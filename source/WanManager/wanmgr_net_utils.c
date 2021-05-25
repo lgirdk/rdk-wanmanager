@@ -33,6 +33,7 @@
 #include <ifaddrs.h>
 #include "platform_hal.h"
 #include <sys/sysinfo.h>
+#include <syscfg/syscfg.h>
 
 #define RESOLV_CONF_FILE "/etc/resolv.conf"
 #define LOOPBACK "127.0.0.1"
