@@ -3249,10 +3249,11 @@ BOOL Marking_Validate(ANSC_HANDLE hInsContext, char* pReturnParamName, ULONG* pu
 ULONG Marking_Commit(ANSC_HANDLE hInsContext)
 {
 
-    ANSC_STATUS                              returnStatus  = ANSC_STATUS_SUCCESS;
+    ANSC_STATUS                              returnStatus  = ANSC_STATUS_FAILURE;
     CONTEXT_MARKING_LINK_OBJECT*        pCxtLink      = (CONTEXT_MARKING_LINK_OBJECT*)hInsContext;
     DML_MARKING*                        p_Marking     = (DML_MARKING* )pCxtLink->hContext;
 
+#ifdef FEATURE_802_1P_COS_MARKING
     if ( pCxtLink->bNew )
     {
         //Add new marking params
@@ -3276,6 +3277,7 @@ ULONG Marking_Commit(ANSC_HANDLE hInsContext)
         //Update marking param values
         returnStatus = DmlSetMarking( NULL, p_Marking );
     }
+#endif /* * FEATURE_802_1P_COS_MARKING */
 
     return returnStatus;
 }
