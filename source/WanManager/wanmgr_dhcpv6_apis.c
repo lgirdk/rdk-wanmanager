@@ -286,7 +286,7 @@ WanMgr_DmlDhcpv6cGetEntry
     memset(pEntry->Cfg.Alias, 0, sizeof(pEntry->Cfg.Alias));
     if( syscfg_get( NULL, buf, out, sizeof(out)) == 0 )
     {
-        strncpy(pEntry->Cfg.Alias, out, sizeof(out));
+        strncpy(pEntry->Cfg.Alias, out, sizeof(pEntry->Cfg.Alias));
     }
 
     pEntry->Cfg.SuggestedT1 = pEntry->Cfg.SuggestedT2 = 0;
@@ -313,7 +313,7 @@ WanMgr_DmlDhcpv6cGetEntry
     memset(pEntry->Cfg.RequestedOptions, 0, sizeof(pEntry->Cfg.RequestedOptions));
     if( syscfg_get( NULL, buf, out, sizeof(out)) == 0 )
     {
-        strncpy(pEntry->Cfg.RequestedOptions, out, sizeof(out));
+        strncpy(pEntry->Cfg.RequestedOptions, out, sizeof(pEntry->Cfg.RequestedOptions));
     }
 
     strcpy(buf, SYSCFG_FORMAT_DHCP6C"_enabled");
