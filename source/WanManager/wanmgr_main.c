@@ -85,7 +85,6 @@ int  cmd_dispatch(int  command)
     {
         case    'e' :
 
-#ifdef _ANSC_LINUX
             CcspTraceInfo(("Connect to bus daemon...\n"));
 
             {
@@ -107,7 +106,6 @@ int  cmd_dispatch(int  command)
                         COMPONENT_PATH_WANMANAGER
                     );
             }
-#endif
 
             ssp_create();
             ssp_engage();
@@ -164,7 +162,6 @@ static void _print_stack_backtrace(void)
 #endif
 }
 
-#if defined(_ANSC_LINUX)
 static void daemonize(void) {
     int fd;
     switch (fork()) {
@@ -239,7 +236,6 @@ void sig_handler(int sig)
 
 }
 
-#endif
 int main(int argc, char* argv[])
 {
     ANSC_STATUS                     returnStatus       = ANSC_STATUS_SUCCESS;
@@ -284,19 +280,6 @@ int main(int argc, char* argv[])
     //DATA INIT
     WanMgr_Data_Init();
 
-#if  defined(_ANSC_WINDOWSNT)
-
-    AnscStartupSocketWrapper(NULL);
-
-    cmd_dispatch('e');
-
-    while ( cmdChar != 'q' )
-    {
-        cmdChar = getchar();
-
-        cmd_dispatch(cmdChar);
-    }
-#elif defined(_ANSC_LINUX)
     if ( bRunAsDaemon )
         daemonize();
 
@@ -378,7 +361,6 @@ int main(int argc, char* argv[])
         }
     }
 
-#endif
 
     //CORE FINALISE
     WanMgr_Core_Finalise();
