@@ -117,18 +117,10 @@ static void WanMgr_SyseventClose()
 ANSC_STATUS syscfg_set_string(const char* name, const char* value)
 {
     ANSC_STATUS ret = ANSC_STATUS_SUCCESS;
-    if (syscfg_set(NULL, name, value) != 0)
+    if (syscfg_set_commit(NULL, name, value) != 0)
     {
         CcspTraceError(("syscfg_set failed: %s %s\n", name, value));
         ret = ANSC_STATUS_FAILURE;
-    }
-    else
-    {
-        if (syscfg_commit() != 0)
-        {
-            CcspTraceError(("syscfg_commit failed: %s %s\n", name, value));
-            ret = ANSC_STATUS_FAILURE;
-        }
     }
 
     return ret;
@@ -141,15 +133,9 @@ ANSC_STATUS syscfg_set_bool(const char* name, int value)
     memset(buf,0,sizeof(buf));
 
     sprintf(buf, "%d", value);
-    if (syscfg_set(NULL, name, buf) != 0)
+    if (syscfg_set_commit(NULL, name, buf) != 0)
     {
         CcspTraceError(("syscfg_set failed: %s %d\n", name, value));
-        ret = ANSC_STATUS_FAILURE;
-    }
-    else
-    {
-        if (syscfg_commit() != 0)
-            CcspTraceError(("syscfg_commit failed: %s %d\n", name, value));
         ret = ANSC_STATUS_FAILURE;
     }
 
