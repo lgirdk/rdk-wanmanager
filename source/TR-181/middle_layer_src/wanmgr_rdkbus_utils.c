@@ -830,11 +830,7 @@ int WanMgr_RdkBus_SetParamValuesToDB( char *pParamName, char *pParamVal )
         CcspTraceError(("%s Error %d writing %s\n", __FUNCTION__, retPsmSet, pParamName));
     } 
 #else
-    if ( syscfg_set(NULL, pParamName, pParamVal) == 0 )
-    {
-        syscfg_commit();
-    }
-    else
+    if ( syscfg_set_commit(NULL, pParamName, pParamVal) != 0 )
     {
         CcspTraceError(("%s Error writing %s\n", __FUNCTION__,pParamName));
         retPsmSet  = CCSP_FAILURE;
