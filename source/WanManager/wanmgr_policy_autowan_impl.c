@@ -1052,17 +1052,9 @@ void SetCurrentWanMode(int mode)
     g_CurrentWanMode = mode;
     CcspTraceInfo(("%s Set Current WanMode = %s\n",__FUNCTION__, WanModeStr(g_CurrentWanMode)));
     snprintf(buf, sizeof(buf), "%d", g_CurrentWanMode);
-    if (syscfg_set(NULL, "curr_wan_mode", buf) != 0)
+    if (syscfg_set_commit(NULL, "curr_wan_mode", buf) != 0)
     {
         CcspTraceInfo(("syscfg_set failed for curr_wan_mode\n"));
-    }
-    else
-    {
-        if (syscfg_commit() != 0)
-        {
-            CcspTraceInfo(("syscfg_commit failed for curr_wan_mode\n"));
-        }
-
     }
 }
 
@@ -1078,17 +1070,9 @@ void SelectedWanMode(int mode)
     CcspTraceInfo(("%s Set  SelectedWanMode = %s\n",__FUNCTION__, WanModeStr(g_SelectedWanMode)));
     memset(buf, 0, sizeof(buf));
     snprintf(buf, sizeof(buf), "%d", mode);
-    if (syscfg_set(NULL, "selected_wan_mode", buf) != 0)
+    if (syscfg_set_commit(NULL, "selected_wan_mode", buf) != 0)
     {
         CcspTraceInfo(("syscfg_set failed for curr_wan_mode\n"));
-    }
-    else
-    {
-        if (syscfg_commit() != 0)
-        {
-            CcspTraceInfo(("syscfg_commit failed for curr_wan_mode\n"));
-        }
-
     }
 }
 
@@ -1126,17 +1110,9 @@ void SetLastKnownWanMode(int mode)
     CcspTraceInfo(("%s Set Last Known WanMode = %s\n",__FUNCTION__, WanModeStr(g_LastKnowWanMode)));
     memset(buf, 0, sizeof(buf));
     snprintf(buf, sizeof(buf), "%d", mode);
-    if (syscfg_set(NULL, "last_wan_mode", buf) != 0)
+    if (syscfg_set_commit(NULL, "last_wan_mode", buf) != 0)
     {
         CcspTraceInfo(("syscfg_set failed for last_wan_mode\n"));
-    }
-    else
-    {
-        if (syscfg_commit() != 0)
-        {
-            CcspTraceInfo(("syscfg_commit failed for last_wan_mode\n"));
-        }
-
     }
 }
 
@@ -1284,32 +1260,14 @@ ANSC_STATUS Wanmgr_WanFixedMode_StartStateMachine(void)
 
 void AutoWan_BkupAndReboot()
 {
-    /* Set the reboot reason */
-    char buf[8];
-    snprintf(buf,sizeof(buf),"%d",1);
     if (syscfg_set(NULL, "X_RDKCENTRAL-COM_LastRebootReason", "WAN_Mode_Change") != 0)
     {
         CcspTraceError(("RDKB_REBOOT : RebootDevice syscfg_set failed GUI\n"));
     }
-    else
-    {
-        if (syscfg_commit() != 0)
-        {
-            CcspTraceError(("RDKB_REBOOT : RebootDevice syscfg_commit failed for ETHWAN mode\n"));
-        }
-    }
 
-
-    if (syscfg_set(NULL, "X_RDKCENTRAL-COM_LastRebootCounter", buf) != 0)
+    if (syscfg_set_commit(NULL, "X_RDKCENTRAL-COM_LastRebootCounter", "1") != 0)
     {
         CcspTraceError(("syscfg_set failed\n"));
-    }
-    else
-    {
-        if (syscfg_commit() != 0)
-        {
-            CcspTraceError(("syscfg_commit failed\n"));
-        }
     }
 
     /* Need to do reboot the device here */
