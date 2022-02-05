@@ -1860,13 +1860,13 @@ ANSC_STATUS WanManager_CreatePPPSession(DML_WAN_IFACE* pInterface)
     {
         strncpy(wan_iface_name, DEFAULT_IFNAME, strlen(DEFAULT_IFNAME));
     }    
-    if (syscfg_set(NULL, SYSCFG_WAN_INTERFACE_NAME, wan_iface_name) != 0)
+    if (syscfg_set_commit(NULL, SYSCFG_WAN_INTERFACE_NAME, wan_iface_name) != 0)
     {
         CcspTraceError(("%s %d - syscfg_set failed to set Interafce=%s \n", __FUNCTION__, __LINE__, wan_iface_name ));
     }else{
         CcspTraceInfo(("%s %d - syscfg_set successfully to set Interafce=%s \n", __FUNCTION__, __LINE__, wan_iface_name ));
     }
-    syscfg_commit();
+
     iErrorCode = pthread_create( &pppThreadId, NULL, &DmlHandlePPPCreateRequestThread, (void*)pInterface );
     if( 0 != iErrorCode )
     {
@@ -2054,13 +2054,12 @@ ANSC_STATUS WanManager_DeletePPPSession(DML_WAN_IFACE* pInterface)
     sleep(2);
 
     /* Create a dummy wan bridge */
-    if (syscfg_set(NULL, SYSCFG_WAN_INTERFACE_NAME, DEFAULT_IFNAME) != 0)
+    if (syscfg_set_commit(NULL, SYSCFG_WAN_INTERFACE_NAME, DEFAULT_IFNAME) != 0)
     {
         CcspTraceError(("%s %d - syscfg_set failed to set Interafce=%s \n", __FUNCTION__, __LINE__, DEFAULT_IFNAME ));
     }else{
         CcspTraceInfo(("%s %d - syscfg_set successfully to set Interafce=%s \n", __FUNCTION__, __LINE__, DEFAULT_IFNAME ));
     }
-    syscfg_commit();    
     createDummyWanBridge(pInterface->Wan.Name);
 
     return ANSC_STATUS_SUCCESS;
