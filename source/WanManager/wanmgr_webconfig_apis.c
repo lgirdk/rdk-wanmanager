@@ -21,8 +21,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "ansc_status.h"
-#include <sysevent.h>
-#include <syscfg.h>
+#include <sysevent/sysevent.h>
+#include <syscfg/syscfg.h>
 #include "ccsp_trace.h"
 #include "ccsp_syslog.h"
 #include "ccsp_message_bus.h"

@@ -51,6 +51,7 @@
 **************************************************************************/
 
 /* ---- Include Files ---------------------------------------- */
+#include <syscfg/syscfg.h>
 #include "dmsb_tr181_psm_definitions.h"
 #include "wanmgr_rdkbus_utils.h"
 #include "ansc_platform.h"
