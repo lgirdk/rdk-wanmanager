@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <syscfg/syscfg.h>
 #include "wanmgr_controller.h"
 #include "wanmgr_data.h"
 #include "wanmgr_rdkbus_utils.h"

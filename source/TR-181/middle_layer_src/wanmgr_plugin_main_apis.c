@@ -64,6 +64,8 @@
 
 **********************************************************************/
 
+#include <syscfg/syscfg.h>
+
 //#include "dml_tr181_custom_cfg.h"
 #include "wanmgr_plugin_main_apis.h"
 

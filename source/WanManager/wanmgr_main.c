@@ -55,6 +55,7 @@
 #endif
 #endif
 
+#include <syscfg/syscfg.h>
 #include "wanmgr_ssp_global.h"
 #include "wanmgr_core.h"
 #include "wanmgr_data.h"
