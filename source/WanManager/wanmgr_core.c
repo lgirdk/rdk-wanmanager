@@ -17,7 +17,7 @@
  * limitations under the License.
 */
 
-#include <syscfg.h>
+#include <syscfg/syscfg.h>
 
 #include "wanmgr_core.h"
 #include "wanmgr_sysevents.h"
