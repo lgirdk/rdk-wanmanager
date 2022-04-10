@@ -291,7 +291,6 @@ int main(int argc, char* argv[])
     char *subSys            = NULL;
     DmErr_t    err;
 
-    syscfg_init();
     syscfg_get( NULL, "NonRootSupport", buf, sizeof(buf));
     if( buf != NULL )  {
         if (strncmp(buf, "true", strlen("true")) == 0) {
