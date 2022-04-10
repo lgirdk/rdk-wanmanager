@@ -166,7 +166,7 @@ ULONG WanIf_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char* 
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             ///* check the parameter name and return the corresponding value */
-            if( AnscEqualString(ParamName, "Name", TRUE) )
+            if (strcmp(ParamName, "Name") == 0)
             {
                /* collect value */
                if ( ( sizeof( pWanDmlIface->Name ) - 1 ) < *pUlSize )
@@ -180,7 +180,7 @@ ULONG WanIf_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char* 
                    ret = 1;
                }
             }
-            else if( AnscEqualString(ParamName, "DisplayName", TRUE) )
+            else if (strcmp(ParamName, "DisplayName") == 0)
             {
                /* collect value */
                if ( ( sizeof( pWanDmlIface->DisplayName ) - 1 ) < *pUlSize )
@@ -195,7 +195,7 @@ ULONG WanIf_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char* 
                }
             }
 
-            if( AnscEqualString(ParamName, "CustomConfigPath", TRUE) )
+            if (strcmp(ParamName, "CustomConfigPath") == 0)
             {
                /* collect value */
                if ( ( sizeof( pWanDmlIface->CustomConfigPath ) - 1 ) < *pUlSize )
@@ -254,13 +254,13 @@ BOOL WanIf_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char* p
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Name", TRUE))
+            if (strcmp(ParamName, "Name") == 0)
             {
                 AnscCopyString(pWanDmlIface->Name, pString);
                 ret = TRUE;
             }
 
-            if( AnscEqualString(ParamName, "CustomConfigPath", TRUE))
+            if (strcmp(ParamName, "CustomConfigPath") == 0)
             {
                 AnscCopyString(pWanDmlIface->CustomConfigPath, pString);
                 ret = TRUE;
@@ -309,19 +309,19 @@ BOOL WanIf_GetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL* pBo
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             //* check the parameter name and return the corresponding value */
-            if( AnscEqualString(ParamName, "EnableOperStatusMonitor", TRUE))
+            if (strcmp(ParamName, "EnableOperStatusMonitor") == 0)
             {
                 *pBool = pWanDmlIface->MonitorOperStatus;
                 ret = TRUE;
             }
 
-            if( AnscEqualString(ParamName, "EnableCustomConfig", TRUE))
+            if (strcmp(ParamName, "EnableCustomConfig") == 0)
             {
                 *pBool = pWanDmlIface->CustomConfigEnable;
                 ret = TRUE;
             }
 
-            if( AnscEqualString(ParamName, "ConfigureWanEnable", TRUE))
+            if (strcmp(ParamName, "ConfigureWanEnable") == 0)
             {
                 *pBool = pWanDmlIface->WanConfigEnabled;
                 ret = TRUE;
@@ -371,18 +371,18 @@ BOOL WanIf_SetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL bVal
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "ConfigureWanEnable", TRUE))
+            if (strcmp(ParamName, "ConfigureWanEnable") == 0)
             {
                 pWanDmlIface->WanConfigEnabled  = bValue;
                 ret = TRUE;
             }
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "EnableCustomConfig", TRUE))
+            if (strcmp(ParamName, "EnableCustomConfig") == 0)
             {
                 pWanDmlIface->CustomConfigEnable  = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "EnableOperStatusMonitor", TRUE))
+            if (strcmp(ParamName, "EnableOperStatusMonitor") == 0)
             {
                 pWanDmlIface->MonitorOperStatus = bValue;
                 ret = TRUE;
@@ -519,7 +519,7 @@ BOOL WanIfCfg_GetParamIntValue(ANSC_HANDLE hInsContext, char* ParamName, int* pI
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Priority", TRUE))
+            if (strcmp(ParamName, "Priority") == 0)
             {
                 *pInt = pWanDmlIface->Wan.Priority;
                 ret = TRUE;
@@ -574,7 +574,7 @@ BOOL WanIfCfg_SetParamIntValue(ANSC_HANDLE hInsContext, char* ParamName, int iVa
             WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Priority", TRUE))
+            if (strcmp(ParamName, "Priority") == 0)
             {
                 uiTotalIfaces = WanIf_GetEntryCount(NULL);
 
@@ -637,33 +637,33 @@ BOOL WanIfCfg_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and return the corresponding value */
-            if( AnscEqualString(ParamName, "SelectionTimeout", TRUE))
+            if (strcmp(ParamName, "SelectionTimeout") == 0)
             {
                 *puLong = pWanDmlIface->Wan.SelectionTimeout;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "Status", TRUE))
+            if (strcmp(ParamName, "Status") == 0)
             {
                 *puLong = pWanDmlIface->Wan.Status;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "Type", TRUE))
+            if (strcmp(ParamName, "Type") == 0)
             {
                 *puLong = pWanDmlIface->Wan.Type;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "Priority", TRUE))
+            if (strcmp(ParamName, "Priority") == 0)
             {
                 *puLong = pWanDmlIface->Wan.Priority;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "LinkStatus", TRUE))
+            if (strcmp(ParamName, "LinkStatus") == 0)
             {
                 *puLong = pWanDmlIface->Wan.LinkStatus;
                 ret = TRUE;
             }
 
-            if( AnscEqualString(ParamName, "OperationalStatus", TRUE))
+            if (strcmp(ParamName, "OperationalStatus") == 0)
             {
                 *puLong = pWanDmlIface->Wan.OperationalStatus;
                 ret = TRUE;
@@ -717,12 +717,12 @@ BOOL WanIfCfg_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "SelectionTimeout", TRUE))
+            if (strcmp(ParamName, "SelectionTimeout") == 0)
             {
                 pWanDmlIface->Wan.SelectionTimeout = uValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "Type", TRUE))
+            if (strcmp(ParamName, "Type") == 0)
             {
                 IfIndex =  pWanDmlIface->uiIfaceIdx;
                 priority =  pWanDmlIface->Wan.Priority;
@@ -745,13 +745,13 @@ BOOL WanIfCfg_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
                     return FALSE;
                 }
             }
-            if( AnscEqualString(ParamName, "LinkStatus", TRUE))
+            if (strcmp(ParamName, "LinkStatus") == 0)
             {
                 pWanDmlIface->Wan.LinkStatus = uValue;
                 ret = TRUE;
             }
 
-            if( AnscEqualString(ParamName, "OperationalStatus", TRUE))
+            if (strcmp(ParamName, "OperationalStatus") == 0)
             {
                 pWanDmlIface->Wan.OperationalStatus = uValue;
                 ret = TRUE;
@@ -800,42 +800,42 @@ BOOL WanIfCfg_GetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL* 
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             //* check the parameter name and return the corresponding value */
-            if( AnscEqualString(ParamName, "Enable", TRUE))
+            if (strcmp(ParamName, "Enable") == 0)
             {
                 *pBool = pWanDmlIface->Wan.Enable;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "Refresh", TRUE))
+            if (strcmp(ParamName, "Refresh") == 0)
             {
                 *pBool = pWanDmlIface->Wan.Refresh;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "ActiveLink", TRUE))
+            if (strcmp(ParamName, "ActiveLink") == 0)
             {
                 *pBool = pWanDmlIface->Wan.ActiveLink;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "EnableDSLite", TRUE))
+            if (strcmp(ParamName, "EnableDSLite") == 0)
             {
                 *pBool = pWanDmlIface->Wan.EnableDSLite;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "EnableIPoEHealthCheck", TRUE))
+            if (strcmp(ParamName, "EnableIPoEHealthCheck") == 0)
             {
                 *pBool = pWanDmlIface->Wan.EnableIPoE;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "EnableMAPT", TRUE))
+            if (strcmp(ParamName, "EnableMAPT") == 0)
             {
                 *pBool = pWanDmlIface->Wan.EnableMAPT;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "RebootOnConfiguration", TRUE))
+            if (strcmp(ParamName, "RebootOnConfiguration") == 0)
             {
                 *pBool = pWanDmlIface->Wan.RebootOnConfiguration;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "EnableDHCP", TRUE))
+            if (strcmp(ParamName, "EnableDHCP") == 0)
             {
                 *pBool = pWanDmlIface->Wan.EnableDHCP;
                 ret = TRUE;
@@ -885,42 +885,42 @@ BOOL WanIfCfg_SetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL b
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Enable", TRUE))
+            if (strcmp(ParamName, "Enable") == 0)
             {
                 pWanDmlIface->Wan.Enable  = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "Refresh", TRUE))
+            if (strcmp(ParamName, "Refresh") == 0)
             {
                 pWanDmlIface->Wan.Refresh = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "ActiveLink", TRUE))
+            if (strcmp(ParamName, "ActiveLink") == 0)
             {
                 pWanDmlIface->Wan.ActiveLink = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "EnableDSLite", TRUE))
+            if (strcmp(ParamName, "EnableDSLite") == 0)
             {
                 pWanDmlIface->Wan.EnableDSLite = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "EnableIPoEHealthCheck", TRUE))
+            if (strcmp(ParamName, "EnableIPoEHealthCheck") == 0)
             {
                 pWanDmlIface->Wan.EnableIPoE = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "EnableMAPT", TRUE))
+            if (strcmp(ParamName, "EnableMAPT") == 0)
             {
                 pWanDmlIface->Wan.EnableMAPT = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "RebootOnConfiguration", TRUE))
+            if (strcmp(ParamName, "RebootOnConfiguration") == 0)
             {
                 pWanDmlIface->Wan.RebootOnConfiguration = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "EnableDHCP", TRUE))
+            if (strcmp(ParamName, "EnableDHCP") == 0)
             {
                 if (bValue != pWanDmlIface->Wan.EnableDHCP)
                 {
@@ -1037,7 +1037,7 @@ BOOL WanIfCfg_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Name", TRUE))
+            if (strcmp(ParamName, "Name") == 0)
             {
                 AnscCopyString(pWanDmlIface->Wan.Name, pString);
                 ret = TRUE;
@@ -1176,7 +1176,7 @@ ULONG WanIfPhy_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, cha
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE) )
+            if (strcmp(ParamName, "Path") == 0)
             {
                /* collect value */
                if ( ( sizeof( pWanDmlIface->Phy.Path ) - 1 ) < *pUlSize )
@@ -1237,7 +1237,7 @@ BOOL WanIfPhy_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE))
+            if (strcmp(ParamName, "Path") == 0)
             {
                 AnscCopyString(pWanDmlIface->Phy.Path, pString);
                 ret = TRUE;
@@ -1288,7 +1288,7 @@ BOOL WanIfPhy_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Status", TRUE))
+            if (strcmp(ParamName, "Status") == 0)
             {
                 *puLong = pWanDmlIface->Phy.Status;
                 ret = TRUE;
@@ -1340,7 +1340,7 @@ BOOL WanIfPhy_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Status", TRUE))
+            if (strcmp(ParamName, "Status") == 0)
             {
                 pWanDmlIface->Phy.Status = uValue;
                 ret = TRUE;
@@ -1476,12 +1476,12 @@ BOOL WanIfIpCfg_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULO
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "IPv4Status", TRUE))
+            if (strcmp(ParamName, "IPv4Status") == 0)
             {
                 *puLong = pWanDmlIface->IP.Ipv4Status;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "IPv6Status", TRUE))
+            if (strcmp(ParamName, "IPv6Status") == 0)
             {
                 *puLong = pWanDmlIface->IP.Ipv6Status;
                 ret = TRUE;
@@ -1531,12 +1531,12 @@ BOOL WanIfIpCfg_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULO
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "IPv4Status", TRUE))
+            if (strcmp(ParamName, "IPv4Status") == 0)
             {
                 pWanDmlIface->IP.Ipv4Status = uValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "IPv6Status", TRUE))
+            if (strcmp(ParamName, "IPv6Status") == 0)
             {
                 pWanDmlIface->IP.Ipv6Status = uValue;
                 ret = TRUE;
@@ -1594,7 +1594,7 @@ ULONG WanIfIpCfg_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, c
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE) )
+            if (strcmp(ParamName, "Path") == 0)
             {
                 /* collect value */
                 if ( ( sizeof( pWanDmlIface->IP.Path ) - 1 ) < *pUlSize )
@@ -1653,7 +1653,7 @@ BOOL WanIfIpCfg_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, ch
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE))
+            if (strcmp(ParamName, "Path") == 0)
             {
                 AnscCopyString(pWanDmlIface->IP.Path, pString);
                 ret = TRUE;
@@ -1787,7 +1787,7 @@ BOOL WanIfMapt_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULON
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "MAPTStatus", TRUE))
+            if (strcmp(ParamName, "MAPTStatus") == 0)
             {
                 *puLong = pWanDmlIface->MAP.MaptStatus;
                 ret = TRUE;
@@ -1837,7 +1837,7 @@ BOOL WanIfMapt_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULON
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "MAPTStatus", TRUE))
+            if (strcmp(ParamName, "MAPTStatus") == 0)
             {
 #ifdef FEATURE_MAPT
                 pWanDmlIface->MAP.MaptStatus = uValue;
@@ -1898,7 +1898,7 @@ ULONG WanIfMapt_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, ch
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE) )
+            if (strcmp(ParamName, "Path") == 0)
             {
                 /* collect value */
                 if ( ( sizeof( pWanDmlIface->MAP.Path ) - 1 ) < *pUlSize )
@@ -1958,7 +1958,7 @@ BOOL WanIfMapt_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, cha
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE))
+            if (strcmp(ParamName, "Path") == 0)
             {
 #ifdef FEATURE_MAPT
                 AnscCopyString(pWanDmlIface->MAP.Path, pString);
@@ -2094,7 +2094,7 @@ BOOL WanIfDSLite_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, UL
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Status", TRUE))
+            if (strcmp(ParamName, "Status") == 0)
             {
                 *puLong = pWanDmlIface->DSLite.Status;
                 ret = TRUE;
@@ -2144,7 +2144,7 @@ BOOL WanIfDSLite_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, UL
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Status", TRUE))
+            if (strcmp(ParamName, "Status") == 0)
             {
                 pWanDmlIface->DSLite.Status = uValue;
                 ret = TRUE;
@@ -2203,7 +2203,7 @@ ULONG WanIfDSLite_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, 
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE) )
+            if (strcmp(ParamName, "Path") == 0)
             {
                 /* collect value */
                 if ( ( sizeof( pWanDmlIface->DSLite.Path ) - 1 ) < *pUlSize )
@@ -2263,7 +2263,7 @@ BOOL WanIfDSLite_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, c
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE))
+            if (strcmp(ParamName, "Path") == 0)
             {
                 AnscCopyString(pWanDmlIface->DSLite.Path, pString);
                 ret = TRUE;
@@ -2615,12 +2615,12 @@ BOOL Marking_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG*
     DML_MARKING*                        p_Marking     = (DML_MARKING* )pCxtLink->hContext;
 
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "SKBPort", TRUE))
+    if (strcmp(ParamName, "SKBPort") == 0)
     {
         *puLong = p_Marking->SKBPort;
         ret = TRUE;
     }
-    if( AnscEqualString(ParamName, "SKBMark", TRUE))
+    if (strcmp(ParamName, "SKBMark") == 0)
     {
         *puLong = p_Marking->SKBMark;
         ret = TRUE;
@@ -2668,7 +2668,7 @@ ULONG Marking_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char
     DML_MARKING*                        p_Marking     = (DML_MARKING* )pCxtLink->hContext;
 
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "Alias", TRUE))
+    if (strcmp(ParamName, "Alias") == 0)
     {
         if ( AnscSizeOfString(p_Marking->Alias) < *pUlSize)
         {
@@ -2717,7 +2717,7 @@ BOOL Marking_GetParamIntValue(ANSC_HANDLE hInsContext, char* ParamName, int* pIn
     DML_MARKING*                        p_Marking     = (DML_MARKING* )pCxtLink->hContext;
 
     /* check the parameter name and return the corresponding value */
-    if( AnscEqualString(ParamName, "EthernetPriorityMark", TRUE))
+    if (strcmp(ParamName, "EthernetPriorityMark") == 0)
     {
         *pInt = p_Marking->EthernetPriorityMark;
         ret = TRUE;
@@ -2758,7 +2758,7 @@ BOOL Marking_SetParamIntValue(ANSC_HANDLE hInsContext, char* ParamName, int iVal
     DML_MARKING*                        p_Marking     = (DML_MARKING* )pCxtLink->hContext;
 
     /* check the parameter name and set the corresponding value */
-    if( AnscEqualString(ParamName, "EthernetPriorityMark", TRUE))
+    if (strcmp(ParamName, "EthernetPriorityMark") == 0)
     {
         p_Marking->EthernetPriorityMark = iValue;
         ret = TRUE;
@@ -2831,7 +2831,7 @@ BOOL Marking_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char*
 
     /* check the parameter name and set the corresponding value */
 
-    if( AnscEqualString(ParamName, "Alias", TRUE))
+    if (strcmp(ParamName, "Alias") == 0)
     {
         //Alias should not overwrite after set
         if( 0 < AnscSizeOfString(p_Marking->Alias) )
@@ -3026,27 +3026,27 @@ WanIfPPPCfg_GetParamUlongValue
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and return the corresponding value */
-            if( AnscEqualString(ParamName, "IPCPStatus", TRUE))
+            if (strcmp(ParamName, "IPCPStatus") == 0)
             {
                 *puLong = pWanDmlIface->PPP.IPCPStatus;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "IPv6CPStatus", TRUE))
+            if (strcmp(ParamName, "IPv6CPStatus") == 0)
             {
                 *puLong = pWanDmlIface->PPP.IPV6CPStatus;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "LCPStatus", TRUE))
+            if (strcmp(ParamName, "LCPStatus") == 0)
             {
                 *puLong = pWanDmlIface->PPP.LCPStatus;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "LinkStatus", TRUE))
+            if (strcmp(ParamName, "LinkStatus") == 0)
             {
                 *puLong = pWanDmlIface->PPP.LinkStatus;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "LinkType", TRUE))
+            if (strcmp(ParamName, "LinkType") == 0)
             {
                 *puLong = pWanDmlIface->PPP.LinkType;
                 ret = TRUE;
@@ -3115,7 +3115,7 @@ WanIfPPPCfg_SetParamUlongValue
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "IPCPStatus", TRUE))
+            if (strcmp(ParamName, "IPCPStatus") == 0)
             {
                 pWanDmlIface->PPP.IPCPStatus = uValue;
                 pInterface = (char *) malloc(64);
@@ -3130,7 +3130,7 @@ WanIfPPPCfg_SetParamUlongValue
                     ret = TRUE;
                 }
             }
-            if( AnscEqualString(ParamName, "IPv6CPStatus", TRUE))
+            if (strcmp(ParamName, "IPv6CPStatus") == 0)
             {
                 pWanDmlIface->PPP.IPV6CPStatus = uValue;
                 pInterface = (char *) malloc(64);
@@ -3145,17 +3145,17 @@ WanIfPPPCfg_SetParamUlongValue
                     ret = TRUE;
                 }
             }
-            if( AnscEqualString(ParamName, "LCPStatus", TRUE))
+            if (strcmp(ParamName, "LCPStatus") == 0)
             {
                 pWanDmlIface->PPP.LCPStatus = uValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "LinkStatus", TRUE))
+            if (strcmp(ParamName, "LinkStatus") == 0)
             {
                 pWanDmlIface->PPP.LinkStatus = uValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "LinkType", TRUE))
+            if (strcmp(ParamName, "LinkType") == 0)
             {
                 pWanDmlIface->PPP.LinkType = uValue;
                 ret = TRUE;
@@ -3230,7 +3230,7 @@ WanIfPPPCfg_GetParamStringValue
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE) )
+            if (strcmp(ParamName, "Path") == 0)
             {
                /* collect value */
                if ( ( sizeof( pWanDmlIface->Phy.Path ) - 1 ) < *pUlSize )
@@ -3301,7 +3301,7 @@ WanIfPPPCfg_SetParamStringValue
         {
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Path", TRUE))
+            if (strcmp(ParamName, "Path") == 0)
             {
                 AnscCopyString(pWanDmlIface->PPP.Path, pString);
                 ret = TRUE;
@@ -3363,17 +3363,17 @@ WanIfPPPCfg_GetParamBoolValue
         {
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
             /* check the parameter name and return the corresponding value */
-            if( AnscEqualString(ParamName, "Enable", TRUE))
+            if (strcmp(ParamName, "Enable") == 0)
             {
                 *pBool = pWanDmlIface->PPP.Enable;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "IPCPEnable", TRUE))
+            if (strcmp(ParamName, "IPCPEnable") == 0)
             {
                 *pBool = pWanDmlIface->PPP.IPCPEnable;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "IPv6CPEnable", TRUE))
+            if (strcmp(ParamName, "IPv6CPEnable") == 0)
             {
                 *pBool = pWanDmlIface->PPP.IPV6CPEnable;
                 ret = TRUE;
@@ -3436,17 +3436,17 @@ WanIfPPPCfg_SetParamBoolValue
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-            if( AnscEqualString(ParamName, "Enable", TRUE))
+            if (strcmp(ParamName, "Enable") == 0)
             {
                 pWanDmlIface->PPP.Enable = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "IPCPEnable", TRUE))
+            if (strcmp(ParamName, "IPCPEnable") == 0)
             {
                 pWanDmlIface->PPP.IPCPEnable = bValue;
                 ret = TRUE;
             }
-            if( AnscEqualString(ParamName, "IPv6CPEnable", TRUE))
+            if (strcmp(ParamName, "IPv6CPEnable") == 0)
             {
                 pWanDmlIface->PPP.IPV6CPEnable = bValue;
                 ret = TRUE;
