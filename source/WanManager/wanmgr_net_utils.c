@@ -1433,7 +1433,6 @@ ANSC_STATUS WanManager_CreatePPPSession(DML_WAN_IFACE* pInterface)
     INT iErrorCode;
     char wan_iface_name[10] = {0};
 
-    syscfg_init();
     /* Generate client-duid file for dibbler */
     generate_client_duid_conf();
 
@@ -1611,7 +1610,6 @@ ANSC_STATUS WanManager_DeletePPPSession(DML_WAN_IFACE* pInterface)
         CcspTraceError(("%s Invalid Memory\n", __FUNCTION__));
         return ANSC_STATUS_FAILURE;
     }
-    syscfg_init();
     memset( acSetParamName, 0, DATAMODEL_PARAM_LENGTH );
     memset( acSetParamValue, 0, DATAMODEL_PARAM_LENGTH );
 
