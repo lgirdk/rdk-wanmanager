@@ -1844,8 +1844,6 @@ ANSC_STATUS WanManager_CreatePPPSession(DML_WAN_IFACE* pInterface)
     INT iErrorCode;
     char wan_iface_name[10] = {0};
 
-    syscfg_init();
-
     /* Remove erouter0 dummy wan bridge if exists */
     deleteDummyWanBridgeIfExist(pInterface->Wan.Name);
     if (pInterface->PPP.LinkType == WAN_IFACE_PPP_LINK_TYPE_PPPoA)
@@ -2020,7 +2018,6 @@ ANSC_STATUS WanManager_DeletePPPSession(DML_WAN_IFACE* pInterface)
         CcspTraceError(("%s Invalid Memory\n", __FUNCTION__));
         return ANSC_STATUS_FAILURE;
     }
-    syscfg_init();
     memset( acSetParamName, 0, DATAMODEL_PARAM_LENGTH );
     memset( acSetParamValue, 0, DATAMODEL_PARAM_LENGTH );
 

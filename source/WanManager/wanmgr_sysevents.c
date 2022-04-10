@@ -387,7 +387,6 @@ static int set_default_conf_entry()
     char result[BUFLEN_128];
     FILE *fp;
 
-    syscfg_init();
     memset(command, 0, sizeof(command));
     memset(result, 0, sizeof(result));
 
