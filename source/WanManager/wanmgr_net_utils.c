@@ -2172,19 +2172,17 @@ static void createDummyWanBridge(char * iface_name)
 
 static void deleteDummyWanBridgeIfExist(char * iface_name)
 {
-    char syscmd[256] = {'\0'};
-    char resultBuff[256] = {'\0'};
-    char cmd[256] = {'\0'};
+    char syscmd[256];
+    char resultBuff[256];
+    char cmd[256];
     FILE *fp = NULL;
 
     memset(resultBuff, '\0', sizeof(resultBuff));
-    memset(cmd, '\0', sizeof(cmd));
-    memset(syscmd, '\0', sizeof(syscmd));
     snprintf(cmd, sizeof(cmd), "ip -d link show %s | tail -n +2 | grep bridge", iface_name);
     fp = popen(cmd, "r");
     if (fp != NULL)
     {
-        fgets(resultBuff, 1024, fp);
+        fgets(resultBuff, sizeof(resultBuff), fp);
         if (resultBuff[0] == '\0')
         {
             // Empty result. No bridge found.
@@ -2196,7 +2194,6 @@ static void deleteDummyWanBridgeIfExist(char * iface_name)
             /* Down the interface before we delete it. */
             snprintf(syscmd, sizeof(syscmd), "ifconfig %s down", iface_name);
             system(syscmd);
-            memset(syscmd, '\0', sizeof(syscmd));
             snprintf(syscmd, sizeof(syscmd), "brctl delbr %s", iface_name);
             system(syscmd);
         }
