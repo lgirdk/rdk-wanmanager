@@ -67,6 +67,7 @@
 #define SYSEVENT_IPV4_TIME_OFFSET "ipv4-timeoffset"
 #define SYSEVENT_IPV4_TIME_ZONE "ipv4_timezone"
 #define SYSEVENT_DHCPV4_TIME_OFFSET "dhcpv4_time_offset"
+#define SYSEVENT_DHCPV4_NTP_SERVER "dhcpv4_ntp_server"
 #define SYSEVENT_IPV4_US_CURRENT_RATE "ipv4_%s_us_current_rate_0"
 #define SYSEVENT_IPV4_DS_CURRENT_RATE "ipv4_%s_ds_current_rate_0"
 #define SYSEVENT_FIELD_SERVICE_ROUTED_STATUS "routed-status"
