@@ -207,6 +207,8 @@ ANSC_STATUS wanmgr_sysevents_ipv4Info_set(const ipc_dhcpv4_data_t* dhcp4Info, co
     snprintf(value, sizeof(value), "%u",dhcp4Info->leaseTime);
     sysevent_set(sysevent_fd, sysevent_token,name, value, 0);
 
+    sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_DHCPV4_NTP_SERVER, dhcp4Info->ntpServer, 0);
+
     return ANSC_STATUS_SUCCESS;
 }
 
