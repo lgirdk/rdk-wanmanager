@@ -69,10 +69,7 @@
 #include "wanmgr_plugin_main.h"
 #include "dslh_dmagnt_interface.h"
 #include "ccsp_trace.h"
-
-
-#define  DATAMODEL_XML_FILE           "/usr/rdk/wanmanager/RdkWanManager.xml"
-
+#include "dm_pack_create_func.h"
 
 PDSLH_CPE_CONTROLLER_OBJECT     pDslhCpeController        = NULL;
 PCOMPONENT_COMMON_WANMANAGER          g_pComponent_COMMON_wanmanager  = NULL;
@@ -192,11 +189,11 @@ ANSC_STATUS ssp_engage()
     }
 
     returnStatus =
-        pDslhCpeController->RegisterCcspDataModel
+        pDslhCpeController->RegisterCcspDataModel2
             (
                 (ANSC_HANDLE)pDslhCpeController,
                 CrName, /* CCSP_DBUS_INTERFACE_CR,*/              /* CCSP CR ID */
-                DATAMODEL_XML_FILE,             /* Data Model XML file. Can be empty if only base data model supported. */
+                DMPackCreateDataModelXML,             /* Data Model XML file. Can be empty if only base data model supported. */
                 COMPONENT_NAME_WANMANAGER,            /* Component Name    */
                 COMPONENT_VERSION_WANMANAGER,         /* Component Version */
                 COMPONENT_PATH_WANMANAGER,            /* Component Path    */
