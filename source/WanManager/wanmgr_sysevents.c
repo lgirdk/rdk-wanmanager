@@ -135,18 +135,7 @@ ANSC_STATUS syscfg_set_string(const char* name, const char* value)
 
 ANSC_STATUS syscfg_set_bool(const char* name, int value)
 {
-    ANSC_STATUS ret = ANSC_STATUS_SUCCESS;
-    char buf[10];
-    memset(buf,0,sizeof(buf));
-
-    sprintf(buf, "%d", value);
-    if (syscfg_set_commit(NULL, name, buf) != 0)
-    {
-        CcspTraceError(("syscfg_set failed: %s %d\n", name, value));
-        ret = ANSC_STATUS_FAILURE;
-    }
-
-    return ret;
+    return syscfg_set_string(name, value ? "1" : "0");
 }
 
 ANSC_STATUS wanmgr_sysevents_ipv6Info_init()
