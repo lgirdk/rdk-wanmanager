@@ -109,14 +109,19 @@ static WcFmobPolicyState_t Transition_WanInterfaceTearDown(WanMgr_Policy_Control
 
 
 /* Auto Wan Detection Functions */
-void IntializeAutoWanConfig();
-int GetCurrentWanMode();
-int GetSelectedWanMode();
-int GetLastKnownWanMode();
-char* WanModeStr(int WanMode);
-void LogWanModeInfo();
-bool IsDocsisRfDetected();
-bool IsEthwanLinkDetected();
+static int GetCurrentWanMode(void);
+static void SetCurrentWanMode(int mode);
+static int GetSelectedWanMode(void);
+static void SelectedWanMode(int mode);
+static int GetSelectedWanModeFromDb(void);
+static int GetLastKnownWanModeFromDb(void);
+static int GetLastKnownWanMode(void);
+static void SetLastKnownWanMode(int mode);
+static char *WanModeStr(int WanMode);
+static void LogWanModeInfo(void);
+static void IntializeAutoWanConfig(void);
+static ANSC_STATUS Wanmgr_WanFixedMode_StartStateMachine(void);
+static void AutoWan_BkupAndReboot(void);
 
 /*********************************************************************************/
 /**************************** ACTIONS ********************************************/
@@ -1041,12 +1046,12 @@ static WcFmobPolicyState_t Transition_WanInterfaceActive(WanMgr_AutoWan_SMInfo_t
 /*********************************************************************************/
 /*********************************************************************************/
 
-int GetCurrentWanMode()
+static int GetCurrentWanMode(void)
 {
     return g_CurrentWanMode;
 }
 
-void SetCurrentWanMode(int mode)
+static void SetCurrentWanMode(int mode)
 {
     char buf[8];
     memset(buf, 0, sizeof(buf));
@@ -1059,12 +1064,12 @@ void SetCurrentWanMode(int mode)
     }
 }
 
-int GetSelectedWanMode()
+static int GetSelectedWanMode(void)
 {
     return g_SelectedWanMode;
 }
 
-void SelectedWanMode(int mode)
+static void SelectedWanMode(int mode)
 {
     char buf[8];
     g_SelectedWanMode = mode;
@@ -1077,7 +1082,7 @@ void SelectedWanMode(int mode)
     }
 }
 
-int GetSelectedWanModeFromDb()
+static int GetSelectedWanModeFromDb(void)
 {
     char buf[8] = {0};
     int wanMode = WAN_MODE_UNKNOWN;
@@ -1088,7 +1093,7 @@ int GetSelectedWanModeFromDb()
     return wanMode;
 }
 
-int GetLastKnownWanModeFromDb()
+static int GetLastKnownWanModeFromDb(void)
 {
     char buf[8] = {0};
     int wanMode = WAN_MODE_UNKNOWN;
@@ -1099,12 +1104,12 @@ int GetLastKnownWanModeFromDb()
     return wanMode;
 }
 
-int GetLastKnownWanMode()
+static int GetLastKnownWanMode(void)
 {
     return g_LastKnowWanMode;
 }
 
-void SetLastKnownWanMode(int mode)
+static void SetLastKnownWanMode(int mode)
 {
     char buf[8];
     g_LastKnowWanMode = mode;
@@ -1117,7 +1122,7 @@ void SetLastKnownWanMode(int mode)
     }
 }
 
-char* WanModeStr(int WanMode)
+static char *WanModeStr(int WanMode)
 {
     if(WanMode == WAN_MODE_AUTO)
     {
@@ -1136,14 +1141,15 @@ char* WanModeStr(int WanMode)
          return "WAN_MODE_UNKNOWN";
     }
 }
-void LogWanModeInfo()
+
+static void LogWanModeInfo(void)
 {
     CcspTraceInfo(("CurrentWanMode  - %s\n",WanModeStr(g_CurrentWanMode)));
     CcspTraceInfo(("SelectedWanMode - %s\n",WanModeStr(g_SelectedWanMode)));
     CcspTraceInfo(("LastKnowWanMode - %s\n",WanModeStr(g_LastKnowWanMode)));
 }
 
-void IntializeAutoWanConfig()
+static void IntializeAutoWanConfig(void)
 {
     CcspTraceInfo(("%s\n",__FUNCTION__));
     g_CurrentWanMode        = WAN_MODE_UNKNOWN;
@@ -1174,7 +1180,7 @@ void IntializeAutoWanConfig()
 }
 
 
-ANSC_STATUS Wanmgr_WanFixedMode_StartStateMachine(void)
+static ANSC_STATUS Wanmgr_WanFixedMode_StartStateMachine(void)
 {
     CcspTraceInfo(("%s %d \n", __FUNCTION__, __LINE__));
 
@@ -1259,7 +1265,7 @@ ANSC_STATUS Wanmgr_WanFixedMode_StartStateMachine(void)
 }
 
 
-void AutoWan_BkupAndReboot()
+static void AutoWan_BkupAndReboot(void)
 {
     if (syscfg_set(NULL, "X_RDKCENTRAL-COM_LastRebootReason", "WAN_Mode_Change") != 0)
     {
@@ -1473,7 +1479,7 @@ static WcFmobPolicyState_t State_WanInterfaceActive(WanMgr_AutoWan_SMInfo_t *pSm
     {
         return Transition_WanInterfaceTearDown(pWanController);
     }
-    if ((pFixedInterface->Phy.Status == WAN_IFACE_PHY_STATUS_DOWN))
+    if (pFixedInterface->Phy.Status == WAN_IFACE_PHY_STATUS_DOWN)
     {
         // wan stop
         wanmgr_setwanstop();
@@ -1600,6 +1606,16 @@ static WcFmobPolicyState_t State_WaitingForInterface(WanMgr_AutoWan_SMInfo_t *pS
             case WAN_IFACE_PHY_STATUS_DOWN:
             {
                  retState = STATE_WAN_DECONFIGURING_INTERFACE;
+            }
+            break;
+            case WAN_IFACE_PHY_STATUS_UNKNOWN:
+            {
+                 /* ?? */
+            }
+            break;
+            case WAN_IFACE_PHY_STATUS_INITIALIZING:
+            {
+                 /* ?? */
             }
             break;
         }
