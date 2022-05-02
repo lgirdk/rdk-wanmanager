@@ -414,6 +414,7 @@ static void *WanManagerSyseventHandler(void *args)
     async_id_t primary_lan_l3net_asyncid;
     async_id_t radvd_restart_asyncid;
     async_id_t ipv6_down_asyncid;
+    async_id_t dhcpv6_ntp_server_asyncid;
 
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_ULA_ADDRESS, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_ULA_ADDRESS, &lan_ula_address_event_asyncid);
@@ -449,6 +450,9 @@ static void *WanManagerSyseventHandler(void *args)
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_MAPT_FEATURE_ENABLE, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_MAPT_FEATURE_ENABLE, &ipv6_down_asyncid);
 #endif
+
+    sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, &dhcpv6_ntp_server_asyncid);
 
     for(;;)
     {
@@ -645,6 +649,10 @@ static void *WanManagerSyseventHandler(void *args)
                 }
             }
 #endif
+            else if (strcmp(name, SYSEVENT_DHCPV6_NTP_SERVER) == 0)
+            {
+                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_NTPD_RESTART, NULL, 0);
+            }
             else
             {
                 CcspTraceError(("%s %d undefined event %s:%s \n", __FUNCTION__, __LINE__, name, val));
