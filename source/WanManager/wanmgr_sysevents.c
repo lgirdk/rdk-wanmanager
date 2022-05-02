@@ -447,6 +447,7 @@ static void *WanManagerSyseventHandler(void *args)
 #if defined (RDKB_EXTENDER_ENABLED)
     async_id_t mesh_wan_link_status_asyncid;
 #endif /* RDKB_EXTENDER_ENABLED */
+    async_id_t dhcpv6_ntp_server_asyncid;
 
 
 #if defined (_HUB4_PRODUCT_REQ_)
@@ -485,6 +486,9 @@ static void *WanManagerSyseventHandler(void *args)
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_MESH_WAN_LINK_STATUS, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_MESH_WAN_LINK_STATUS, &mesh_wan_link_status_asyncid);
 #endif /* RDKB_EXTENDER_ENABLED */
+
+    sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, &dhcpv6_ntp_server_asyncid);
 
     for(;;)
     {
@@ -654,6 +658,10 @@ static void *WanManagerSyseventHandler(void *args)
                 }
             }
 #endif
+            else if (strcmp(name, SYSEVENT_DHCPV6_NTP_SERVER) == 0)
+            {
+                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_NTPD_RESTART, NULL, 0);
+            }
             else
             {
                 CcspTraceWarning(("%s %d undefined event %s:%s \n", __FUNCTION__, __LINE__, name, val));
