@@ -127,6 +127,8 @@
 #define SYSEVENT_MULTINET_NAME        "multinet_1-name"
 #define SYSEVENT_MULTINET_INSTANCES   "multinet-instances"
 #define SYSEVENT_TOPOLOGY_MODE        "erouter_topology-mode"
+#define SYSEVENT_DHCPV6_NTP_SERVER    "dhcpv6_ntp_server"
+#define SYSEVENT_NTPD_RESTART         "ntpd-restart"
 
 //firewall restart
 #define SYSEVENT_FIREWALL_RESTART "firewall-restart"
