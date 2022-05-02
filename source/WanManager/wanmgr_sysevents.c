@@ -565,6 +565,7 @@ static void *WanManagerSyseventHandler(void *args)
 #if defined (RDKB_EXTENDER_ENABLED)
     async_id_t mesh_wan_link_status_asyncid;
 #endif /* RDKB_EXTENDER_ENABLED */
+    async_id_t dhcpv6_ntp_server_asyncid;
 
 #if defined (FEATURE_MAPT) || defined(FEATURE_SUPPORT_MAPT_NAT46)
     async_id_t factory_reset_status_asyncid;
@@ -608,6 +609,10 @@ static void *WanManagerSyseventHandler(void *args)
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_SYNC_NTP_STATUS, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_SYNC_NTP_STATUS, &sync_ntp_statusid);
 #endif
+
+    sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, &dhcpv6_ntp_server_asyncid);
+
 #if defined(FEATURE_MAPT) || defined(FEATURE_SUPPORT_MAPT_NAT46)
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_MAPT_FEATURE_ENABLE, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_MAPT_FEATURE_ENABLE, &ipv6_down_asyncid);
@@ -911,6 +916,10 @@ static void *WanManagerSyseventHandler(void *args)
                 }
             }
 #endif
+            else if (strcmp(name, SYSEVENT_DHCPV6_NTP_SERVER) == 0)
+            {
+                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_NTPD_RESTART, NULL, 0);
+            }
             else
             {
                 CcspTraceWarning(("%s %d undefined event %s:%s \n", __FUNCTION__, __LINE__, name, val));
