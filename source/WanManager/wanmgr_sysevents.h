@@ -129,6 +129,8 @@
 #if defined (RDKB_EXTENDER_ENABLED)
 #define SYSCFG_DEVICE_NETWORKING_MODE "Device_Mode"
 #endif /* RDKB_EXTENDER_ENABLED */
+#define SYSEVENT_DHCPV6_NTP_SERVER    "dhcpv6_ntp_server"
+#define SYSEVENT_NTPD_RESTART         "ntpd-restart"
 
 //firewall restart
 #define SYSEVENT_FIREWALL_RESTART "firewall-restart"
