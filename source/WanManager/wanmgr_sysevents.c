@@ -806,7 +806,7 @@ static int CheckV6DefaultRule (char *wanInterface)
     return ret;
 }
 
-static int do_toggle_v6_status (void)
+int do_toggle_v6_status (void)
 {
     int ret = 0;
 
@@ -820,6 +820,11 @@ static int do_toggle_v6_status (void)
     if (CheckV6DefaultRule(wanInterface) != TRUE)
     {
         CcspTraceInfo(("%s %d toggle initiated\n", __FUNCTION__, __LINE__));
+
+        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.accept_ra=2", wanInterface);
+        if (ret != 0) {
+            CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
+        }
 
         ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=1", wanInterface);
         if (ret != 0) {
