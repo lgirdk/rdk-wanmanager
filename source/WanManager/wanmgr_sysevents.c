@@ -56,7 +56,6 @@ static int lan_wan_started = 0;
 static int ipv4_connection_up = 0;
 static int ipv6_connection_up = 0;
 static void check_lan_wan_ready();
-static int do_toggle_v6_status (void);
 static int getVendorClassInfo(char *buffer, int length);
 static int set_default_conf_entry();
 #ifdef FEATURE_MAPT
@@ -740,7 +739,7 @@ static int CheckV6DefaultRule (void)
     return ret;
 }
 
-static int do_toggle_v6_status (void)
+int do_toggle_v6_status (void)
 {
     int ret = 0;
 
@@ -752,11 +751,13 @@ static int do_toggle_v6_status (void)
         char wanInterface[BUFLEN_64] = {'\0'};
         wanmgr_get_wan_interface(wanInterface);
 
-        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=1 ; "
+        ret = v_secure_system("echo 2 > /proc/sys/net/ipv6/conf/%s/accept_ra ; "
+                              "sysctl -w net.ipv6.conf.%s.disable_ipv6=1 ; "
                               "sysctl -w net.ipv6.conf.%s.disable_ipv6=0",
-                              wanInterface, wanInterface);
+                              wanInterface, wanInterface, wanInterface);
 #else
-        ret = v_secure_system("echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ; "
+        ret = v_secure_system("echo 2 > /proc/sys/net/ipv6/conf/erouter0/accept_ra ; "
+                              "echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ; "
                               "echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
 #endif
 

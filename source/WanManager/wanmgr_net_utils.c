@@ -398,6 +398,10 @@ uint32_t WanManager_StartDhcpv6Client(char * iface_name)
         params.ifType = pWanDmlIfaceData->data.Wan.IfaceType;
 
         CcspTraceInfo(("Enter WanManager_StartDhcpv6Client for  %s \n", pWanDmlIfaceData->data.Wan.Name));
+
+        /* Add IPv6 default route from RA if not already available */
+        do_toggle_v6_status();
+
         pid = start_dhcpv6_client(&params);
         WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
     }
