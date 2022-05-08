@@ -256,6 +256,8 @@ INT wanmgr_isWanStarted();
 //ANSC_STATUS maptInfo_reset();
 //#endif // FEATURE_MAPT
 
+void do_toggle_v6_status (void);
+
 /*
  * @brief Utility function used to toggle ipv6 based on sysevent from netmonitor.
  * @return Returns NONE.
