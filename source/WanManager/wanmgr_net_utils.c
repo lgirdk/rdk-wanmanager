@@ -212,6 +212,44 @@ static void* DmlHandlePPPCreateRequestThread( void *arg );
 static void createDummyWanBridge(char * iface_name);
 static void deleteDummyWanBridgeIfExist(char * iface_name);
 static INT IsIPObtained(char *pInterfaceName);
+/* TODO: these two functions are copied from wanmgr_sysevents.c
+   to avoid redundant code, include this in a header */
+static int CheckV6DefaultRule();
+static void do_toggle_v6_status();
+
+static int CheckV6DefaultRule()
+{
+    int ret = FALSE;
+    FILE *fp = NULL;
+    char buf[256] = {0};
+    char output[256] = {0};
+
+    snprintf(buf, sizeof(buf), " ip -6 ro | grep default | grep via | grep erouter0");
+    if(!(fp = popen(buf, "r")))
+    {
+        return -1;
+    }
+    while(fgets(output, sizeof(output), fp)!=NULL)
+    {
+        ret = TRUE; // Default rout entry exist
+    }
+
+    pclose(fp);
+    return ret;
+}
+
+static void do_toggle_v6_status()
+{
+    bool isV6DefaultRoutePresent = FALSE;
+    isV6DefaultRoutePresent = CheckV6DefaultRule();
+    if ( isV6DefaultRoutePresent != TRUE)
+    {
+        system("echo 2 > /proc/sys/net/ipv6/conf/erouter0/accept_ra");
+        system("echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
+        system("echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
+    }
+    return;
+}
 
 static ANSC_STATUS SetDataModelParamValues( char *pComponent, char *pBus, char *pParamName, char *pParamVal, enum dataType_e type, BOOLEAN bCommit )
 {
@@ -399,6 +437,9 @@ uint32_t WanManager_StartDhcpv6Client(char * iface_name)
         params.ifType = pWanDmlIfaceData->data.Wan.IfaceType;
 
         CcspTraceInfo(("Enter WanManager_StartDhcpv6Client for  %s \n", pWanDmlIfaceData->data.Wan.Name));
+        /* Add IPv6 default route from RA if not already available */
+        do_toggle_v6_status();
+
         pid = start_dhcpv6_client(&params);
         WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
     }
