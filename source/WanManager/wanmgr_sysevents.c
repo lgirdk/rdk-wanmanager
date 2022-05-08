@@ -715,6 +715,7 @@ static void do_toggle_v6_status()
     if ( isV6DefaultRoutePresent != TRUE)
     {
         CcspTraceInfo(("%s %d toggle initiated \n", __FUNCTION__, __LINE__));
+        system("echo 2 > /proc/sys/net/ipv6/conf/erouter0/accept_ra");
         snprintf(cmdLine, sizeof(cmdLine), "echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
         system(cmdLine);
         snprintf(cmdLine, sizeof(cmdLine), "echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
