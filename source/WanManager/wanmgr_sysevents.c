@@ -800,7 +800,7 @@ static int CheckV6DefaultRule (char *wanInterface)
     return ret;
 }
 
-static int do_toggle_v6_status (void)
+int do_toggle_v6_status (void)
 {
     int ret = 0;
 
@@ -814,6 +814,11 @@ static int do_toggle_v6_status (void)
     if (CheckV6DefaultRule(wanInterface) != TRUE)
     {
         CcspTraceInfo(("%s %d toggle initiated\n", __FUNCTION__, __LINE__));
+
+        if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra", wanInterface, "2") != 0)
+        {
+            CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
+        }
 
         if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", wanInterface, "1") != 0)
         {
