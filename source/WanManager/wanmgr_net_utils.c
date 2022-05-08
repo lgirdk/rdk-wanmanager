@@ -564,6 +564,10 @@ uint32_t WanManager_StartDhcpv6Client(DML_VIRTUAL_IFACE* pVirtIf, IFACE_TYPE Ifa
     Force_IPv6_toggle(pVirtIf->Name); //Toggle before starting dibbler to send RS
     usleep(500000); //sleep for 500 milli seconds
 #endif
+
+    /* Add IPv6 default route from RA if not already available */
+    do_toggle_v6_status();
+
     pid = start_dhcpv6_client(&params);
     pVirtIf->IP.Dhcp6cPid = pid;
 
