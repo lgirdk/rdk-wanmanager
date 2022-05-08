@@ -548,6 +548,10 @@ uint32_t WanManager_StartDhcpv6Client(DML_VIRTUAL_IFACE* pVirtIf, IFACE_TYPE Ifa
     params.ifType = IfaceType;
 
     CcspTraceInfo(("Enter WanManager_StartDhcpv6Client for  %s \n", pVirtIf->Name));
+
+    /* Add IPv6 default route from RA if not already available */
+    do_toggle_v6_status();
+
     pid = start_dhcpv6_client(&params);
 
     return pid;

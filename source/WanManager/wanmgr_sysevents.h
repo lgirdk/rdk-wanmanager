@@ -276,6 +276,8 @@ ANSC_STATUS wanmgr_firewall_restart(void);
 //ANSC_STATUS maptInfo_reset();
 //#endif // FEATURE_MAPT
 
+int do_toggle_v6_status (void);
+
 /*
  * @brief Utility function used to toggle ipv6 based on sysevent from netmonitor.
  * @return Returns NONE.
