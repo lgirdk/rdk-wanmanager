@@ -176,6 +176,26 @@ ANSC_STATUS wanmgr_sysevents_ipv4Info_set(const ipc_dhcpv4_data_t* dhcp4Info, co
     snprintf(name, sizeof(name), SYSEVENT_IPV4_DNS_SECONDARY, wanIfName);
     sysevent_set(sysevent_fd, sysevent_token,name, dhcp4Info->dnsServer1, 0);
 
+    /* For backwards compatibility set wan_dhcp_dns sysevent too */
+
+    if (dhcp4Info->dnsServer)
+    {
+        char buf[256];
+        char *p;
+
+        if (dhcp4Info->dnsServer1 == NULL)
+        {
+            p = dhcp4Info->dnsServer;
+        }
+        else
+        {
+            snprintf(buf, sizeof(buf), "%s,%s", dhcp4Info->dnsServer, dhcp4Info->dnsServer1);
+            p = buf;
+        }
+
+        sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", p, 0);
+    }
+
     snprintf(name, sizeof(name), SYSEVENT_IPV4_DS_CURRENT_RATE, wanIfName);
     snprintf(value, sizeof(value), "%d", dhcp4Info->downstreamCurrRate);
     sysevent_set(sysevent_fd, sysevent_token,name, value, 0);
