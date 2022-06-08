@@ -1410,6 +1410,34 @@ int wan_updateDNS(DML_WAN_IFACE* pInterface, BOOL addIPv4, BOOL addIPv6)
             sysevent_set(sysevent_fd, sysevent_token, syseventParam, "", 0);
             sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_SECONDARY, "", 0);
         }
+
+        {
+            char buf[256];
+            char *p = NULL;
+
+            if ((IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer) == RETURN_OK) &&
+                (IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer1) == RETURN_OK))
+            {
+                snprintf(buf, sizeof(buf), "%s,%s", pInterface->IP.Ipv4Data.dnsServer, pInterface->IP.Ipv4Data.dnsServer1);
+                p = buf;
+            }
+            else
+            {
+                if (IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer) == RETURN_OK)
+                {
+                    p = pInterface->IP.Ipv4Data.dnsServer;
+                }
+                else if (IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer1) == RETURN_OK)
+                {
+                    p = pInterface->IP.Ipv4Data.dnsServer1;
+                }
+            }
+
+            if (p)
+            {
+                sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", p, 0);
+            }
+        }
     }
 
     if (addIPv6)
