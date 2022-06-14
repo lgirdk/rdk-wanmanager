@@ -214,11 +214,10 @@ LONG WanManager_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, ch
         if (strcmp(ParamName, "Data") == 0)
         {
             /* Data value should be empty for all get */
-            snprintf(pValue, pulSize, "%s", "");
+            snprintf(pValue, *pulSize, "%s", "");
             ret = 0;
         }
-
-        if (strcmp(ParamName, "InterfaceAvailableStatus") == 0)
+        else if (strcmp(ParamName, "InterfaceAvailableStatus") == 0)
         {
             if (( sizeof(pWanDmlData->InterfaceAvailableStatus ) - 1 ) < *pulSize )
             {
@@ -226,7 +225,6 @@ LONG WanManager_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, ch
                 ret = 0;
             }
         }
-
         else if (strcmp(ParamName, "InterfaceActiveStatus") == 0)
         {
             if ( ( sizeof(pWanDmlData->InterfaceActiveStatus) - 1 ) < *pulSize )
@@ -235,7 +233,6 @@ LONG WanManager_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, ch
                 ret = 0;
             }
         }
-
         else if (strcmp(ParamName, "CurrentActiveInterface") == 0)
         {
             if ( ( sizeof(pWanDmlData->CurrentActiveInterface) - 1 ) < *pulSize )
@@ -244,7 +241,6 @@ LONG WanManager_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, ch
                 ret = 0;
             }
         }
-
         else if (strcmp(ParamName, "CurrentStandbyInterface") == 0)
         {
             if ( ( sizeof(pWanDmlData->CurrentStandbyInterface) - 1 ) < *pulSize )
