@@ -246,7 +246,7 @@ LONG WanManager_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, ch
     if (strcmp(ParamName, "Data") == 0)
     {
         /* Data value should be empty for all get */
-        snprintf(pValue, pulSize, "%s", "");
+        snprintf(pValue, *pulSize, "%s", "");
         ret = 0;
     }
 
