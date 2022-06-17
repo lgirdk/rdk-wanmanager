@@ -1333,8 +1333,10 @@ int wan_updateDNS(DML_WAN_IFACE* pInterface, BOOL addIPv4, BOOL addIPv6)
             if (fp != NULL)
             {
                 // GATEWAY Mode
+                char cmd[256];
                 CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.dnsServer, RESOLV_CONF_FILE));
-                fprintf(fp, "nameserver %s\n", pInterface->IP.Ipv4Data.dnsServer);
+                snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.inet",pInterface->IP.Ipv4Data.dnsServer,pInterface->Wan.Name);
+                system(cmd);
             }
             sysevent_set(sysevent_fd, sysevent_token, syseventParam, pInterface->IP.Ipv4Data.dnsServer, 0);
             sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_PRIMARY, pInterface->IP.Ipv4Data.dnsServer, 0);
@@ -1355,8 +1357,10 @@ int wan_updateDNS(DML_WAN_IFACE* pInterface, BOOL addIPv4, BOOL addIPv6)
             if (fp != NULL)
             {
                 // GATEWAY Mode
+                char cmd[256];
                 CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.dnsServer1, RESOLV_CONF_FILE));
-                fprintf(fp, "nameserver %s\n", pInterface->IP.Ipv4Data.dnsServer1);
+                snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.inet",pInterface->IP.Ipv4Data.dnsServer1,pInterface->Wan.Name);
+                system(cmd);
             }
             sysevent_set(sysevent_fd, sysevent_token, syseventParam, pInterface->IP.Ipv4Data.dnsServer1, 0);
             sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_SECONDARY, pInterface->IP.Ipv4Data.dnsServer1, 0);
