@@ -49,6 +49,9 @@ static token_t sysevent_msg_token;
 #define OPTION_16 16
 #define WAN_PHY_ADDRESS "/sys/class/net/erouter0/address"
 #define LAN_BRIDGE_NAME "brlan0"
+#define LANMODE     "Device.X_CISCO_COM_DeviceControl.LanManagementEntry.1.LanMode"
+#define ROUTER_MODE "router"
+#define BRIDGE_MODE "bridge-static"
 
 static int pnm_inited = 0;
 static int lan_wan_started = 0;
@@ -61,6 +64,7 @@ static void lan_start();
 static void set_vendor_spec_conf();
 static int getVendorClassInfo(char *buffer, int length);
 static int set_default_conf_entry();
+static void updateErouterInitMode(void);
 #ifdef FEATURE_MAPT
 int mapt_feature_enable_changed = FALSE;
 #endif
@@ -420,6 +424,7 @@ static void *WanManagerSyseventHandler(void *args)
     async_id_t radvd_restart_asyncid;
     async_id_t ipv6_down_asyncid;
     async_id_t dhcpv6_ntp_server_asyncid;
+    async_id_t erouter_mode_init;
 
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_ULA_ADDRESS, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_ULA_ADDRESS, &lan_ula_address_event_asyncid);
@@ -458,6 +463,9 @@ static void *WanManagerSyseventHandler(void *args)
 
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, &dhcpv6_ntp_server_asyncid);
+
+    sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_EROUTER_INIT, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_EROUTER_INIT, &erouter_mode_init);
 
     for(;;)
     {
@@ -657,6 +665,11 @@ static void *WanManagerSyseventHandler(void *args)
             else if (strcmp(name, SYSEVENT_DHCPV6_NTP_SERVER) == 0)
             {
                 sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_NTPD_RESTART, NULL, 0);
+            }
+
+            else if (strcmp(name, SYSEVENT_EROUTER_INIT) == 0)
+            {
+                updateErouterInitMode();
             }
             else
             {
@@ -874,4 +887,70 @@ ANSC_STATUS WanMgr_SysEvents_Finalise(void)
     WanMgr_SyseventClose();
 
     return retStatus;
+}
+
+static void updateErouterInitMode(void)
+{
+    int olderoutermode = -1;
+    int erouterinitmode = EROUTER_INIT_MODE_CONTROL_HONOR; // default value
+    int neweroutermode = -1;
+    char buf[8];
+
+    if(!syscfg_get( NULL, SYSCFG_LAST_EROUTER, buf, sizeof(buf)))
+        olderoutermode = atoi(buf);
+
+    memset(buf, 0, sizeof(buf));
+    if (!syscfg_get(NULL, SYSCFG_EROUTER_INIT, buf, sizeof(buf)))
+        erouterinitmode = atoi(buf);
+
+    switch (erouterinitmode)
+    {
+        case EROUTER_INIT_MODE_CONTROL_DISABLED:
+           neweroutermode = 0;
+           break;
+        case EROUTER_INIT_MODE_CONTROL_IPV4:
+           neweroutermode = 1;
+           break;
+        case EROUTER_INIT_MODE_CONTROL_IPV6:
+           neweroutermode = 2;
+           break;
+        case EROUTER_INIT_MODE_CONTROL_IPV4_IPV6:
+           neweroutermode = 3;
+           break;
+        case EROUTER_INIT_MODE_CONTROL_HONOR:
+            if(!syscfg_get( NULL, "default_erouter_mode", buf, sizeof(buf)))
+            {
+                neweroutermode = atoi(buf);
+            }
+           break;
+        default:
+           return; //return if nothing matches
+    }
+
+    CcspTraceInfo(("%s %d : neweroutermode = %d, olderoutermode = %d, erouterinitmode = %d \n", __FUNCTION__, __LINE__, neweroutermode, olderoutermode, erouterinitmode));
+
+    if (olderoutermode == neweroutermode)
+        return; //do nothing
+
+    if (syscfg_set_u_commit(NULL, SYSCFG_LAST_EROUTER, neweroutermode) != 0)
+    {
+        CcspTraceError(("%s %d: syscfg_set %s failed\n", __FUNCTION__, __LINE__, SYSCFG_LAST_EROUTER));
+        return;
+    }
+
+
+    if (neweroutermode == 0 ) //This is case entering router to bridge mode
+    {
+        WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, LANMODE, BRIDGE_MODE, ccsp_boolean, TRUE );
+    }
+    else if (olderoutermode == 0 ) //This is case entering  bridge to router mode
+    {
+        WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, LANMODE, ROUTER_MODE, ccsp_boolean, TRUE );
+    }
+
+    if (syscfg_set_commit(NULL, "X_RDKCENTRAL-COM_LastRebootReason", "Erouter Mode Change") != 0)
+    {
+        CcspTraceError(("RDKB_REBOOT : RebootDevice syscfg_set failed erouter mode change\n"));
+    }
+    system("reboot");
 }

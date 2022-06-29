@@ -130,6 +130,9 @@
 #define SYSEVENT_TOPOLOGY_MODE        "erouter_topology-mode"
 #define SYSEVENT_DHCPV6_NTP_SERVER    "dhcpv6_ntp_server"
 #define SYSEVENT_NTPD_RESTART         "ntpd-restart"
+#define SYSEVENT_EROUTER_INIT         "erouter_init_mode_change"
+#define SYSCFG_EROUTER_INIT           "ErouterModeControl"
+#define SYSCFG_LAST_EROUTER           "last_erouter_mode"
 
 //firewall restart
 #define SYSEVENT_FIREWALL_RESTART "firewall-restart"
@@ -183,6 +186,16 @@
 #define PSM_DHCPV4_OPT_43         "dmsb.dhcpv4.option.43"
 
 #define  WANMNGR_INTERFACE_DEFAULT_MTU_SIZE          (1500)
+
+typedef enum
+{
+    EROUTER_INIT_MODE_CONTROL_UNKNOWN = 0,
+    EROUTER_INIT_MODE_CONTROL_DISABLED = 1,
+    EROUTER_INIT_MODE_CONTROL_IPV4 = 2,
+    EROUTER_INIT_MODE_CONTROL_IPV6 = 3,
+    EROUTER_INIT_MODE_CONTROL_IPV4_IPV6 = 4,
+    EROUTER_INIT_MODE_CONTROL_HONOR = 5,
+} eRouterInitMode_t;
 
 /**********************************************************************
                 FUNCTION PROTOTYPES
