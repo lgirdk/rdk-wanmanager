@@ -1025,6 +1025,27 @@ static eWanState_t wan_transition_wan_up(WanMgr_IfaceSM_Controller_t* pWanIfaceC
     return WAN_STATE_VALIDATING_WAN;
 }
 
+static void startDhcpClient (DML_WAN_IFACE *pInterface)
+{
+    char buf[8];
+    int erouter_mode = 0;
+
+    syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
+    erouter_mode = atoi(buf);
+
+    if (erouter_mode == 1 || erouter_mode == 3)
+    {
+        /* Start DHCPv4 client */
+        pInterface->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(pInterface->Wan.Name);
+    }
+
+    if (erouter_mode == 2 || erouter_mode == 3)
+    {
+        /* Start DHCPv6 Client */
+        pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
+    }
+}
+
 static eWanState_t wan_transition_wan_validated(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
 {
     if((pWanIfaceCtrl == NULL) || (pWanIfaceCtrl->pIfaceData == NULL))
@@ -1071,14 +1092,7 @@ static eWanState_t wan_transition_wan_validated(WanMgr_IfaceSM_Controller_t* pWa
         }
 #endif // FEATURE_IPOE_HEALTH_CHECK
 
-        /* Start DHCPv4 client */
-        pInterface->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(pInterface->Wan.Name);
-        CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv4_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp4cPid));
-
-        /* Start DHCPv6 Client */
-        pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
-        CcspTraceInfo(("%s %d - Started dhcpv6 client on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
-
+        startDhcpClient(pInterface);
     }
 
     CcspTraceInfo(("%s %d - Interface '%s' - TRANSITION OBTAINING IP ADDRESSES\n", __FUNCTION__, __LINE__, pInterface->Name));
@@ -1158,15 +1172,7 @@ static eWanState_t wan_transition_wan_refreshed(WanMgr_IfaceSM_Controller_t* pWa
     }
     else if ( pInterface->Wan.EnableDHCP == TRUE )
     {
-        /* Start dhcp clients */
-        /* DHCPv4 client */
-        pInterface->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(pInterface->Wan.Name);
-        CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv4_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp4cPid));
-
-        /* DHCPv6 Client */
-        pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
-        CcspTraceInfo(("%s %d - Started dhcpv6 client on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
-
+        startDhcpClient(pInterface);
     }
 
     CcspTraceInfo(("%s %d - Interface '%s' - TRANSITION OBTAINING IP ADDRESSES\n", __FUNCTION__, __LINE__, pInterface->Name));
