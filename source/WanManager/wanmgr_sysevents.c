@@ -947,6 +947,19 @@ static void check_lan_wan_ready()
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_START_MISC, SYSEVENT_VALUE_READY, 0);
         lan_wan_started = 1;
+
+#ifdef _LG_MV3_
+        char sk_enable[8];
+
+        if ((syscfg_get(NULL, "skenable", sk_enable, sizeof(sk_enable)) == 0) && (strcmp(sk_enable, "1") == 0))
+        {
+            if (access("/var/run/opt/samknows/router_agent/unitid", F_OK) != 0)
+            {
+                CcspTraceInfo(("Starting Samknows\n"));
+                system("/etc/init.d/samknows_ispmon restart &");
+            }
+        }
+#endif
     }
     return;
 }
