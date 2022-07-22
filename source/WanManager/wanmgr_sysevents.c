@@ -777,8 +777,19 @@ static void check_lan_wan_ready()
     CcspTraceInfo(("****************************************************\n"));
     if (!strcmp(lan_st, SYSEVENT_VALUE_STARTED) && !strcmp(wan_st, SYSEVENT_VALUE_STARTED))
     {
+        char sk_enable[8];
+
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_START_MISC, SYSEVENT_VALUE_READY, 0);
         lan_wan_started = 1;
+
+        if ((syscfg_get(NULL, "skenable", sk_enable, sizeof(sk_enable)) == 0) && (strcmp(sk_enable, "1") == 0))
+        {
+            if (access("/var/run/opt/samknows/router_agent/unitid", F_OK) != 0)
+            {
+                CcspTraceInfo(("Starting Samknows\n"));
+                system("/etc/init.d/samknows_ispmon restart &");
+            }
+        }
     }
     return;
 }
