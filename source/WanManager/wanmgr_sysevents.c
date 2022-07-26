@@ -55,8 +55,7 @@ static int lan_wan_started = 0;
 static int ipv4_connection_up = 0;
 static int ipv6_connection_up = 0;
 static void check_lan_wan_ready();
-static int CheckV6DefaultRule();
-static void do_toggle_v6_status();
+static void do_toggle_v6_status (void);
 static void lan_start();
 static void set_vendor_spec_conf();
 static int getVendorClassInfo(char *buffer, int length);
@@ -684,41 +683,42 @@ static void check_lan_wan_ready()
     }
     return;
 }
-static int CheckV6DefaultRule()
-{
-    int ret = FALSE;
-    FILE *fp = NULL;
-    char buf[256] = {0};
-    char output[256] = {0};
 
-    snprintf(buf, sizeof(buf), " ip -6 ro | grep default | grep via | grep erouter0");
-    if(!(fp = popen(buf, "r")))
+static int CheckV6DefaultRule (void)
+{
+    char output[256];
+    int ret = FALSE;
+    FILE *fp;
+
+    if ((fp = popen("ip -6 ro", "r")) == NULL)
     {
-        return -1;
+        return FALSE;
     }
-    while(fgets(output, sizeof(output), fp)!=NULL)
+
+    while (fgets(output, sizeof(output), fp) != NULL)
     {
-        ret = TRUE; // Default rout entry exist
+        if ((strncmp(output, "default via ", strlen("default via ")) == 0) &&
+            (strstr(output, "erouter0") != NULL))
+        {
+            ret = TRUE; // Default route entry exists
+            break;
+        }
     }
 
     pclose(fp);
+
     return ret;
 }
 
-static void do_toggle_v6_status()
+static void do_toggle_v6_status (void)
 {
-    char cmdLine[BUFLEN_128] = {0};
-    bool isV6DefaultRoutePresent = FALSE;
-    isV6DefaultRoutePresent = CheckV6DefaultRule();
-    if ( isV6DefaultRoutePresent != TRUE)
+    if (CheckV6DefaultRule() != TRUE)
     {
-        CcspTraceInfo(("%s %d toggle initiated \n", __FUNCTION__, __LINE__));
-        snprintf(cmdLine, sizeof(cmdLine), "echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
-        system(cmdLine);
-        snprintf(cmdLine, sizeof(cmdLine), "echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
-        system(cmdLine);
+        CcspTraceInfo(("%s %d toggle initiated\n", __FUNCTION__, __LINE__));
+
+        system("echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ; "
+               "echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
     }
-    return;
 }
 
 void wanmgr_Ipv6Toggle()
