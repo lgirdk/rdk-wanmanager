@@ -57,8 +57,7 @@ static int lan_wan_started = 0;
 static int ipv4_connection_up = 0;
 static int ipv6_connection_up = 0;
 static void check_lan_wan_ready();
-static int CheckV6DefaultRule();
-static void do_toggle_v6_status();
+static void do_toggle_v6_status (void);
 static void lan_start();
 static void set_vendor_spec_conf();
 static int getVendorClassInfo(char *buffer, int length);
@@ -774,26 +773,34 @@ static void check_lan_wan_ready()
     }
     return;
 }
-static int CheckV6DefaultRule()
+
+static int CheckV6DefaultRule (void)
 {
-    int ret = FALSE,pclose_ret = 0;
-    FILE *fp = NULL;
-    char output[256] = {0};
+    char output[256];
+    int ret = FALSE;
+    int pclose_ret = 0;
+    FILE *fp;
 
 #ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
     char wanInterface[BUFLEN_64] = {'\0'};
-
     wanmgr_get_wan_interface(wanInterface);
-    if(!(fp = v_secure_popen("r", " ip -6 ro | grep default | grep via | grep %s", wanInterface)))
 #else
-    if(!(fp = v_secure_popen("r"," ip -6 ro | grep default | grep via | grep erouter0")))
+    char *wanInterface = "erouter0";
 #endif
+
+    if ((fp = v_secure_popen("r", "ip -6 ro")) == NULL)
     {
-        return -1;
+        return FALSE;
     }
-    while(fgets(output, sizeof(output), fp)!=NULL)
+
+    while (fgets(output, sizeof(output), fp) != NULL)
     {
-        ret = TRUE; // Default rout entry exist
+        if ((strncmp(output, "default via ", strlen("default via ")) == 0) &&
+            (strstr(output, wanInterface) != NULL))
+        {
+            ret = TRUE; // Default route entry exists
+            break;
+        }
     }
 
     pclose_ret = v_secure_pclose(fp);
@@ -801,40 +808,34 @@ static int CheckV6DefaultRule()
     {
         CcspTraceInfo(("Failed in closing the pipe ret %d \n",pclose_ret));
     }
+
     return ret;
 }
 
-static void do_toggle_v6_status()
+static void do_toggle_v6_status (void)
 {
-    bool isV6DefaultRoutePresent = FALSE;
-    int ret = 0;
-#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
-    char wanInterface[BUFLEN_64] = {'\0'};
-    wanmgr_get_wan_interface(wanInterface);
-#endif
-    isV6DefaultRoutePresent = CheckV6DefaultRule();
-    if ( isV6DefaultRoutePresent != TRUE)
+    if (CheckV6DefaultRule() != TRUE)
     {
-        CcspTraceInfo(("%s %d toggle initiated \n", __FUNCTION__, __LINE__));
-#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
-        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=1", wanInterface);
-#else
-        ret = v_secure_system("echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
-#endif
-	if(ret != 0) {
-            CcspTraceWarning(("%s: Failure in executing command via v_secure_system. ret:[%d] \n",__FUNCTION__,ret));
-        } 
-#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
-        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=0", wanInterface);
-#else
-        ret = v_secure_system("echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
-#endif
-        if(ret != 0) {
-            CcspTraceWarning(("%s: Failure in executing command via v_secure_system. ret:[%d] \n", __FUNCTION__,ret));
-        }
+        int ret = 0;
 
+        CcspTraceInfo(("%s %d toggle initiated\n", __FUNCTION__, __LINE__));
+
+#ifdef FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE
+        char wanInterface[BUFLEN_64] = {'\0'};
+        wanmgr_get_wan_interface(wanInterface);
+
+        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=1 ; "
+                              "sysctl -w net.ipv6.conf.%s.disable_ipv6=0",
+                              wanInterface, wanInterface);
+#else
+        ret = v_secure_system("echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ; "
+                              "echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
+#endif
+
+        if (ret != 0) {
+            CcspTraceWarning(("%s: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, ret));
+        }
     }
-    return;
 }
 
 void wanmgr_Ipv6Toggle()
