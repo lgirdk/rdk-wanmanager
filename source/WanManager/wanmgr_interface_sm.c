@@ -447,6 +447,142 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 
     bool valid_dns = FALSE;
     int ret = RETURN_OK;
+
+#if defined(_LG_OFW_)
+
+    char cmd[256];
+    char syseventParam[128];
+
+    if (deviceMode == MODEM_MODE)
+    {
+        // DNS nameserves should not be configured in MODEM mode
+        remove(RESOLV_CONF_FILE);
+    }
+
+    if (addIPv4)
+    {
+        snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_WANIFNAME_DNS_PRIMARY, pInterface->Wan.Name);
+
+        // v4 DNS1
+        if(IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer) == RETURN_OK)
+        {
+            // v4 DNS1 is a valid
+             // GATEWAY Mode         
+            CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.dnsServer, RESOLV_CONF_FILE));
+            snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.inet",pInterface->IP.Ipv4Data.dnsServer,pInterface->Wan.Name);
+            system(cmd);
+        
+            sysevent_set(sysevent_fd, sysevent_token, syseventParam, pInterface->IP.Ipv4Data.dnsServer, 0);
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_PRIMARY, pInterface->IP.Ipv4Data.dnsServer, 0);
+            valid_dns = TRUE;
+        }
+        else
+        {
+            // v4 DNS1 is a invalid
+            sysevent_set(sysevent_fd, sysevent_token, syseventParam, "", 0);
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_PRIMARY, "", 0);
+        }
+
+        // v4 DNS2
+        snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_WANIFNAME_DNS_SECONDARY, pInterface->Wan.Name);
+        if(IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer1) == RETURN_OK)
+        {
+            // v4 DNS2 is a valid
+            
+            // GATEWAY Mode
+            CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.dnsServer1, RESOLV_CONF_FILE));
+            snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.inet",pInterface->IP.Ipv4Data.dnsServer1,pInterface->Wan.Name);
+            system(cmd);
+            
+            sysevent_set(sysevent_fd, sysevent_token, syseventParam, pInterface->IP.Ipv4Data.dnsServer1, 0);
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_SECONDARY, pInterface->IP.Ipv4Data.dnsServer1, 0);
+            if (valid_dns == TRUE)
+            {
+                snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_DNS_NUMBER, pInterface->Wan.Name);
+                sysevent_set(sysevent_fd, sysevent_token, syseventParam, SYSEVENT_IPV4_NO_OF_DNS_SUPPORTED, 0);
+            }
+            valid_dns = TRUE;
+        }
+        else
+        {
+            // v4 DNS2 is a invalid
+            sysevent_set(sysevent_fd, sysevent_token, syseventParam, "", 0);
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_SECONDARY, "", 0);
+        }
+
+        {
+            char buf[256];
+            char *p = NULL;
+
+            if ((IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer) == RETURN_OK) &&
+                (IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer1) == RETURN_OK))
+            {
+                snprintf(buf, sizeof(buf), "%s %s", pInterface->IP.Ipv4Data.dnsServer, pInterface->IP.Ipv4Data.dnsServer1);
+                p = buf;
+            }
+            else
+            {
+                if (IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer) == RETURN_OK)
+                {
+                    p = pInterface->IP.Ipv4Data.dnsServer;
+                }
+                else if (IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer1) == RETURN_OK)
+                {
+                    p = pInterface->IP.Ipv4Data.dnsServer1;
+                }
+            }
+
+            if (p)
+            {
+                sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", p, 0);
+            }
+        }
+    }
+
+    if (addIPv6)
+    {
+        // v6 DNS1
+        if(IsValidDnsServer(AF_INET6, pInterface->IP.Ipv6Data.nameserver) == RETURN_OK)
+        {
+            // v6 DNS1 is valid
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_DNS_PRIMARY, pInterface->IP.Ipv6Data.nameserver, 0);
+            valid_dns = TRUE;
+        }
+        else
+        {
+            // v6 DNS1 is invalid
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_DNS_PRIMARY, "", 0);
+        }
+
+        // v6 DNS2
+        if(IsValidDnsServer(AF_INET6, pInterface->IP.Ipv6Data.nameserver1) == RETURN_OK)
+        {
+            // v6 DNS2 is valid
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_DNS_SECONDARY, pInterface->IP.Ipv6Data.nameserver1, 0);
+            valid_dns = TRUE;
+        }
+        else
+        {
+            // v6 DNS2 is invalid
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_DNS_SECONDARY, "", 0);
+        }
+    }
+
+    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCP_SERVER_RESTART, NULL, 0);
+
+    if (valid_dns == TRUE)
+    {
+        CcspTraceInfo(("%s %d - Active domainname servers set!\n", __FUNCTION__,__LINE__));
+    }
+    else
+    {
+        CcspTraceInfo(("%s %d - No valid nameserver is available, adding loopback address for nameserver\n", __FUNCTION__,__LINE__));
+        snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.inet",LOOPBACK,pInterface->Wan.Name);
+        system(cmd);
+    }
+
+#else
+
     FILE *fp = NULL;
     char syseventParam[BUFLEN_128]={0};
 
@@ -618,6 +754,8 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     {
         fclose(fp);
     }
+
+#endif
 
     return ret;
 }
