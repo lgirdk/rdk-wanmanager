@@ -2650,8 +2650,8 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_WAN_IFACE* pIfaceData)
                 if (strcmp(pDhcp6cInfoCur->sitePrefix, pNewIpcMsg->sitePrefix) != 0)
                 {
                     CcspTraceInfo(("%s %d new prefix = %s, current prefix = %s \n", __FUNCTION__, __LINE__, pNewIpcMsg->sitePrefix, pDhcp6cInfoCur->sitePrefix));
-                    strncat(prefix, "/64",sizeof(prefix)-1);
-                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, prefix, 0);
+                    /* ipv6_prefix should be set with original prefix length received on WAN interface. */
+                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, pNewIpcMsg->sitePrefix, 0);
                 }
             }
 #endif
@@ -2877,7 +2877,8 @@ int setUpLanPrefixIPv6(DML_WAN_IFACE* pIfaceData)
                 sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIXVLTIME, previousPrefix_vldtime, 0);
                 sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIXPLTIME, previousPrefix_prdtime, 0);
             }
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, lanPrefix, 0);
+            /* ipv6_prefix event has already been set with the correct prefix length in wanmgr_handle_dchpv6_event_data().
+             * Prefix length in tr_erouter0_dhcpv6_client_v6pref should be the actual length of the prefix on erouter0 interface. */
             sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_TR_EROUTER_DHCPV6_CLIENT_PREFIX, pIfaceData->IP.Ipv6Data.sitePrefix, 0);
         }
     }
