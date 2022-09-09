@@ -2530,8 +2530,8 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_WAN_IFACE* pIfaceData)
                 if (strcmp(pDhcp6cInfoCur->sitePrefix, pNewIpcMsg->sitePrefix) != 0)
                 {
                     CcspTraceInfo(("%s %d new prefix = %s, current prefix = %s \n", __FUNCTION__, __LINE__, pNewIpcMsg->sitePrefix, pDhcp6cInfoCur->sitePrefix));
-                    strncat(prefix, "/64",sizeof(prefix)-1);
-                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, prefix, 0);
+                    /* ipv6_prefix should be set with original prefix length received on WAN interface. */
+                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, pNewIpcMsg->sitePrefix, 0);
                 }
             }
         }
