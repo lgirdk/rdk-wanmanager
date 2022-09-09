@@ -531,8 +531,9 @@ static int setUpLanPrefixIPv6(DML_WAN_IFACE* pIfaceData)
                 sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIXVLTIME, previousPrefix_vldtime, 0);
                 sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIXPLTIME, previousPrefix_prdtime, 0);
             }
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, lanPrefix, 0);
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_TR_EROUTER_DHCPV6_CLIENT_PREFIX, lanPrefix, 0);
+            /* ipv6_prefix event has already been set with the correct prefix length in wanmgr_handle_dchpv6_event_data().
+             * Prefix length in tr_erouter0_dhcpv6_client_v6pref should be the actual length of the prefix on erouter0 interface. */
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_TR_EROUTER_DHCPV6_CLIENT_PREFIX, pIfaceData->IP.Ipv6Data.sitePrefix, 0);
         }
     }
 
