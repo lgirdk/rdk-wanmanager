@@ -826,6 +826,11 @@ int do_toggle_v6_status (void)
             CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
         }
 
+        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.autoconf=0", wanInterface);
+        if (ret != 0) {
+            CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
+        }
+
         ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=1", wanInterface);
         if (ret != 0) {
             CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
