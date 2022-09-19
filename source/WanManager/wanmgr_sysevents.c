@@ -818,7 +818,8 @@ void do_toggle_v6_status (void)
 
         v_secure_system("echo 2 > /proc/sys/net/ipv6/conf/erouter0/accept_ra ; "
                         "echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ; "
-                        "echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6");
+                        "echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ; "
+                        "echo 0 > /proc/sys/net/ipv6/conf/erouter0/autoconf");
     }
 }
 
