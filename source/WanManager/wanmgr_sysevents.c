@@ -861,6 +861,11 @@ int do_toggle_v6_status (void)
             CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
         }
 
+        if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", wanInterface, "0") != 0)
+        {
+            CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
+        }
+
         if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", wanInterface, "1") != 0)
         {
             CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
