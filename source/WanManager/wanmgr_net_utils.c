@@ -1394,6 +1394,11 @@ int wan_updateDNS(DML_WAN_IFACE* pInterface, BOOL addIPv4, BOOL addIPv6)
             {
                 sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", p, 0);
             }
+
+            // Update domain name in resolv.conf
+            CcspTraceInfo(("%s %d: adding domainname  %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.domainName, RESOLV_CONF_FILE));
+            snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | resolvconf -a %s.inet", pInterface->IP.Ipv4Data.domainName, pInterface->Wan.Name);
+            system(cmd);
         }
     }
 
