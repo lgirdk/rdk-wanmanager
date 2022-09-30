@@ -168,6 +168,8 @@ ANSC_STATUS wanmgr_sysevents_ipv4Info_set(const ipc_dhcpv4_data_t* dhcp4Info, co
         sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_DHCPV4_NTP_SERVER, dhcp4Info->ntpServer, 0);
     }
 
+    sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_FIELD_IPV4_DOMAIN, dhcp4Info->domainName, 0);
+
     snprintf(name,sizeof(name),SYSEVENT_IPV4_DHCP_SERVER,dhcp4Info->dhcpcInterface);
     sysevent_set(sysevent_fd, sysevent_token,name, dhcp4Info->dhcpServerId,0);
 
