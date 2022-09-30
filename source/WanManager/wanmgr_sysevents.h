@@ -53,6 +53,7 @@
 #define SYSEVENT_IPV4_WANIFNAME_DNS_SECONDARY "ipv4_%s_dns_1"
 #define SYSEVENT_FIELD_IPV4_DNS_PRIMARY       "ipv4_dns_0"
 #define SYSEVENT_FIELD_IPV4_DNS_SECONDARY     "ipv4_dns_1"
+#define SYSEVENT_FIELD_IPV4_DOMAIN            "dhcp_domain"
 #define SYSEVENT_IPV4_GW_NUMBER "ipv4_%s_gw_number"
 #define SYSEVENT_IPV4_GW_ADDRESS "ipv4_%s_gw_0"
 #define SYSEVENT_VENDOR_CLASS "vendor_class"
