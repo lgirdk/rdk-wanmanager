@@ -691,6 +691,11 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
             {
                 sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", p, 0);
             }
+
+            // Update domain name in resolv.conf
+            CcspTraceInfo(("%s %d: adding domainname  %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.domainName, RESOLV_CONF_FILE));
+            snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | resolvconf -a %s.inet", pInterface->IP.Ipv4Data.domainName, pInterface->Wan.Name);
+            system(cmd);
         }
     }
 
