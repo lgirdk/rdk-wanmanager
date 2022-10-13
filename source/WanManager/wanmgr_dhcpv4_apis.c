@@ -79,8 +79,10 @@ static ANSC_STATUS wanmgr_dchpv4_get_ipc_msg_info(WANMGR_IPV4_DATA* pDhcpv4Data,
     memcpy(pDhcpv4Data->ip, pIpcIpv4Data->ip, BUFLEN_32);
     memcpy(pDhcpv4Data->mask , pIpcIpv4Data->mask, BUFLEN_32);
     memcpy(pDhcpv4Data->gateway, pIpcIpv4Data->gateway, BUFLEN_32);
-    memcpy(pDhcpv4Data->dnsServer, pIpcIpv4Data->dnsServer, BUFLEN_64);
+    memcpy(pDhcpv4Data->dnsServer, pIpcIpv4Data->dnsServer, BUFLEN_256);
+#if !defined(_LG_OFW_)
     memcpy(pDhcpv4Data->dnsServer1, pIpcIpv4Data->dnsServer1, BUFLEN_64);
+#endif
     memcpy(pDhcpv4Data->domainName, pIpcIpv4Data->domainName, BUFLEN_64);
 #if defined(FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE)
     memcpy(pDhcpv4Data->timeZone, pIpcIpv4Data->timeZone, BUFLEN_64);
@@ -139,7 +141,9 @@ ANSC_STATUS wanmgr_handle_dhcpv4_event_data(DML_VIRTUAL_IFACE* pVirtIf)
       strcmp(pVirtIf->IP.Ipv4Data.mask, pDhcpcInfo->mask) ||
       strcmp(pVirtIf->IP.Ipv4Data.gateway, pDhcpcInfo->gateway) ||
       strcmp(pVirtIf->IP.Ipv4Data.dnsServer, pDhcpcInfo->dnsServer) ||
+#if !defined(_LG_OFW_)
       strcmp(pVirtIf->IP.Ipv4Data.dnsServer1, pDhcpcInfo->dnsServer1) ||
+#endif
       strcmp(pVirtIf->IP.Ipv4Data.domainName, pDhcpcInfo->domainName))
     {
         CcspTraceInfo(("%s %d - IPV4 configuration changed \n", __FUNCTION__, __LINE__));
@@ -510,6 +514,20 @@ ANSC_STATUS IPCPStateChangeHandler (DML_VIRTUAL_IFACE* pVirtIf)
     }
     if (acTmpReturnValue[0] != '\0')
     {
+#if defined(_LG_OFW_)
+        int i, len;
+
+        /* In order to align with udhcpc message format, replace ',' with ' '.
+         * IPC message from udhcpc is sent as space separated list of dns servers.
+         */
+        snprintf(pVirtIf->IP.pIpcIpv4Data->dnsServer, sizeof(pVirtIf->IP.pIpcIpv4Data->dnsServer), "%s", acTmpReturnValue);
+        len = strlen(pVirtIf->IP.pIpcIpv4Data->dnsServer);
+        for (i = 0; i < len; i++)
+        {
+            if (pVirtIf->IP.pIpcIpv4Data->dnsServer[i] == ',')
+                pVirtIf->IP.pIpcIpv4Data->dnsServer[i] = ' ';
+        }
+#else
         //Return first DNS Server
         token = strtok(acTmpReturnValue, ",");
         if (token != NULL)
@@ -522,6 +540,7 @@ ANSC_STATUS IPCPStateChangeHandler (DML_VIRTUAL_IFACE* pVirtIf)
                 strncpy (pVirtIf->IP.pIpcIpv4Data->dnsServer1, token,sizeof(pVirtIf->IP.pIpcIpv4Data->dnsServer1)-1);
             }
         }
+#endif
     }
 
     strncpy(pVirtIf->IP.pIpcIpv4Data->dhcpcInterface, pVirtIf->Name, sizeof(pVirtIf->IP.pIpcIpv4Data->dhcpcInterface) - 1);
