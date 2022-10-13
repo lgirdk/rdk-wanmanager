@@ -279,7 +279,7 @@ typedef struct _WANMGR_IPV4_DATA
     char ip[BUFLEN_32];                /** New IP address, if addressAssigned==TRUE */
     char mask[BUFLEN_32];              /** New netmask, if addressAssigned==TRUE */
     char gateway[BUFLEN_32];           /** New gateway, if addressAssigned==TRUE */
-    char dnsServer[BUFLEN_64];         /** New dns Server, if addressAssigned==TRUE */
+    char dnsServer[BUFLEN_256];        /** New dns Server, if addressAssigned==TRUE */
     char dnsServer1[BUFLEN_64];        /** New dns Server, if addressAssigned==TRUE */
     char domainName[BUFLEN_64];        /** New domain Name, if addressAssigned==TRUE */
     uint32_t mtuSize;                  /** New MTU size, if mtuAssigned==TRUE */
