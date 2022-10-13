@@ -454,90 +454,54 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
         remove(RESOLV_CONF_FILE);
     }
 
+    snprintf(cmd,sizeof(cmd),"resolvconf -d %s.udhcpc",pInterface->Wan.Name);
+    system(cmd);
+
     if (addIPv4)
     {
-        snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_WANIFNAME_DNS_PRIMARY, pInterface->Wan.Name);
+        char buf[256] = {'\0'};
+        char dns[256] = {'\0'};
+        char *tok = NULL;
+        int idx = 0;
 
-        // v4 DNS1
-        if(IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer) == RETURN_OK)
-        {
-            // v4 DNS1 is a valid
-             // GATEWAY Mode         
-            CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.dnsServer, RESOLV_CONF_FILE));
-            snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.inet",pInterface->IP.Ipv4Data.dnsServer,pInterface->Wan.Name);
-            system(cmd);
-        
-            sysevent_set(sysevent_fd, sysevent_token, syseventParam, pInterface->IP.Ipv4Data.dnsServer, 0);
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_PRIMARY, pInterface->IP.Ipv4Data.dnsServer, 0);
-            valid_dns = TRUE;
-        }
-        else
-        {
-            // v4 DNS1 is a invalid
-            sysevent_set(sysevent_fd, sysevent_token, syseventParam, "", 0);
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_PRIMARY, "", 0);
-        }
+        snprintf(dns, sizeof(dns), "%s", pInterface->IP.Ipv4Data.dnsServer);
+        tok = strtok(dns, " ");
 
-        // v4 DNS2
-        snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_WANIFNAME_DNS_SECONDARY, pInterface->Wan.Name);
-        if(IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer1) == RETURN_OK)
+        while (tok)
         {
-            // v4 DNS2 is a valid
-            
-            // GATEWAY Mode
-            CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.dnsServer1, RESOLV_CONF_FILE));
-            snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.inet",pInterface->IP.Ipv4Data.dnsServer1,pInterface->Wan.Name);
-            system(cmd);
-            
-            sysevent_set(sysevent_fd, sysevent_token, syseventParam, pInterface->IP.Ipv4Data.dnsServer1, 0);
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_SECONDARY, pInterface->IP.Ipv4Data.dnsServer1, 0);
-            if (valid_dns == TRUE)
+            if (IsValidDnsServer(AF_INET, tok) == RETURN_OK)
             {
-                snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_DNS_NUMBER, pInterface->Wan.Name);
-                sysevent_set(sysevent_fd, sysevent_token, syseventParam, SYSEVENT_IPV4_NO_OF_DNS_SUPPORTED, 0);
-            }
-            valid_dns = TRUE;
-        }
-        else
-        {
-            // v4 DNS2 is a invalid
-            sysevent_set(sysevent_fd, sysevent_token, syseventParam, "", 0);
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV4_DNS_SECONDARY, "", 0);
-        }
+                snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_WANIFNAME_DNS_INDEX, pInterface->Wan.Name, idx);
+                sysevent_set(sysevent_fd, sysevent_token, syseventParam, tok, 0);
+                snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_FIELD_IPV4_DNS_INDEX, idx++);
+                sysevent_set(sysevent_fd, sysevent_token, syseventParam, tok, 0);
 
-        {
-            char buf[256];
-            char *p = NULL;
+                snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%s ", tok);
 
-            if ((IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer) == RETURN_OK) &&
-                (IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer1) == RETURN_OK))
-            {
-                snprintf(buf, sizeof(buf), "%s %s", pInterface->IP.Ipv4Data.dnsServer, pInterface->IP.Ipv4Data.dnsServer1);
-                p = buf;
-            }
-            else
-            {
-                if (IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer) == RETURN_OK)
-                {
-                    p = pInterface->IP.Ipv4Data.dnsServer;
-                }
-                else if (IsValidDnsServer(AF_INET, pInterface->IP.Ipv4Data.dnsServer1) == RETURN_OK)
-                {
-                    p = pInterface->IP.Ipv4Data.dnsServer1;
-                }
+                CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, tok, RESOLV_CONF_FILE));
+                snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.udhcpc", tok, pInterface->Wan.Name);
+                system(cmd);
+
+                valid_dns = TRUE;
             }
 
-            if (p)
-            {
-                sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", p, 0);
-            }
+            tok = strtok(NULL, " ");
+        }
+
+        if (valid_dns) {
+            buf[strlen(buf)-1] = '\0';
+            sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", buf, 0);
+
+            snprintf(buf, sizeof(buf), "%d", idx);
+            snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_DNS_NUMBER, pInterface->Wan.Name);
+            sysevent_set(sysevent_fd, sysevent_token, syseventParam, buf, 0);
         }
 
         if (strlen(pInterface->IP.Ipv4Data.domainName) > 0)
         {
             // Update domain name in resolv.conf
             CcspTraceInfo(("%s %d: adding domainname  %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.domainName, RESOLV_CONF_FILE));
-            snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | resolvconf -a %s.inet", pInterface->IP.Ipv4Data.domainName, pInterface->Wan.Name);
+            snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | resolvconf -a %s.udhcpc", pInterface->IP.Ipv4Data.domainName, pInterface->Wan.Name);
             system(cmd);
         }
     }
@@ -580,7 +544,7 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     else
     {
         CcspTraceInfo(("%s %d - No valid nameserver is available, adding loopback address for nameserver\n", __FUNCTION__,__LINE__));
-        snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.inet",LOOPBACK,pInterface->Wan.Name);
+        snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.udhcpc",LOOPBACK,pInterface->Wan.Name);
         system(cmd);
     }
 
