@@ -78,8 +78,10 @@ static ANSC_STATUS wanmgr_dchpv4_get_ipc_msg_info(WANMGR_IPV4_DATA* pDhcpv4Data,
     memcpy(pDhcpv4Data->ip, pIpcIpv4Data->ip, BUFLEN_32);
     memcpy(pDhcpv4Data->mask , pIpcIpv4Data->mask, BUFLEN_32);
     memcpy(pDhcpv4Data->gateway, pIpcIpv4Data->gateway, BUFLEN_32);
-    memcpy(pDhcpv4Data->dnsServer, pIpcIpv4Data->dnsServer, BUFLEN_64);
+    memcpy(pDhcpv4Data->dnsServer, pIpcIpv4Data->dnsServer, BUFLEN_256);
+#if !defined(_LG_OFW_)
     memcpy(pDhcpv4Data->dnsServer1, pIpcIpv4Data->dnsServer1, BUFLEN_64);
+#endif
     memcpy(pDhcpv4Data->domainName, pIpcIpv4Data->domainName, BUFLEN_64);
 
     if( ( TRUE == pIpcIpv4Data->mtuAssigned ) && ( 0 != pIpcIpv4Data->mtuSize ) )
@@ -116,7 +118,9 @@ ANSC_STATUS wanmgr_handle_dhcpv4_event_data(DML_WAN_IFACE* pIfaceData)
       strcmp(pIfaceData->IP.Ipv4Data.mask, pDhcpcInfo->mask) ||
       strcmp(pIfaceData->IP.Ipv4Data.gateway, pDhcpcInfo->gateway) ||
       strcmp(pIfaceData->IP.Ipv4Data.dnsServer, pDhcpcInfo->dnsServer) ||
+#if !defined(_LG_OFW_)
       strcmp(pIfaceData->IP.Ipv4Data.dnsServer1, pDhcpcInfo->dnsServer1) ||
+#endif
       strcmp(pIfaceData->IP.Ipv4Data.domainName, pDhcpcInfo->domainName))
     {
         CcspTraceInfo(("%s %d - IPV4 configuration changed \n", __FUNCTION__, __LINE__));
@@ -505,6 +509,20 @@ void* IPCPStateChangeHandler (void *arg)
                          }
                          if (acTmpReturnValue[0] != '\0')
                          {
+#if defined(_LG_OFW_)
+                             int i, len;
+
+                             /* In order to align with udhcpc message format, replace ',' with ' '.
+                              * IPC message from udhcpc is sent as space separated list of dns servers.
+                              */
+                             snprintf(pIfaceData->IP.pIpcIpv4Data->dnsServer, sizeof(pIfaceData->IP.pIpcIpv4Data->dnsServer), "%s", acTmpReturnValue);
+                             len = strlen(pIfaceData->IP.pIpcIpv4Data->dnsServer);
+                             for (i = 0; i < len; i++)
+                             {
+                                 if (pIfaceData->IP.pIpcIpv4Data->dnsServer[i] == ',')
+                                     pIfaceData->IP.pIpcIpv4Data->dnsServer[i] = ' ';
+                             }
+#else
                              //Return first DNS Server
                              token = strtok(acTmpReturnValue, ",");
                              if (token != NULL)
@@ -517,6 +535,7 @@ void* IPCPStateChangeHandler (void *arg)
                                      strncpy (pIfaceData->IP.pIpcIpv4Data->dnsServer1, token,sizeof(pIfaceData->IP.pIpcIpv4Data->dnsServer1)-1);
                                  }
                              }
+#endif
                          }
 
                           strncpy(pIfaceData->IP.pIpcIpv4Data->dhcpcInterface, dhcpcInterface, sizeof(pIfaceData->IP.pIpcIpv4Data->dhcpcInterface) - 1);
