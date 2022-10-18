@@ -437,7 +437,6 @@ void WanMgr_UpdateIpFromCellularMgr (char *dhcpcInterface)
     {
         WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
     }
-    return NULL;
 }
 
 void* IPCPStateChangeHandler (void *arg)
