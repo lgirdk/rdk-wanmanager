@@ -166,7 +166,7 @@ ANSC_STATUS WanController_Start_StateMachine(DML_WAN_POLICY swan_policy)
                 break;
 
             case AUTOWAN_MODE: 
-#if defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)
+#if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) && !defined(_LG_OFW_)
                 retStatus = WanMgr_Policy_AutoWan();
 #else
                 retStatus = WanMgr_Policy_AutoWanPolicy();
@@ -217,6 +217,10 @@ ANSC_STATUS WanMgr_Controller_PolicyCtrlInit(WanMgr_Policy_Controller_t* pWanPol
         pWanPolicyCtrl->WanEnable = FALSE;
         pWanPolicyCtrl->activeInterfaceIdx = -1;
         pWanPolicyCtrl->selSecondaryInterfaceIdx = -1;
+#if defined(_LG_OFW_)
+        pWanPolicyCtrl->selectedInterfaceIdx = -1;
+        pWanPolicyCtrl->prevSelectedInterfaceIdx = -1;
+#endif
         pWanPolicyCtrl->pWanActiveIfaceData = NULL;
         memset(&(pWanPolicyCtrl->SelectionTimeOutStart), 0, sizeof(struct timespec));
         memset(&(pWanPolicyCtrl->SelectionTimeOutEnd), 0, sizeof(struct timespec));

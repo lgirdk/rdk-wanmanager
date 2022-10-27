@@ -482,6 +482,7 @@ static bool WanMgr_CheckIfPlatformReconfiguringRequired (WanMgr_Policy_Controlle
         if(pWanDmlIfaceData != NULL)
         {
             DML_WAN_IFACE* pWanIfaceData = &(pWanDmlIfaceData->data);
+            char *upstreamsuffix;
 
             if (pWanIfaceData->Wan.RebootOnConfiguration == FALSE)
             {
@@ -491,7 +492,12 @@ static bool WanMgr_CheckIfPlatformReconfiguringRequired (WanMgr_Policy_Controlle
             }
             CcspTraceInfo(("%s %d: Checking interface index:%d, RebootOnConfiguration is set to TRUE\n", __FUNCTION__, __LINE__, uiLoopCount));
 
-            snprintf(dmQuery, sizeof(dmQuery)-1, "%s%s", pWanIfaceData->Phy.Path, UPSTREAM_DM_SUFFIX);
+            if (strstr(pWanIfaceData->Phy.Path, "CableModem") != NULL)
+                upstreamsuffix = CMAGENT_UPSTREAM_NAME;
+            else
+                upstreamsuffix = UPSTREAM_DM_SUFFIX;
+
+            snprintf(dmQuery, sizeof(dmQuery), "%s%s", pWanIfaceData->Phy.Path, upstreamsuffix);
             if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dmValue))
             {
                 CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
@@ -570,6 +576,22 @@ static void WanMgr_SetUpstreamOnlyForSelectedIntf (WanMgr_Policy_Controller_t* p
     }
 
     UINT uiLoopCount;
+
+#if defined(_LG_OFW_)
+
+    for( uiLoopCount = 0; uiLoopCount < pWanController->TotalIfaces; uiLoopCount++ )
+    {
+         WanMgr_Iface_Data_t*   pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
+         if(pWanDmlIfaceData != NULL)
+         {
+             DML_WAN_IFACE* pWanIfaceData = &(pWanDmlIfaceData->data);
+             WanMgr_RdkBus_updateInterfaceUpstreamFlag(pWanIfaceData->Phy.Path, (uiLoopCount == pWanController->activeInterfaceIdx) ? TRUE : FALSE);
+             WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+         }
+    }
+
+#else
+
     char dmQuery[BUFLEN_256] = {0};
     char dmValue[BUFLEN_256] = {0};
 
@@ -599,6 +621,9 @@ static void WanMgr_SetUpstreamOnlyForSelectedIntf (WanMgr_Policy_Controller_t* p
             WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
         }
     }
+
+#endif
+
     return; 
 
 }
@@ -798,6 +823,11 @@ static WcAwPolicyState_t Transition_InterfaceFound (WanMgr_Policy_Controller_t *
         CcspTraceError(("%s %d: unable to start interface state machine\n", __FUNCTION__, __LINE__));
     }
 
+#if defined(_LG_OFW_) 
+    pWanController->prevSelectedInterfaceIdx = pWanController->selectedInterfaceIdx;
+    pWanController->selectedInterfaceIdx = pWanController->activeInterfaceIdx;
+#endif
+
     // update the  controller SelectedTimeOut for new selected active iface
     DML_WAN_IFACE* pActiveInterface = &(pWanController->pWanActiveIfaceData->data);
     pWanController->InterfaceSelectionTimeOut = pActiveInterface->Wan.SelectionTimeout;
@@ -868,6 +898,30 @@ static WcAwPolicyState_t Transition_InterfaceValidated (WanMgr_Policy_Controller
     // stop timer
     CcspTraceInfo(("%s %d: stopping timer\n", __FUNCTION__, __LINE__));
     memset(&(pWanController->SelectionTimeOutStart), 0, sizeof(struct timespec));
+
+#if defined(_LG_OFW_)
+
+    if ((pWanController->prevSelectedInterfaceIdx != -1) &&
+        (pWanController->prevSelectedInterfaceIdx != pWanController->selectedInterfaceIdx))
+    {
+        DML_WAN_IFACE *pActiveInterface = &(pWanController->pWanActiveIfaceData->data);
+
+        if (pActiveInterface && pActiveInterface->Wan.RebootOnConfiguration)
+        {
+            CcspTraceInfo(("%s %d: Active link has changed from %d to %d and reboot is needed for the currently active link!!\n",
+                           __FUNCTION__,
+                           __LINE__,
+                           pWanController->prevSelectedInterfaceIdx,
+                           pWanController->selectedInterfaceIdx));
+
+            /* SelectionStatus to NOT_SELECTED in order for the iface state machine to end. */
+            pActiveInterface->SelectionStatus = WAN_IFACE_NOT_SELECTED;
+
+            return STATE_AUTO_WAN_REBOOT_PLATFORM;
+        }
+    }
+
+#endif
 
     return STATE_AUTO_WAN_INTERFACE_RECONFIGURATION;
 
