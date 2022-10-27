@@ -399,6 +399,11 @@ ANSC_STATUS WanMgr_RdkBus_updateInterfaceUpstreamFlag(char *phyPath, BOOL flag)
         strncpy(pCompName, CELLULAR_COMPONENT_NAME, sizeof(pCompName));
         strncpy(pCompPath, CELLULAR_COMPONENT_PATH, sizeof(pCompPath));
     }
+    else if (strstr(param_name, "CableModem") != NULL) { // CableModem wan interface
+        strncat(param_name, CMAGENT_UPSTREAM_NAME, sizeof(param_name) - strlen(param_name));
+        strncpy(pCompName, CMAGENT_COMPONENT_NAME, sizeof(pCompName));
+        strncpy(pCompPath, CMAGENT_COMPONENT_PATH, sizeof(pCompPath));
+    }
 
     if(flag)
         strncpy(param_value, "true", sizeof(param_value));
