@@ -1370,8 +1370,14 @@ static eWanState_t wan_transition_physical_interface_down(WanMgr_IfaceSM_Control
         //Check Upstream value
         char dmQuery[BUFLEN_256] = {0};
         char dmValue[BUFLEN_256] = {0};
+        char *upstreamsuffix;
 
-        snprintf(dmQuery, sizeof(dmQuery)-1, "%s%s",pInterface->Phy.Path, UPSTREAM_DM_SUFFIX);
+        if (strstr(pInterface->Phy.Path, "CableModem") != NULL)
+            upstreamsuffix = CMAGENT_UPSTREAM_NAME;
+        else
+            upstreamsuffix = UPSTREAM_DM_SUFFIX;
+
+        snprintf(dmQuery, sizeof(dmQuery), "%s%s", pInterface->Phy.Path, upstreamsuffix);
 
         if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dmValue))
         {
