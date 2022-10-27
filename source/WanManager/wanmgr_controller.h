@@ -29,6 +29,10 @@ typedef  struct _WANMGR_POLICY_CONTROLLER_
     BOOL                    WanEnable;
     INT                     activeInterfaceIdx;
     INT                     selSecondaryInterfaceIdx;
+#if defined(_LG_OFW_)
+    INT                     selectedInterfaceIdx;
+    INT                     prevSelectedInterfaceIdx;
+#endif
     WanMgr_Iface_Data_t*    pWanActiveIfaceData;
     struct timespec         SelectionTimeOutStart;
     struct timespec         SelectionTimeOutEnd;

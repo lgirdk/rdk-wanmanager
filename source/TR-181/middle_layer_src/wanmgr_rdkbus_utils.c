@@ -391,6 +391,11 @@ ANSC_STATUS WanMgr_RdkBus_updateInterfaceUpstreamFlag(char *phyPath, BOOL flag)
         pCompName = CELLULAR_COMPONENT_NAME;
         pCompPath = CELLULAR_COMPONENT_PATH;
     }
+    else if (strstr(phyPath, "CableModem") != NULL) { // CableModem wan interface
+        snprintf(param_name, sizeof(param_name), "%s%s", phyPath, CMAGENT_UPSTREAM_NAME);
+        pCompName = CMAGENT_COMPONENT_NAME;
+        pCompPath = CMAGENT_COMPONENT_PATH;
+    }
     else {
         CcspTraceInfo(("%s unexpected phyPath\n", __FUNCTION__));
         return ANSC_STATUS_FAILURE;
