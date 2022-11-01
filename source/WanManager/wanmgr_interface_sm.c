@@ -1424,13 +1424,27 @@ static eWanState_t wan_transition_wan_up(WanMgr_IfaceSM_Controller_t* pWanIfaceC
 
 static void startDhcpClients (DML_WAN_IFACE *pInterface)
 {
-    /* Start DHCPv4 client */
-    pInterface->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(pInterface->Wan.Name);
-    CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv4_pid %d\n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp4cPid));
+    char buf[8];
+    int erouter_mode;
 
-    /* Start DHCPv6 Client */
-    pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
-    CcspTraceInfo(("%s %d - Started dhcpv6 client on interface %s, dhcpv6_pid %d\n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
+    syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
+    erouter_mode = atoi(buf);
+
+    // For now request both the IP in bridge mode. Need clarification in requirements for bridgemode erouter0 IP
+
+    if (erouter_mode != 2) // Dont run udhcpc in IPV6 only
+    {
+        /* Start DHCPv4 client */
+        pInterface->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(pInterface->Wan.Name);
+//      CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv4_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp4cPid));
+    }
+
+    if (erouter_mode != 1) // Dont run dibbler in IPv4 only
+    {
+        /* Start DHCPv6 Client */
+        pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
+//      CcspTraceInfo(("%s %d - Started dhcpv6 client on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
+    }
 }
 
 static eWanState_t wan_transition_wan_validated(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
