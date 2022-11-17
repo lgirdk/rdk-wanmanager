@@ -2515,6 +2515,9 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_WAN_IFACE* pIfaceData)
             if (strcmp(pDhcp6cInfoCur->sitePrefix, pNewIpcMsg->sitePrefix))
             {
                 syscfg_set_string(SYSCFG_FIELD_IPV6_PREFIX, pNewIpcMsg->sitePrefix);
+                sleep(1);
+                v_secure_system("killall dnsmasq");
+                v_secure_system("dnsmasq -P 4096 -C /var/dnsmasq.conf");
             }
 
             // create global IPv6 address (<prefix>::1)
