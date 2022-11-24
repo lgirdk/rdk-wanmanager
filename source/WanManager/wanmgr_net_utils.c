@@ -402,6 +402,9 @@ uint32_t WanManager_StartDhcpv6Client(char * iface_name)
         /* Add IPv6 default route from RA if not already available */
         do_toggle_v6_status();
 
+        /* Dibbler-init is called to set the pre-configuration for dibbler */
+        CcspTraceInfo(("%s dibbler-init.sh Called \n", __func__));
+        system("/lib/rdk/dibbler-init.sh");
         pid = start_dhcpv6_client(&params);
         WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
     }
