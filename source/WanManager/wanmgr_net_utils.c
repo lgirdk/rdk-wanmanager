@@ -568,6 +568,10 @@ uint32_t WanManager_StartDhcpv6Client(DML_VIRTUAL_IFACE* pVirtIf, IFACE_TYPE Ifa
     /* Add IPv6 default route from RA if not already available */
     do_toggle_v6_status();
 
+    /* Dibbler-init is called to set the pre-configuration for dibbler */
+    CcspTraceInfo(("%s dibbler-init.sh Called \n", __func__));
+    system("/lib/rdk/dibbler-init.sh");
+
     pid = start_dhcpv6_client(&params);
     pVirtIf->IP.Dhcp6cPid = pid;
 
