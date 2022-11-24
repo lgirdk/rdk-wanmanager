@@ -64,16 +64,14 @@
 
 extern char g_Subsystem[32];
 extern ANSC_HANDLE bus_handle;
+
 ANSC_STATUS WanMgr_RdkBus_getWanPolicy(DML_WAN_POLICY *wan_policy)
 {
     int result = ANSC_STATUS_SUCCESS;
     int retPsmGet = CCSP_SUCCESS;
-    char param_value[BUFLEN_256] = {0};
-    char param_name[BUFLEN_256]= {0};
+    char param_value[12];
 
-    memset(param_name, 0, sizeof(param_name));
-    _ansc_sprintf(param_name, PSM_WANMANAGER_WANPOLICY);
-    retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name, param_value, sizeof(param_value));
+    retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(PSM_WANMANAGER_WANPOLICY, param_value, sizeof(param_value));
     if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0') {
         *wan_policy = strtol(param_value, NULL, 10);
     }
@@ -89,19 +87,15 @@ ANSC_STATUS WanMgr_RdkBus_setRestorationDelay(UINT delay)
 {
     int result = ANSC_STATUS_SUCCESS;
     int retPsmSet = CCSP_SUCCESS;
-    char param_name[BUFLEN_256] = {0};
-    char param_value[BUFLEN_256] = {0};
+    char param_value[12];
 
     /* Update the wan policy information in PSM */
-    memset(param_value, 0, sizeof(param_value));
-    memset(param_name, 0, sizeof(param_name));
 
     snprintf(param_value, sizeof(param_value), "%d", delay);
-    _ansc_sprintf(param_name, PSM_WANMANAGER_RESTORATION_DELAY);
 
-    retPsmSet = WanMgr_RdkBus_SetParamValuesToDB(param_name, param_value);
+    retPsmSet = WanMgr_RdkBus_SetParamValuesToDB(PSM_WANMANAGER_RESTORATION_DELAY, param_value);
     if (retPsmSet != CCSP_SUCCESS) {
-        AnscTraceError(("%s Error %d writing %s %s\n", __FUNCTION__, retPsmSet, param_name, param_value));
+        AnscTraceError(("%s Error %d writing %s %s\n", __FUNCTION__, retPsmSet, PSM_WANMANAGER_RESTORATION_DELAY, param_value));
         result = ANSC_STATUS_FAILURE;
     }
 
@@ -112,19 +106,15 @@ ANSC_STATUS WanMgr_RdkBus_setWanPolicy(DML_WAN_POLICY wan_policy)
 {
     int result = ANSC_STATUS_SUCCESS;
     int retPsmSet = CCSP_SUCCESS;
-    char param_name[BUFLEN_256] = {0};
-    char param_value[BUFLEN_256] = {0};
+    char param_value[12];
 
     /* Update the wan policy information in PSM */
-    memset(param_value, 0, sizeof(param_value));
-    memset(param_name, 0, sizeof(param_name));
 
     snprintf(param_value, sizeof(param_value), "%d", wan_policy);
-    _ansc_sprintf(param_name, PSM_WANMANAGER_WANPOLICY);
 
-    retPsmSet = WanMgr_RdkBus_SetParamValuesToDB(param_name, param_value);
+    retPsmSet = WanMgr_RdkBus_SetParamValuesToDB(PSM_WANMANAGER_WANPOLICY, param_value);
     if (retPsmSet != CCSP_SUCCESS) {
-        AnscTraceError(("%s Error %d writing %s %s\n", __FUNCTION__, retPsmSet, param_name, param_value));
+        AnscTraceError(("%s Error %d writing %s %s\n", __FUNCTION__, retPsmSet, PSM_WANMANAGER_WANPOLICY, param_value));
         result = ANSC_STATUS_FAILURE;
     }
 
@@ -135,19 +125,15 @@ ANSC_STATUS WanMgr_RdkBus_setWanEnableToPsm(BOOL WanEnable)
 {
     int result = ANSC_STATUS_SUCCESS;
     int retPsmSet = CCSP_SUCCESS;
-    char param_name[BUFLEN_256] = {0};
-    char param_value[BUFLEN_256] = {0};
+    char param_value[12];
 
     /* Update the wan Enable information in PSM */
-    memset(param_value, 0, sizeof(param_value));
-    memset(param_name, 0, sizeof(param_name));
 
     snprintf(param_value, sizeof(param_value), "%d", WanEnable);
-    _ansc_sprintf(param_name, PSM_WANMANAGER_WANENABLE);
 
-    retPsmSet = WanMgr_RdkBus_SetParamValuesToDB(param_name, param_value);
+    retPsmSet = WanMgr_RdkBus_SetParamValuesToDB(PSM_WANMANAGER_WANENABLE, param_value);
     if (retPsmSet != CCSP_SUCCESS) {
-        AnscTraceError(("%s Error %d writing %s %s\n", __FUNCTION__, retPsmSet, param_name, param_value));
+        AnscTraceError(("%s Error %d writing %s %s\n", __FUNCTION__, retPsmSet, PSM_WANMANAGER_WANENABLE, param_value));
         result = ANSC_STATUS_FAILURE;
     }
 
@@ -158,81 +144,88 @@ ANSC_STATUS WanMgr_RdkBus_setAllowRemoteIfaceToPsm(BOOL Enable)
 {
     int result = ANSC_STATUS_SUCCESS;
     int retPsmSet = CCSP_SUCCESS;
-    char param_name[BUFLEN_256] = {0};
-    char param_value[BUFLEN_256] = {0};
+    char param_value[12];
 
     /* Update the AllowRemoteIface information in PSM */
-    snprintf(param_value, sizeof(param_value), "%d", Enable);
-    _ansc_sprintf(param_name, PSM_WANMANAGER_ALLOW_REMOTE_IFACE);
 
-    retPsmSet = WanMgr_RdkBus_SetParamValuesToDB(param_name, param_value);
+    snprintf(param_value, sizeof(param_value), "%d", Enable);
+
+    retPsmSet = WanMgr_RdkBus_SetParamValuesToDB(PSM_WANMANAGER_ALLOW_REMOTE_IFACE, param_value);
     if (retPsmSet != CCSP_SUCCESS) {
-        AnscTraceError(("%s Error %d writing %s %s\n", __FUNCTION__, retPsmSet, param_name, param_value));
+        AnscTraceError(("%s Error %d writing %s %s\n", __FUNCTION__, retPsmSet, PSM_WANMANAGER_ALLOW_REMOTE_IFACE, param_value));
         result = ANSC_STATUS_FAILURE;
     }
 
     return result;
 }
 
-static void checkComponentHealthStatus(char * compName, char * dbusPath, char *status, int *retStatus)
+static void checkComponentHealthStatus(char *compName, char *dbusPath, char *status, size_t len, int *retStatus)
 {
     int ret = 0, val_size = 0;
     parameterValStruct_t **parameterval = NULL;
     char *parameterNames[1] = {};
-    char tmp[256];
     char str[256];
-    char l_Subsystem[128] = { 0 };
+    char tmp[256];
 
-    sprintf(tmp,"%s.%s",compName, "Health");
-    parameterNames[0] = tmp;
-
-    strncpy(l_Subsystem, "eRT.",sizeof(l_Subsystem));
-    snprintf(str, sizeof(str), "%s%s", l_Subsystem, compName);
+    snprintf(str, sizeof(str), "eRT.%s", compName);
     CcspTraceDebug(("str is:%s\n", str));
 
-    ret = CcspBaseIf_getParameterValues(bus_handle, str, dbusPath,  parameterNames, 1, &val_size, &parameterval);
+    snprintf(tmp, sizeof(tmp), "%s.%s", compName, "Health");
+    parameterNames[0] = tmp;
+
+    ret = CcspBaseIf_getParameterValues(bus_handle, str, dbusPath, parameterNames, 1, &val_size, &parameterval);
     CcspTraceDebug(("ret = %d val_size = %d\n",ret,val_size));
     if(ret == CCSP_SUCCESS)
     {
         CcspTraceDebug(("parameterval[0]->parameterName : %s parameterval[0]->parameterValue : %s\n",parameterval[0]->parameterName,parameterval[0]->parameterValue));
-        strncpy(status, parameterval[0]->parameterValue, strlen(parameterval[0]->parameterValue) + 1 );
+        snprintf(status, len, "%s", parameterval[0]->parameterValue);
         CcspTraceDebug(("status of component:%s\n", status));
     }
+    else
+    {
+        snprintf(status, len, "%s", "");
+    }
+
     free_parameterValStruct_t (bus_handle, val_size, parameterval);
 
     *retStatus = ret;
 }
 
-ANSC_STATUS WaitForInterfaceComponentReady(char *pPhyPath)
+ANSC_STATUS WaitForInterfaceComponentReady(char *phyPath)
 {
-    char status[32] = {'\0'};
     int count = 0;
     int ret = -1;
-    char  pCompName[BUFLEN_64] = {0};
-    char  pCompPath[BUFLEN_64] = {0};
+    char *pCompName;
+    char *pCompPath;
 
-    if (pPhyPath == NULL)
+    if (phyPath == NULL)
     {
         CcspTraceInfo(("%s %d Error: phyPath is NULL \n", __FUNCTION__, __LINE__ ));
         return ANSC_STATUS_FAILURE;
     }
         
-    if(strstr(pPhyPath, "CableModem") != NULL) { // CM wan interface
-        strncpy(pCompName, CMAGENT_COMP_NAME_WITHOUTSUBSYSTEM, sizeof(pCompName));
-        strncpy(pCompPath, CMAGENT_COMPONENT_PATH, sizeof(pCompPath));
+    if(strstr(phyPath, "CableModem") != NULL) { // CM wan interface
+        pCompName = CMAGENT_COMP_NAME_WITHOUTSUBSYSTEM;
+        pCompPath = CMAGENT_COMPONENT_PATH;
     }
-    else if(strstr(pPhyPath, "Ethernet") != NULL) { // ethernet wan interface
-        strncpy(pCompName, ETH_COMP_NAME_WITHOUTSUBSYSTEM, sizeof(pCompName));
-        strncpy(pCompPath, ETH_COMPONENT_PATH, sizeof(pCompPath));
+    else if(strstr(phyPath, "Ethernet") != NULL) { // ethernet wan interface
+        pCompName = ETH_COMP_NAME_WITHOUTSUBSYSTEM;
+        pCompPath = ETH_COMPONENT_PATH;
     }
-    else if(strstr(pPhyPath, "Cellular") != NULL) { // cellular wan interface
-        strncpy(pCompName, CELLULAR_COMP_NAME_WITHOUTSUBSYSTEM, sizeof(pCompName));
-        strncpy(pCompPath, CELLULAR_COMPONENT_PATH, sizeof(pCompPath));
+    else if(strstr(phyPath, "Cellular") != NULL) { // cellular wan interface
+        pCompName = CELLULAR_COMP_NAME_WITHOUTSUBSYSTEM;
+        pCompPath = CELLULAR_COMPONENT_PATH;
+    }
+    else {
+        CcspTraceInfo(("%s unexpected phyPath\n", __FUNCTION__));
+        return ANSC_STATUS_FAILURE;
     }
 
     while(1)
     {
-        checkComponentHealthStatus(pCompName, pCompPath, status,&ret);
+        char status[32];
+
+        checkComponentHealthStatus(pCompName, pCompPath, status, sizeof(status), &ret);
         if(ret == CCSP_SUCCESS && (strcmp(status, "Green") == 0))
         {
             CcspTraceInfo(("%s component health is %s, continue\n", pCompName, status));
@@ -248,41 +241,46 @@ ANSC_STATUS WaitForInterfaceComponentReady(char *pPhyPath)
             sleep(5);
         }
     }
+
     return ANSC_STATUS_SUCCESS;
 }
 
-ANSC_STATUS WanMgr_RdkBus_SetRequestIfComponent(char *pPhyPath, char *pInputparamName, char *pInputParamValue, enum dataType_e type)
+ANSC_STATUS WanMgr_RdkBus_SetRequestIfComponent(char *phyPath, char *pInputparamName, char *pInputParamValue, enum dataType_e type)
 {
     char param_name[BUFLEN_256];
-    char  pCompName[BUFLEN_64] = {0};
-    char  pCompPath[BUFLEN_64] = {0};
+    char *pCompName;
+    char *pCompPath;
     char *faultParam = NULL;
     int ret = 0;
 
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     parameterValStruct_t param_info[1] = {0};
 
-    if((pPhyPath == NULL) || (pInputparamName == NULL) || (pInputParamValue == NULL)) {
+    if((phyPath == NULL) || (pInputparamName == NULL) || (pInputParamValue == NULL)) {
         CcspTraceInfo(("%s %d Error: phyPath/inputParamName is NULL \n", __FUNCTION__, __LINE__ ));
         return ANSC_STATUS_FAILURE;
     }
 
-    snprintf(param_name, sizeof(param_name), "%s%s", pPhyPath, pInputparamName);
+    snprintf(param_name, sizeof(param_name), "%s%s", phyPath, pInputparamName);
 
-    if(strstr(param_name, "CableModem") != NULL) { // CM wan interface
-        strncpy(pCompName, CMAGENT_COMPONENT_NAME, sizeof(pCompName));
-        strncpy(pCompPath, CMAGENT_COMPONENT_PATH, sizeof(pCompPath));
+    if(strstr(phyPath, "CableModem") != NULL) { // CM wan interface
+        pCompName = CMAGENT_COMPONENT_NAME;
+        pCompPath = CMAGENT_COMPONENT_PATH;
     }
-    else if(strstr(param_name, "Ethernet") != NULL) { // ethernet wan interface
-        strncpy(pCompName, ETH_COMPONENT_NAME, sizeof(pCompName));
-        strncpy(pCompPath, ETH_COMPONENT_PATH, sizeof(pCompPath));
+    else if(strstr(phyPath, "Ethernet") != NULL) { // ethernet wan interface
+        pCompName = ETH_COMPONENT_NAME;
+        pCompPath = ETH_COMPONENT_PATH;
     }
-    else if(strstr(param_name, "Cellular") != NULL) { // cellular wan interface
-        strncpy(pCompName, CELLULAR_COMPONENT_NAME, sizeof(pCompName));
-        strncpy(pCompPath, CELLULAR_COMPONENT_PATH, sizeof(pCompPath));
+    else if(strstr(phyPath, "Cellular") != NULL) { // cellular wan interface
+        pCompName = CELLULAR_COMPONENT_NAME;
+        pCompPath = CELLULAR_COMPONENT_PATH;
+    }
+    else {
+        CcspTraceInfo(("%s unexpected phyPath\n", __FUNCTION__));
+        return ANSC_STATUS_FAILURE;
     }
 
-     CcspTraceInfo(("%s: Param Name %s value %s\n", __FUNCTION__,param_name,pInputParamValue));
+    CcspTraceInfo(("%s: Param Name %s value %s\n", __FUNCTION__,param_name,pInputParamValue));
     param_info[0].parameterName = param_name;
     param_info[0].parameterValue = pInputParamValue;
     param_info[0].type = type;
@@ -305,18 +303,15 @@ ANSC_STATUS WanMgr_RdkBus_SetRequestIfComponent(char *pPhyPath, char *pInputpara
 void WanMgr_SetPortCapabilityForEthIntf (DML_WAN_POLICY eWanPolicy)
 {
     ANSC_STATUS result = ANSC_STATUS_FAILURE;
-    char dmQuery[BUFLEN_256] = {0};
-    char dmValue[BUFLEN_32]  = {0};
-    int foundPhyPath = 0;
+    char dmQuery[BUFLEN_256];
+    char *dmValue;
     int uiLoopCount;
     int TotalIfaces = WanMgr_IfaceData_GetTotalWanIface();
 
-    if(eWanPolicy == PRIMARY_PRIORITY)
-        strcpy(dmValue,"WAN");
-    else
-        strcpy(dmValue,"WAN_LAN");
-
     CcspTraceInfo(("%s %d: TotalIfaces:%d \n", __FUNCTION__, __LINE__, TotalIfaces));
+
+    dmQuery[0] = 0;
+
     for (uiLoopCount = 0; uiLoopCount < TotalIfaces; uiLoopCount++)
     {
         WanMgr_Iface_Data_t*   pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
@@ -325,14 +320,15 @@ void WanMgr_SetPortCapabilityForEthIntf (DML_WAN_POLICY eWanPolicy)
             DML_WAN_IFACE* pWanIfaceData = &(pWanDmlIfaceData->data);
             if (strstr(pWanIfaceData->Phy.Path,"Ethernet") != NULL)
             {
-                foundPhyPath = 1;
-                snprintf(dmQuery, sizeof(dmQuery)-1, "%s%s", pWanIfaceData->Phy.Path, ETH_INTERFACE_PORTCAPABILITY);
+                snprintf(dmQuery, sizeof(dmQuery), "%s%s", pWanIfaceData->Phy.Path, ETH_INTERFACE_PORTCAPABILITY);
             }
             WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
         }
     }
-    if(foundPhyPath)
+
+    if (dmQuery[0] != 0)
     {
+        dmValue = (eWanPolicy == PRIMARY_PRIORITY) ? "WAN" : "WAN_LAN";
         CcspTraceInfo(("%s: dmQuery[%s] dmValue[%s]\n", __FUNCTION__, dmQuery,dmValue));
         result = WanMgr_RdkBus_SetParamValues(ETH_COMPONENT_NAME, ETH_COMPONENT_PATH, dmQuery, dmValue, ccsp_string, TRUE );
     }
@@ -342,16 +338,15 @@ void WanMgr_SetPortCapabilityForEthIntf (DML_WAN_POLICY eWanPolicy)
 
 ANSC_STATUS WanMgr_RdkBus_Get_InterfaceRebootRequired(UINT IfaceIndex, BOOL *RebootRequired)
 {
-    char acTmpReturnValue[BUFLEN_256] = { 0 };
-    char acTmpQueryParam[BUFLEN_256] = { 0 };
+    char acTmpReturnValue[BUFLEN_256];
+    char acTmpQueryParam[BUFLEN_256];
 
     if (IfaceIndex == -1)
     {
         return ANSC_STATUS_FAILURE;
     }
 
-    memset( acTmpReturnValue, 0, BUFLEN_256);
-    memset( acTmpQueryParam, 0, BUFLEN_256);
+    memset( acTmpReturnValue, 0, sizeof(acTmpReturnValue));
 
     snprintf( acTmpQueryParam, sizeof(acTmpQueryParam ), ETH_X_RDK_REBOOTREQUIRED_PARAM_NAME, (IfaceIndex+1));
     if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValues( ETH_COMPONENT_NAME, ETH_COMPONENT_PATH, acTmpQueryParam, acTmpReturnValue ) )
@@ -366,47 +361,43 @@ ANSC_STATUS WanMgr_RdkBus_Get_InterfaceRebootRequired(UINT IfaceIndex, BOOL *Reb
 
 ANSC_STATUS WanMgr_RdkBus_updateInterfaceUpstreamFlag(char *phyPath, BOOL flag)
 {
-    char param_name[BUFLEN_256] = {0};
-    char param_value[BUFLEN_256] = {0};
-    char  pCompName[BUFLEN_64] = {0};
-    char  pCompPath[BUFLEN_64] = {0};
+    char param_name[BUFLEN_256];
+    char *pCompName = NULL;
+    char *pCompPath = NULL;
     char *faultParam = NULL;
     int ret = 0;
     int retry_count = UPSTREAM_SET_MAX_RETRY_COUNT;
-
     CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     parameterValStruct_t upstream_param[1] = {0};
+
     CcspTraceInfo(("%s %d Upstream[%s]\n", __FUNCTION__, __LINE__, (flag)?"UP":"Down" ));
     if(phyPath == NULL) {
         CcspTraceInfo(("%s %d Error: phyPath is NULL \n", __FUNCTION__, __LINE__ ));
         return ANSC_STATUS_FAILURE;
     }
 
-    strncpy(param_name, phyPath, sizeof(param_name)-1);
-
-    if(strstr(param_name, "DSL") != NULL) { // dsl wan interface
-        strncat(param_name, DSL_UPSTREAM_NAME, sizeof(param_name) - strlen(param_name));
-        strncpy(pCompName, DSL_COMPONENT_NAME, sizeof(pCompName));
-        strncpy(pCompPath, DSL_COMPONENT_PATH, sizeof(pCompPath));
+    if(strstr(phyPath, "DSL") != NULL) { // dsl wan interface
+        snprintf(param_name, sizeof(param_name), "%s%s", phyPath, DSL_UPSTREAM_NAME);
+        pCompName = DSL_COMPONENT_NAME;
+        pCompPath = DSL_COMPONENT_PATH;
     }
-    else if(strstr(param_name, "Ethernet") != NULL) { // ethernet wan interface
-        strncat(param_name, ETH_UPSTREAM_NAME, sizeof(param_name) - strlen(param_name));
-        strncpy(pCompName, ETH_COMPONENT_NAME, sizeof(pCompName));
-        strncpy(pCompPath, ETH_COMPONENT_PATH, sizeof(pCompPath));
+    else if(strstr(phyPath, "Ethernet") != NULL) { // ethernet wan interface
+        snprintf(param_name, sizeof(param_name), "%s%s", phyPath, ETH_UPSTREAM_NAME);
+        pCompName = ETH_COMPONENT_NAME;
+        pCompPath = ETH_COMPONENT_PATH;
     }
-    else if(strstr(param_name, "Cellular") != NULL) { // cellular wan interface
-        strncat(param_name, CELLULAR_UPSTREAM_NAME, sizeof(param_name) - strlen(param_name));
-        strncpy(pCompName, CELLULAR_COMPONENT_NAME, sizeof(pCompName));
-        strncpy(pCompPath, CELLULAR_COMPONENT_PATH, sizeof(pCompPath));
+    else if(strstr(phyPath, "Cellular") != NULL) { // cellular wan interface
+        snprintf(param_name, sizeof(param_name), "%s%s", phyPath, CELLULAR_UPSTREAM_NAME);
+        pCompName = CELLULAR_COMPONENT_NAME;
+        pCompPath = CELLULAR_COMPONENT_PATH;
     }
-
-    if(flag)
-        strncpy(param_value, "true", sizeof(param_value));
-    else
-        strncpy(param_value, "false", sizeof(param_value));
+    else {
+        CcspTraceInfo(("%s unexpected phyPath\n", __FUNCTION__));
+        return ANSC_STATUS_FAILURE;
+    }
 
     upstream_param[0].parameterName = param_name;
-    upstream_param[0].parameterValue = param_value;
+    upstream_param[0].parameterValue = flag ? "true" : "false";
     upstream_param[0].type = ccsp_boolean;
 
     while (retry_count--)
@@ -458,7 +449,7 @@ static ANSC_STATUS WanMgr_RdkBus_GetParamNames( char *pComponent, char *pBus, ch
            if( NULL != retInfo[iLoopCount]->parameterName )
            {
               //CcspTraceInfo(("%s parameterName[%d,%s]\n",__FUNCTION__,iLoopCount,retInfo[iLoopCount]->parameterName));
-              snprintf( a2cReturnVal[iLoopCount], strlen( retInfo[iLoopCount]->parameterName ) + 1, "%s", retInfo[iLoopCount]->parameterName );
+              snprintf( a2cReturnVal[iLoopCount], BUFLEN_256, "%s", retInfo[iLoopCount]->parameterName );
            }
         }
 
@@ -481,18 +472,18 @@ static ANSC_STATUS WanMgr_RdkBus_GetParamNames( char *pComponent, char *pBus, ch
 
 ANSC_STATUS WanMgr_RdkBus_GetParamValueFromAnyComp( char * pQuery, char *pValue)
 {
+    int ret ;
+    int size = 0;
+    char dst_pathname_cr[BUFLEN_256];
+    componentStruct_t ** ppComponents = NULL;
+
     if ((pQuery == NULL) || (pValue == NULL))
     {
         CcspTraceError (("%s %d: invalid args..\n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
     }
 
-    int ret ;
-    int size = 0;
-    char dst_pathname_cr[BUFLEN_256] = {0};
-    componentStruct_t ** ppComponents = NULL;
-
-    snprintf(dst_pathname_cr, sizeof(dst_pathname_cr) - 1, "eRT.%s", CCSP_DBUS_INTERFACE_CR);
+    snprintf(dst_pathname_cr, sizeof(dst_pathname_cr), "eRT.%s", CCSP_DBUS_INTERFACE_CR);
 
     // Get the component name and dbus path which has the data model 
     ret = CcspBaseIf_discComponentSupportingNamespace
@@ -554,7 +545,7 @@ ANSC_STATUS WanMgr_RdkBus_GetParamValues( char *pComponent, char *pBus, char *pP
 
         if( NULL != retVal[0]->parameterValue )
         {
-            memcpy( pReturnVal, retVal[0]->parameterValue, strlen( retVal[0]->parameterValue ) + 1 );
+            strcpy( pReturnVal, retVal[0]->parameterValue);
         }
 
         if( retVal )
@@ -580,20 +571,11 @@ ANSC_STATUS WanMgr_RdkBus_SetParamValues( char *pComponent, char *pBus, char *pP
     CCSP_MESSAGE_BUS_INFO *bus_info              = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     parameterValStruct_t   param_val[1]          = { 0 };
     char                  *faultParam            = NULL;
-    char                   acParameterName[BUFLEN_256]  = { 0 },
-                           acParameterValue[BUFLEN_128] = { 0 };
     int                    ret                   = 0;
 
-    //Copy Name
-    snprintf( acParameterName,sizeof(acParameterName)-1, "%s", pParamName );
-    param_val[0].parameterName  = acParameterName;
-
-    //Copy Value
-    snprintf( acParameterValue,sizeof(acParameterValue)-1, "%s", pParamVal );
-    param_val[0].parameterValue = acParameterValue;
-
-    //Copy Type
-    param_val[0].type           = type;
+    param_val[0].parameterName = pParamName;
+    param_val[0].parameterValue = pParamVal;
+    param_val[0].type = type;
 
     ret = CcspBaseIf_setParameterValues(
                                         bus_handle,
@@ -665,7 +647,7 @@ static ANSC_STATUS WanMgr_RdkBus_GetInterfaceInstanceInOtherAgent( WAN_NOTIFY_EN
             //Traverse from loop
             for ( iLoopCount = 0; iLoopCount < iTotalNoofEntries; iLoopCount++ )
             {
-                char acTmpQueryParam[BUFLEN_256] = { 0 };
+                char acTmpQueryParam[BUFLEN_256];
 
                 //Query
                 snprintf( acTmpQueryParam, sizeof(acTmpQueryParam ), "%sX_RDK_BaseInterface", a2cTmpTableParams[ iLoopCount ] );
@@ -680,7 +662,7 @@ static ANSC_STATUS WanMgr_RdkBus_GetInterfaceInstanceInOtherAgent( WAN_NOTIFY_EN
                 //Compare ifname
                 if( 0 == strncmp(acTmpReturnValue, pIfName, BUFLEN_256) )
                 {
-                    char  tmpTableParam[BUFLEN_256] = { 0 };
+                    char tmpTableParam[BUFLEN_256];
                     const char *last_two;
 
                     //Copy table param
@@ -733,7 +715,6 @@ void* WanMgr_RdkBus_WanIfRefreshThread( void *arg )
        CcspTraceInfo(("%s %d VLAN Instance:%d\n",__FUNCTION__, __LINE__,iVLANInstance));
 
         //Set VLAN EthLink Refresh
-        memset( acSetParamName, 0, sizeof(acSetParamName) );
         snprintf( acSetParamName, sizeof(acSetParamName), VLAN_ETHLINK_REFRESH_PARAM_NAME, iVLANInstance );
         WanMgr_RdkBus_SetParamValues( VLAN_COMPONENT_NAME, VLAN_DBUS_PATH, acSetParamName, "true", ccsp_boolean, TRUE );
 
@@ -798,11 +779,19 @@ ANSC_STATUS DmlGetInstanceByKeywordFromPandM(char *ifname, int *piInstanceNumber
 
 int WanMgr_RdkBus_GetParamValuesFromDB( char *pParamName, char *pReturnVal, int returnValLength )
 {
-    int     retPsmGet     = CCSP_SUCCESS;
-    CHAR   *param_value   = NULL, tmpOutput[BUFLEN_256] = {0};
+    int retPsmGet = CCSP_SUCCESS;
+    char *param_value = NULL;
 
     /* Input Validation */
-    if( ( NULL == pParamName) || ( NULL == pReturnVal ) || ( 0 >= returnValLength ) )
+    if ((pReturnVal == NULL) || (returnValLength <= 0))
+    {
+        CcspTraceError(("%s Invalid Input Parameters\n",__FUNCTION__));
+        return CCSP_FAILURE;
+    }
+
+    pReturnVal[0] = 0;
+
+    if (pParamName == NULL)
     {
         CcspTraceError(("%s Invalid Input Parameters\n",__FUNCTION__));
         return CCSP_FAILURE;
@@ -819,10 +808,8 @@ int WanMgr_RdkBus_GetParamValuesFromDB( char *pParamName, char *pReturnVal, int 
         ((CCSP_MESSAGE_BUS_INFO *)bus_handle)->freefunc(param_value);
     } 
 #else
-    if( 0 == syscfg_get( NULL, pParamName, tmpOutput, sizeof(tmpOutput)) )
+    if( 0 == syscfg_get( NULL, pParamName, pReturnVal, returnValLength) )
     {
-        /* Copy DB Value */
-        snprintf(pReturnVal, returnValLength, "%s", tmpOutput);
         retPsmGet = CCSP_SUCCESS;
     }
     else
@@ -864,7 +851,7 @@ int WanMgr_RdkBus_SetParamValuesToDB( char *pParamName, char *pParamVal )
 ANSC_STATUS WanMgr_RestartGetPhyStatus (DML_WAN_IFACE *pWanIfaceData)
 {
     //get PHY status
-    char dmQuery[BUFLEN_256] = {0};
+    char dmQuery[BUFLEN_256];
     char dmValue[BUFLEN_256] = {0};
 
     if(pWanIfaceData->Phy.Path == NULL)
@@ -875,7 +862,7 @@ ANSC_STATUS WanMgr_RestartGetPhyStatus (DML_WAN_IFACE *pWanIfaceData)
 
     if(strstr(pWanIfaceData->Phy.Path, "Cellular") != NULL)
     {
-        snprintf(dmQuery, sizeof(dmQuery)-1, "%s%s", pWanIfaceData->Phy.Path, CELLULARMGR_PHY_STATUS_DM_SUFFIX);
+        snprintf(dmQuery, sizeof(dmQuery), "%s%s", pWanIfaceData->Phy.Path, CELLULARMGR_PHY_STATUS_DM_SUFFIX);
         if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dmValue))
         {
             CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
@@ -890,7 +877,7 @@ ANSC_STATUS WanMgr_RestartGetPhyStatus (DML_WAN_IFACE *pWanIfaceData)
     }
     else
     {
-        snprintf(dmQuery, sizeof(dmQuery)-1, "%s%s", pWanIfaceData->Phy.Path, STATUS_DM_SUFFIX);
+        snprintf(dmQuery, sizeof(dmQuery), "%s%s", pWanIfaceData->Phy.Path, STATUS_DM_SUFFIX);
         if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dmValue))
         {
             CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
@@ -912,20 +899,20 @@ ANSC_STATUS WanMgr_RestartGetPhyStatus (DML_WAN_IFACE *pWanIfaceData)
  ***************************************/
 bool WanMgr_RestartUpdatePPPinfo(DML_WAN_IFACE *pWanIfaceData)
 {
-    char dmQuery[BUFLEN_256] = {0};
+    char dmQuery[BUFLEN_256];
     char ppp_Status[BUFLEN_256]             = {0};
     char ppp_ConnectionStatus[BUFLEN_256]   = {0};
 
     if(pWanIfaceData->PPP.Enable == TRUE && (strlen(pWanIfaceData->PPP.Path) > 0))
     {
-        snprintf(dmQuery, sizeof(dmQuery)-1, "%sStatus", pWanIfaceData->PPP.Path);
+        snprintf(dmQuery, sizeof(dmQuery), "%sStatus", pWanIfaceData->PPP.Path);
         if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, ppp_Status))
         {
             CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
             return FALSE;
         }
 
-        snprintf(dmQuery, sizeof(dmQuery)-1, "%sConnectionStatus", pWanIfaceData->PPP.Path);
+        snprintf(dmQuery, sizeof(dmQuery), "%sConnectionStatus", pWanIfaceData->PPP.Path);
         if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, ppp_ConnectionStatus))
         {
             CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
@@ -988,8 +975,8 @@ bool WanMgr_RestartUpdatePPPinfo(DML_WAN_IFACE *pWanIfaceData)
 ANSC_STATUS WanMgr_RestartGetLinkStatus (DML_WAN_IFACE *pWanIfaceData)
 {
     //get PHY status
-    char dmQuery[BUFLEN_256] = {0};
-    char dmValue[BUFLEN_256] = {0};
+    char dmQuery[BUFLEN_256];
+    char dmValue[BUFLEN_256] = { 0 };
 
     if(pWanIfaceData->PPP.Enable == TRUE)
     {
@@ -998,7 +985,8 @@ ANSC_STATUS WanMgr_RestartGetLinkStatus (DML_WAN_IFACE *pWanIfaceData)
             return ANSC_STATUS_FAILURE;
         }
 
-        snprintf(dmQuery, sizeof(dmQuery)-1, "%sEnable", pWanIfaceData->PPP.Path);
+        snprintf(dmQuery, sizeof(dmQuery), "%sEnable", pWanIfaceData->PPP.Path);
+
         if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dmValue))
         {
             CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
@@ -1011,10 +999,8 @@ ANSC_STATUS WanMgr_RestartGetLinkStatus (DML_WAN_IFACE *pWanIfaceData)
         }
 
         //Get Wan.name
-        memset(dmQuery, 0, sizeof(dmQuery));
+        snprintf(dmQuery, sizeof(dmQuery),"%sAlias", pWanIfaceData->PPP.Path);
         memset(dmValue, 0, sizeof(dmValue));
-
-        snprintf(dmQuery, sizeof(dmQuery)-1,"%sAlias", pWanIfaceData->PPP.Path);
 
         if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dmValue))
         {
@@ -1022,14 +1008,12 @@ ANSC_STATUS WanMgr_RestartGetLinkStatus (DML_WAN_IFACE *pWanIfaceData)
             return ANSC_STATUS_FAILURE;
         }
 
-        if(dmValue != NULL)
-        {
-            strncpy(pWanIfaceData->Wan.Name, dmValue, sizeof(pWanIfaceData->Wan.Name));
-        }
+        strncpy(pWanIfaceData->Wan.Name, dmValue, sizeof(pWanIfaceData->Wan.Name));
     }
     else if(strstr(pWanIfaceData->Phy.Path, "Cellular") != NULL)
     {
-        snprintf(dmQuery, sizeof(dmQuery)-1, "%s%s", pWanIfaceData->Phy.Path, CELLULARMGR_LINK_STATUS_DM_SUFFIX);
+        snprintf(dmQuery, sizeof(dmQuery), "%s%s", pWanIfaceData->Phy.Path, CELLULARMGR_LINK_STATUS_DM_SUFFIX);
+
         if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dmValue))
         {
             CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
@@ -1054,7 +1038,7 @@ ANSC_STATUS WanMgr_RestartGetLinkStatus (DML_WAN_IFACE *pWanIfaceData)
         {
             CcspTraceInfo(("%s %d VLAN Instance:%d\n",__FUNCTION__, __LINE__,iVLANInstance));
 
-            snprintf(dmQuery, sizeof(dmQuery)-1,VLAN_ETHLINK_STATUS_PARAM_NAME, iVLANInstance);
+            snprintf(dmQuery, sizeof(dmQuery),VLAN_ETHLINK_STATUS_PARAM_NAME, iVLANInstance);
 
             if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dmValue))
             {
@@ -1068,10 +1052,8 @@ ANSC_STATUS WanMgr_RestartGetLinkStatus (DML_WAN_IFACE *pWanIfaceData)
             }
 
             //Get Vlan interface name
-            memset(dmQuery, 0, sizeof(dmQuery));
+            snprintf(dmQuery, sizeof(dmQuery),VLAN_ETHLINK_NAME_PARAM_NAME, iVLANInstance);
             memset(dmValue, 0, sizeof(dmValue));
-
-            snprintf(dmQuery, sizeof(dmQuery)-1,VLAN_ETHLINK_NAME_PARAM_NAME, iVLANInstance);
 
             if ( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dmValue))
             {
@@ -1079,20 +1061,19 @@ ANSC_STATUS WanMgr_RestartGetLinkStatus (DML_WAN_IFACE *pWanIfaceData)
                 return ANSC_STATUS_FAILURE;
             }
 
-            if(dmValue != NULL)
-            {
-                strncpy(pWanIfaceData->Wan.Name, dmValue, sizeof(pWanIfaceData->Wan.Name));  
-            }
+            strncpy(pWanIfaceData->Wan.Name, dmValue, sizeof(pWanIfaceData->Wan.Name));  
         }
     }
+
     return ANSC_STATUS_SUCCESS;
 }
+
 ANSC_STATUS WanMgr_RdkBus_setDhcpv6DnsServerInfo(void)
 {
     ANSC_STATUS retStatus = ANSC_STATUS_FAILURE;
     char sysevent_buf[BUFLEN_128] = {'\0'};
 
-    sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_ULA_ADDRESS, sysevent_buf, BUFLEN_128);
+    sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_ULA_ADDRESS, sysevent_buf, sizeof(sysevent_buf));
     if(sysevent_buf[0] != '\0')
     {
         retStatus = WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, "Device.DHCPv6.Server.Pool.1.X_RDKCENTRAL-COM_DNSServersEnabled", "true", ccsp_boolean, TRUE );
@@ -1127,7 +1108,7 @@ ANSC_STATUS WanMgr_RdkBus_setWanIpInterfaceData(DML_WAN_IFACE* pWanIfaceData)
     }else
     {
         INT     iVLANInstance   = -1;
-        CHAR    VlanPath[BUFLEN_264]  = {0};
+        CHAR    VlanPath[BUFLEN_264];
         WanMgr_RdkBus_GetInterfaceInstanceInOtherAgent( NOTIFY_TO_VLAN_AGENT, pWanIfaceData->Name, &iVLANInstance );
         snprintf( VlanPath, sizeof(VlanPath), VLAN_ETHLINK_TABLE_FORMAT, iVLANInstance);
 

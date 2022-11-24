@@ -155,8 +155,8 @@ ANSC_STATUS WanMgr_RdkBus_updateInterfaceUpstreamFlag(char *phyPath, BOOL flag);
 void* WanMgr_RdkBus_WanIfRefreshThread( void *arg );
 
 ANSC_STATUS DmlGetInstanceByKeywordFromPandM(char *ifname, int *piInstanceNumber);
-ANSC_STATUS WanMgr_RdkBus_SetRequestIfComponent(char *pPhyPath, char *pInputparamName, char *pInputParamValue, enum dataType_e type);
-ANSC_STATUS WaitForInterfaceComponentReady(char *pPhyPath);
+ANSC_STATUS WanMgr_RdkBus_SetRequestIfComponent(char *phyPath, char *pInputparamName, char *pInputParamValue, enum dataType_e type);
+ANSC_STATUS WaitForInterfaceComponentReady(char *phyPath);
 ANSC_STATUS WanMgr_RdkBus_Get_InterfaceRebootRequired(UINT IfaceIndex, BOOL *RebootRequired);
 
 ANSC_STATUS WanMgr_RestartGetPhyStatus (DML_WAN_IFACE *pWanIfaceData);
