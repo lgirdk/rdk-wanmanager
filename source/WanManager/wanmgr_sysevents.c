@@ -831,14 +831,22 @@ int do_toggle_v6_status (void)
         CcspTraceInfo(("%s %d toggle initiated\n", __FUNCTION__, __LINE__));
 
         ret = v_secure_system("echo 2 > /proc/sys/net/ipv6/conf/%s/accept_ra ; "
-                              "echo 0 > /proc/sys/net/ipv6/conf/%s/autoconf ; "
-                              "sysctl -w net.ipv6.conf.%s.disable_ipv6=1 ; "
+                              "echo 0 > /proc/sys/net/ipv6/conf/%s/autoconf",
+                              wanInterface, wanInterface);
+#ifdef _LG_OFW_
+        ret = v_secure_system("/usr/bin/rdisc6 -w 1 -r 1 %s", wanInterface);
+
+        // As the default route will be added by kernel (after router advertisement is received),
+        // no need to wait for the response of router solicitaion(s) we just sent.
+#else
+        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=1 ; "
                               "sysctl -w net.ipv6.conf.%s.disable_ipv6=0",
-                              wanInterface, wanInterface, wanInterface, wanInterface);
+                              wanInterface, wanInterface);
 
         if (ret != 0) {
             CcspTraceWarning(("%s: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, ret));
         }
+#endif
     }
 
     return ret;
