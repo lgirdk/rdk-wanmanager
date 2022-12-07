@@ -1023,15 +1023,13 @@ int do_toggle_v6_status (void)
             CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
         }
 
-        if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", wanInterface, "1") != 0)
-        {
-            CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
+        ret = v_secure_system("/usr/bin/rdisc6 -w 1 -r 1 %s", wanInterface);
+        if (ret != 0) {
+            CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
         }
 
-        if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", wanInterface, "0") != 0)
-        {
-            CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
-        }
+        // As the default route will be added by kernel (after router advertisement is received),
+        // no need to wait for the response of router solicitaion(s) we just sent.
     }
 
     return ret;
