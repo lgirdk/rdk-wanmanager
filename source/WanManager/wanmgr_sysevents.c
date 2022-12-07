@@ -846,15 +846,13 @@ int do_toggle_v6_status (void)
             CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
         }
 
-        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=1", wanInterface);
+        ret = v_secure_system("/usr/bin/rdisc6 -w 1 -r 1 %s", wanInterface);
         if (ret != 0) {
             CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
         }
 
-        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=0", wanInterface);
-        if (ret != 0) {
-            CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
-        }
+        // As the default route will be added by kernel (after router advertisement is received),
+        // no need to wait for the response of router solicitaion(s) we just sent.
     }
 
     return ret;
