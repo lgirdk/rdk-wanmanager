@@ -757,20 +757,35 @@ void do_toggle_v6_status (void)
         wanmgr_get_wan_interface(wanInterface);
 
         ret = v_secure_system("echo 2 > /proc/sys/net/ipv6/conf/%s/accept_ra ; "
-                              "sysctl -w net.ipv6.conf.%s.disable_ipv6=1 ; "
-                              "sysctl -w net.ipv6.conf.%s.disable_ipv6=0 ; ",
                               "echo 0 > /proc/sys/net/ipv6/conf/%s/autoconf",
-                              wanInterface, wanInterface, wanInterface, wanInterface);
+                              wanInterface, wanInterface);
+#ifdef _LG_OFW_
+        ret = v_secure_system("/usr/bin/rdisc6 -w 1 -r 1 %s", wanInterface);
+#else
+        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=1 ; "
+                              "sysctl -w net.ipv6.conf.%s.disable_ipv6=0 ",
+                              wanInterface, wanInterface);
+#endif //_LG_OFW_
+
 #else
         ret = v_secure_system("echo 2 > /proc/sys/net/ipv6/conf/erouter0/accept_ra ; "
-                              "echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ; "
-                              "echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ; "
                               "echo 0 > /proc/sys/net/ipv6/conf/erouter0/autoconf");
+#ifdef _LG_OFW_
+        ret = v_secure_system("/usr/bin/rdisc6 -w 1 -r 1 erouter0");
+#else
+        ret = v_secure_system("echo 1 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ; "
+                              "echo 0 > /proc/sys/net/ipv6/conf/erouter0/disable_ipv6 ");
+#endif //_LG_OFW_
+
 #endif
 
+#ifndef _LG_OFW_
+        // As the default route will be added by kernel (after router advertisement is received),
+        // no need to wait for the response of router solicitaion(s) we just sent.
         if (ret != 0) {
             CcspTraceWarning(("%s: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, ret));
         }
+#endif
     }
 }
 
