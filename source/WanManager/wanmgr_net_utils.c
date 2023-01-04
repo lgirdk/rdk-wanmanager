@@ -441,6 +441,8 @@ ANSC_STATUS WanManager_StopDhcpv6Client(char * iface_name)
 
 uint32_t WanManager_StartDhcpv4Client(char * iface_name)
 {
+    char wanmg_enable[8];
+    syscfg_get(NULL, "management_wan_enabled", wanmg_enable, sizeof(wanmg_enable));
     if (iface_name == NULL)
     {
         CcspTraceError(("%s %d: Invalid args \n", __FUNCTION__, __LINE__));
@@ -460,6 +462,18 @@ uint32_t WanManager_StartDhcpv4Client(char * iface_name)
         CcspTraceInfo(("Starting DHCPv4 Client for iface: %s \n", params.ifname));
         pid = start_dhcpv4_client(&params);
         WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+
+        if (strcmp(wanmg_enable, "1") == 0)
+        {
+            params.ifname = "mg0";
+            params.ifType = WAN_LOCAL_IFACE;
+            start_dhcpv4_client(&params);
+
+            params.ifname = "voip0";
+            params.ifType = WAN_LOCAL_IFACE;
+            start_dhcpv4_client(&params);
+        }
+
     }
 
     return pid;
@@ -467,6 +481,8 @@ uint32_t WanManager_StartDhcpv4Client(char * iface_name)
 
 ANSC_STATUS WanManager_StopDhcpv4Client(char * iface_name)
 {
+    char wanmg_enable[8];
+    syscfg_get(NULL, "management_wan_enabled", wanmg_enable, sizeof(wanmg_enable));
     if (iface_name == NULL)
     {
         CcspTraceError(("%s %d: Invalid args \n", __FUNCTION__, __LINE__));
@@ -482,6 +498,14 @@ ANSC_STATUS WanManager_StopDhcpv4Client(char * iface_name)
     params.ifname = iface_name;
 
     ret = stop_dhcpv4_client(&params);
+    if (strcmp(wanmg_enable, "1") == 0)
+    {
+        params.ifname = "mg0";
+        stop_dhcpv4_client(&params);
+
+        params.ifname = "voip0";
+        stop_dhcpv4_client(&params);
+    }
 
     return ret;
 }
