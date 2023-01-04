@@ -1434,6 +1434,27 @@ static eWanState_t wan_transition_wan_up(WanMgr_IfaceSM_Controller_t* pWanIfaceC
     return WAN_STATE_VALIDATING_WAN;
 }
 
+static void stopDhcpClients(DML_WAN_IFACE *pInterface)
+{
+    char buf[8];
+    syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
+
+    if (atoi(buf) != 2) // Dont try to stop DHCPv4 client on IPv6 only
+    {
+        if (WanManager_StopDhcpv4Client(pInterface, TRUE) == ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceInfo(("DHCP v4 client on interface %s was successfully terminated \n", pInterface->Wan.Name));
+        }
+    }
+    if (atoi(buf) != 1) // Dont try to stop DHCPv6 client on IPv4 only mode
+    {
+        if (WanManager_StopDhcpv6Client(pInterface) == ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceInfo(("DHCP v6 client on interface %s was successfully terminated \n", pInterface->Wan.Name));
+        }
+    }
+}
+
 static void startDhcpClients (DML_WAN_IFACE *pInterface)
 {
     char buf[8];
@@ -1486,6 +1507,8 @@ static eWanState_t wan_transition_wan_validated(WanMgr_IfaceSM_Controller_t* pWa
     {
         // DHCPv4v6 is enabled
 
+        // Check if we have any running DHCP v4/v6 clients to be stopped
+        stopDhcpClients(pInterface);
         startDhcpClients(pInterface);
 
     }else if(pInterface->Wan.EnableDHCP == FALSE)
