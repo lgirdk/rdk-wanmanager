@@ -2543,6 +2543,7 @@ static eWanState_t wan_state_standby(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
                     CcspTraceInfo((" %s %d - configure IPv6 prefix \n", __FUNCTION__, __LINE__));
                 }
             }
+#ifndef _LG_MV2_PLUS_
             if (checkIpv6AddressAssignedToBridge() == RETURN_OK)
             {
                 BridgeWait = FALSE;
@@ -2554,6 +2555,9 @@ static eWanState_t wan_state_standby(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
             {
                 wanmgr_Ipv6Toggle();
             }
+#else
+            return wan_transition_ipv6_up(pWanIfaceCtrl);
+#endif
         }
         if (pInterface->IP.Ipv6Status != WAN_IFACE_IPV6_STATE_UP || !BridgeWait)
         {
