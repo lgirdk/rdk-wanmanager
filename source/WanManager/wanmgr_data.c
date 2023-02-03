@@ -678,6 +678,7 @@ void WanMgr_IfaceData_Init(WanMgr_Iface_Data_t* pIfaceData, UINT iface_index)
     {
         DML_WAN_IFACE* pWanDmlIface = &(pIfaceData->data);
 
+        pWanDmlIface->IfaceMgrInitted = FALSE;
         pWanDmlIface->MonitorOperStatus = FALSE;
         pWanDmlIface->WanConfigEnabled = FALSE;
         pWanDmlIface->CustomConfigEnable = FALSE;

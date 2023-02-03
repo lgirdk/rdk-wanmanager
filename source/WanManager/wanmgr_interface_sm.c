@@ -4057,6 +4057,37 @@ int WanMgr_StartInterfaceStateMachine(WanMgr_IfaceSM_Controller_t *wanIf)
     return iErrorCode ;
 }
 
+static void WanMgr_IfaceMgr_Init(INT iface_idx)
+{
+    WanMgr_Iface_Data_t *pWanDmlIfaceData;
+    DML_WAN_POLICY wan_policy = FIXED_MODE;
+
+    pWanDmlIfaceData = WanMgr_GetIfaceData_locked(iface_idx);
+    if (pWanDmlIfaceData != NULL)
+    {
+        DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
+        WANMGR_IFACE_GROUP* pWanIfaceGroup = WanMgr_GetIfaceGroup_locked(pWanIfaceData->Selection.Group - 1);
+        if (pWanIfaceGroup != NULL)
+        {
+            wan_policy = pWanIfaceGroup->Policy;
+            WanMgrDml_GetIfaceGroup_release();
+        }
+        else
+        {
+            CcspTraceInfo(("%s %d - WanManager Failed to retrieve policy\n", __FUNCTION__, __LINE__ ));
+        }
+
+        if (!pWanIfaceData->IfaceMgrInitted && strcmp("WanOE", pWanIfaceData->DisplayName) == 0)
+        {
+            pWanIfaceData->IfaceMgrInitted = TRUE;
+            WaitForInterfaceComponentReady("Ethernet");
+#ifdef FEATURE_RDKB_AUTO_PORT_SWITCH
+            WanMgr_SetPortCapabilityForEthIntf(wan_policy);
+#endif
+        }
+        WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+    }
+}
 
 void WanMgr_IfaceSM_Init(WanMgr_IfaceSM_Controller_t* pWanIfaceSMCtrl, INT iface_idx, INT VirIfIdx)
 {
@@ -4068,6 +4099,7 @@ void WanMgr_IfaceSM_Init(WanMgr_IfaceSM_Controller_t* pWanIfaceSMCtrl, INT iface
 #ifdef FEATURE_IPOE_HEALTH_CHECK
         WanMgr_IfaceSM_IHC_Init(pWanIfaceSMCtrl);
 #endif
-        pWanIfaceSMCtrl->pIfaceData = NULL;        
+        pWanIfaceSMCtrl->pIfaceData = NULL;
     }
+    WanMgr_IfaceMgr_Init(iface_idx);
 }
