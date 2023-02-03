@@ -494,6 +494,7 @@ typedef struct _DML_WAN_INTERFACE
     DATAMODEL_MARKING           Marking;
     UINT                        NoOfVirtIfs;
     DML_VIRTUAL_IFACE*          VirtIfList;
+    BOOL                        IfaceMgrInitted;
 } DML_WAN_IFACE;
 
 
