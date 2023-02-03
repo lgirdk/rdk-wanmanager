@@ -114,6 +114,12 @@ static int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE*
     {
         AnscCopyString(p_Interface->Name, param_value);
         AnscCopyString(p_Interface->Wan.Name, param_value);
+
+        /* ccsp-eth-agent and ethsw HAL shall retrieve ethwan name from below syscfg */
+        if (syscfg_set_commit( NULL, "eth_wan_iface_name", param_value) != 0)
+        {
+            CcspTraceError(("syscfg_set failed for eth_wan_iface_name\n"));
+        }
     }
 
     _ansc_memset(param_name, 0, sizeof(param_name));
