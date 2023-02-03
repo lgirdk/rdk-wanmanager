@@ -108,20 +108,27 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
 
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
-    _ansc_sprintf(param_name, PSM_WANMANAGER_IF_NAME, instancenum);
-    retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
-    {
-        AnscCopyString(p_Interface->Name, param_value);
-    }
-
-    _ansc_memset(param_name, 0, sizeof(param_name));
-    _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_DISPLAY_NAME, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
     if (retPsmGet == CCSP_SUCCESS)
     {
         AnscCopyString(p_Interface->DisplayName, param_value);
+    }
+
+    _ansc_memset(param_name, 0, sizeof(param_name));
+    _ansc_memset(param_value, 0, sizeof(param_value));
+    _ansc_sprintf(param_name, PSM_WANMANAGER_IF_NAME, instancenum);
+    retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
+    if (retPsmGet == CCSP_SUCCESS)
+    {
+        AnscCopyString(p_Interface->Name, param_value);
+
+        /* ccsp-eth-agent and ethsw HAL shall retrieve ethwan name from below syscfg */
+        if ((strcmp(p_Interface->DisplayName, "WanOE") == 0) &&
+            (syscfg_set_commit(NULL, "eth_wan_iface_name", param_value) != 0))
+        {
+             CcspTraceError(("syscfg_set failed for eth_wan_iface_name\n"));
+        }
     }
 
     _ansc_memset(param_name, 0, sizeof(param_name));
