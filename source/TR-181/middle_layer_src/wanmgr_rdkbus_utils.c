@@ -230,7 +230,8 @@ ANSC_STATUS WaitForInterfaceComponentReady(char *pPhyPath)
             {
                 CcspTraceError(("%s component Health, ret:%d, waiting\n", pCompName, ret));
             }
-            sleep(5);
+            // Decrease wait time between trials from 5 to 1 seconds to save time
+            sleep(1);
         }
     }
     return ANSC_STATUS_SUCCESS;
