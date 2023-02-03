@@ -1346,6 +1346,26 @@ BOOL WanIfPhy_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char
             /* check the parameter name and set the corresponding value */
             if (strcmp(ParamName, "Path") == 0)
             {
+#ifdef FEATURE_RDKB_AUTO_PORT_SWITCH
+                /* eth-agent isn't around before wanManager. Therefore portCapability setting fails during wanManager
+                 * initialization. After eth-agent sets the Phy Path for the first time (or if the path changes),
+                 * retry setting the port capability.
+                 * WARNING: This logic should be removed after inter-component dependency issues are resolved with
+                 * the new wanManager architecture implemented by the community.
+                */
+                if ((strstr(pString, "Ethernet")) && (strcmp(pWanDmlIface->Phy.Path, pString)))
+                {
+                    WanMgr_Config_Data_t*   pWanConfigData = WanMgr_GetConfigData_locked();
+                    if (pWanConfigData)
+                    {
+                        DML_WANMGR_CONFIG* pWanDmlData = &(pWanConfigData->data);
+
+                        WanMgr_SetPortCapabilityForEthIntf(pWanDmlData->Policy);
+                        WanMgrDml_GetConfigData_release(pWanConfigData);
+                    }
+                }
+#endif  //FEATURE_RDKB_AUTO_PORT_SWITCH
+
                 AnscCopyString(pWanDmlIface->Phy.Path, pString);
                 WanMgr_SetRestartWanInfo(WAN_PHY_PATH_PARAM_NAME, pWanDmlIface->uiIfaceIdx, pString);
                 ret = TRUE;
