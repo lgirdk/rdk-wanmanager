@@ -1183,7 +1183,7 @@ void WanMgr_RdkBus_setEthernetUpstream(bool setVal)
             if(insVal > 0)
             {
                 memset(dmName, 0, BUFLEN_256);
-                snprintf(dmName, "%s%d", ETH_HW_CONFIG_PHY_PATH, insVal);
+                snprintf(dmName, sizeof(dmName), "%s%d", ETH_HW_CONFIG_PHY_PATH, insVal);
                 if (WanMgr_RdkBus_updateInterfaceUpstreamFlag(dmName, setVal) != ANSC_STATUS_SUCCESS)
                 {
                     CcspTraceError(("%s - Failed to set [%s] data model \n", __FUNCTION__, dmName));
