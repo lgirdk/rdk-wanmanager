@@ -1211,7 +1211,7 @@ static WcAwPolicyState_t State_InterfaceReconfiguration (WanMgr_Policy_Controlle
             sscanf(pActiveInterface->Phy.Path, ETH_PHY_PATH_DM, &insVal);
             if(insVal > 0)
             {
-                snprintf(dmName, "%s%d", ETH_HW_CONFIG_PHY_PATH, insVal);
+                snprintf(dmName, sizeof(dmName), ETH_HW_CONFIG_PHY_PATH, insVal);
                 if (WanMgr_RdkBus_updateInterfaceUpstreamFlag(dmName, TRUE) != ANSC_STATUS_SUCCESS)
                 {
                     CcspTraceError(("%s - Failed to set [%s] data model \n", __FUNCTION__, dmName));
