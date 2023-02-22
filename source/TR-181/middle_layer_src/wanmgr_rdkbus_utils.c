@@ -592,10 +592,13 @@ ANSC_STATUS WanMgr_RdkBus_SetParamValues( char *pComponent, char *pBus, char *pP
                                         &faultParam
                                        );
 
-    if( ( ret != CCSP_SUCCESS ) && ( faultParam != NULL ) )
+    if ( ret != CCSP_SUCCESS )
     {
         CcspTraceError(("%s-%d Failed to set %s\n",__FUNCTION__,__LINE__,pParamName));
-        bus_info->freefunc( faultParam );
+        if ( faultParam )
+        {
+            bus_info->freefunc( faultParam );
+        }
         return ANSC_STATUS_FAILURE;
     }
 
