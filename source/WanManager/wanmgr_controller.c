@@ -152,7 +152,13 @@ ANSC_STATUS WanController_Start_StateMachine(DML_WAN_POLICY swan_policy)
         }
 
 #ifdef FEATURE_RDKB_AUTO_PORT_SWITCH
-        WanMgr_SetPortCapabilityForEthIntf(wan_policy);
+        // Move WanMgr_SetPortCapabilityForEthIntf to a thread to wait for EthAgent and save time
+        pthread_t portCapabilityTid;
+        if (pthread_create(&portCapabilityTid, NULL, &WanMgr_portCapabilityThread, (void *)wan_policy))
+        {
+            CcspTraceInfo((" %s %d Failed to create port capability set thread!\n", __FUNCTION__, __LINE__));
+            return ANSC_STATUS_FAILURE;
+        }
 #endif  //FEATURE_RDKB_AUTO_PORT_SWITCH
 
         //Starts wan controller threads
