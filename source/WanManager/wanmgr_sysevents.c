@@ -583,7 +583,15 @@ static void *WanManagerSyseventHandler(void *args)
                 {
                     check_lan_wan_ready();
                 }
-                creat("/tmp/phylink_wan_state_up",S_IRUSR| S_IWUSR| S_IRGRP| S_IROTH);
+                int fd = creat("/tmp/phylink_wan_state_up",S_IRUSR| S_IWUSR| S_IRGRP| S_IROTH);
+                if (fd == -1)
+                {
+                    CcspTraceError(("%s %d: Failed to create file: tmp/phylink_wan_state_up, error = [%d][%s]\n", __FUNCTION__, __LINE__, errno, strerror(errno)));
+                }
+                else
+                {
+                    close(fd);
+                }
             }
 #if defined (RDKB_EXTENDER_ENABLED)
             else if ((strcmp(name, SYSEVENT_MESH_WAN_LINK_STATUS) == 0))
