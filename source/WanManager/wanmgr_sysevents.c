@@ -17,6 +17,8 @@
  * limitations under the License.
 */
 
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sysevent/sysevent.h>
 #include <pthread.h>
 #include <syscfg/syscfg.h>
@@ -629,7 +631,6 @@ static void *WanManagerSyseventHandler(void *args)
         char cmd_str[BUF_SIZE] = {0};
         int namelen = sizeof(name);
         int vallen  = sizeof(val);
-	int fd = 0;
         async_id_t getnotification_asyncid;
         int err = 0;
         ANSC_STATUS result = 0;
@@ -724,15 +725,24 @@ static void *WanManagerSyseventHandler(void *args)
             }
             else if ((strcmp(name, SYSEVENT_WAN_STATUS) == 0) && (strcmp(val, SYSEVENT_VALUE_STARTED) == 0))
             {
+                int fd;
+
                 if (!lan_wan_started)
                 {
                     check_lan_wan_ready();
                 }
-                fd = creat("/tmp/phylink_wan_state_up",S_IRUSR| S_IWUSR| S_IRGRP| S_IROTH);
-		if(fd != -1)
-		{
-		    close(fd);
-		}
+
+                fd = open("/tmp/phylink_wan_state_up", O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+
+                if (fd == -1)
+                {
+                    CcspTraceError(("%s %d: Failed to create file: /tmp/phylink_wan_state_up, error = [%d][%s]\n", __FUNCTION__, __LINE__, errno, strerror(errno)));
+                }
+                else
+                {
+                    close(fd);
+                }
+
 #if defined(_DT_WAN_Manager_Enable_)
                                 sysevent_set(sysevent_fd, sysevent_token, "sendImmediateRA", "true", 0);
             }
