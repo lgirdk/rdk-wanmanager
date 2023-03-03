@@ -284,14 +284,15 @@ ANSC_STATUS Wan_ForceRenewDhcpIPv6(char *ifName)
 {
 
     /*send triggered renew request to DHCPv6C*/
-    if (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME) == TRUE)
-    {
-        int pid = util_getPidByName(DHCPV6_CLIENT_NAME);
-        CcspTraceInfo(("sending SIGUSR2 to dhcp6c, this will let the dhcp6c to send renew packet out \n"));
-        util_signalProcess(pid, SIGUSR2);
-    }
+    WanManager_StopDhcpv6Client(ifName);
+    CcspTraceInfo(("Dhcpv6 client has been killed. Restart it \n"));
+    WanManager_StartDhcpv6Client(ifName);
 
+#if 0
+    return  WanMgr_SetInterfaceStatus(ifName, WANMGR_IFACE_CONNECTION_IPV6_DOWN);
+#else
     return  ANSC_STATUS_SUCCESS; 
+#endif
 }
 
 static void* IpcServerThread( void *arg )
@@ -381,23 +382,16 @@ ANSC_STATUS WanMgr_SendMsgToIHC (ipoe_msg_type_t msgType, char *ifName)
     {
         // V6 UP Message needs Wan V6 IP
         char* pattern = NULL;
-        char ipv6_prefix[INET6_ADDRSTRLEN] = {0};
+        char ipv6_address[INET6_ADDRSTRLEN] = {0};
 
-        sysevent_get(sysevent_fd, sysevent_token, SYSCFG_FIELD_IPV6_PREFIX, ipv6_prefix, sizeof(ipv6_prefix));
-        if(ipv6_prefix == NULL  || *ipv6_prefix == '\0'|| (0 == strncmp(ipv6_prefix, "(null)", strlen("(null)"))))
+        syscfg_get(NULL, SYSCFG_FIELD_IPV6_ADDRESS, ipv6_address, sizeof(ipv6_address));
+        if( *ipv6_address == '\0'|| (0 == strncmp(ipv6_address, "(null)", strlen("(null)"))))
         {
-            CcspTraceError(("[%s-%d] Unable to get ipv6_prefix..\n",  __FUNCTION__, __LINE__));
+            CcspTraceError(("[%s-%d] Unable to get ipv6_address..\n",  __FUNCTION__, __LINE__));
             return ANSC_STATUS_FAILURE;
         }
 
-        pattern = strstr(ipv6_prefix, "/");
-        if (pattern == NULL)
-        {
-            CcspTraceError(("[%s-%d] Invalid ipv6_prefix :%s\n", ipv6_prefix));
-            return ANSC_STATUS_FAILURE;
-        }
-        sprintf(pattern, "%c%c", '1', '\0'); //Form the global address with ::1
-        strncpy(msgBody.ipv6Address, ipv6_prefix, sizeof(ipv6_prefix));
+        strncpy(msgBody.ipv6Address, ipv6_address, sizeof(ipv6_address));
         CcspTraceInfo(("[%s-%d] Sending IPOE_MSG_WAN_CONNECTION_IPV6_UP msg with addr :%s\n", __FUNCTION__, __LINE__, msgBody.ipv6Address));
     }
     else if (msgType == IPOE_MSG_WAN_CONNECTION_UP)
