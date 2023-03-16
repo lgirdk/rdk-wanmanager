@@ -209,24 +209,6 @@ ANSC_STATUS WanController_Init_StateMachine(void)
     DML_WAN_POLICY wan_policy;
 
     CcspTraceInfo(("%s %d \n", __FUNCTION__, __LINE__ ));
-
-#ifdef _LG_MV2_PLUS_
-    char buf[8];
-    syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
-    if (atoi(buf) == 0)
-    {
-        /* HACK: disable wanmanager if bridge mode is active. This logic
-         * shall be revisited once wanmanager supports bridge mode
-         */
-        if (access("/tmp/OS_WANMANAGER_ENABLED", F_OK) == 0)
-        {
-            unlink("/tmp/OS_WANMANAGER_ENABLED");
-        }
-        CcspTraceInfo(("%s %d: In bridge mode. Exiting Wan Manager \n", __FUNCTION__, __LINE__));
-        return ANSC_STATUS_SUCCESS;
-    }
-#endif
-
     // Get the configured wan policy
     if(WanMgr_RdkBus_getWanPolicy(&wan_policy) != ANSC_STATUS_SUCCESS) {
         CcspTraceInfo(("%s %d  Error: WanController_getWanPolicy() failed \n", __FUNCTION__, __LINE__ ));

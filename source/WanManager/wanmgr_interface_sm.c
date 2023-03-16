@@ -1391,14 +1391,23 @@ static void stopDhcpClients(DML_WAN_IFACE *pInterface)
     char buf[8];
     syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
 
+#ifdef _LG_MV2_PLUS_
+    if (atoi(buf) != 2 && atoi(buf) != 0) // Dont try to stop DHCPv4 client on IPv6 only mode and bridge mode
+#else
     if (atoi(buf) != 2) // Dont try to stop DHCPv4 client on IPv6 only
+#endif
     {
         if (WanManager_StopDhcpv4Client(pInterface, TRUE) == ANSC_STATUS_SUCCESS)
         {
             CcspTraceInfo(("DHCP v4 client on interface %s was successfully terminated \n", pInterface->Wan.Name));
         }
     }
+
+#ifdef _LG_MV2_PLUS_
+    if (atoi(buf) != 1 && atoi(buf) != 0) // Dont try to stop DHCPv6 client on IPv4 only mode and bridge mode
+#else
     if (atoi(buf) != 1) // Dont try to stop DHCPv6 client on IPv4 only mode
+#endif
     {
         if (WanManager_StopDhcpv6Client(pInterface) == ANSC_STATUS_SUCCESS)
         {
@@ -1415,20 +1424,28 @@ static void startDhcpClients (DML_WAN_IFACE *pInterface)
     syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
     erouter_mode = atoi(buf);
 
+#ifdef _LG_MV2_PLUS_
+    // Only Request the erouter0 IP in router mode. Don't request the erouter0 IP in bridge mode.
+    if (erouter_mode != 2 && erouter_mode != 0) // Dont run udhcpc in IPV6 only mode and bridge mode
+#else
     // For now request both the IP in bridge mode. Need clarification in requirements for bridgemode erouter0 IP
-
     if (erouter_mode != 2) // Dont run udhcpc in IPV6 only
+#endif
     {
         /* Start DHCPv4 client */
         pInterface->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(pInterface->Wan.Name);
-//      CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv4_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp4cPid));
+        CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv4_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp4cPid));
     }
 
+#ifdef _LG_MV2_PLUS_
+    if (erouter_mode != 1 && erouter_mode != 0) // Dont run dibbler in IPv4 only mode and bridge mode
+#else
     if (erouter_mode != 1) // Dont run dibbler in IPv4 only
+#endif
     {
         /* Start DHCPv6 Client */
         pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
-//      CcspTraceInfo(("%s %d - Started dhcpv6 client on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
+        CcspTraceInfo(("%s %d - Started dhcpv6 client on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
     }
 }
 
