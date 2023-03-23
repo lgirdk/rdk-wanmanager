@@ -2261,8 +2261,6 @@ static eWanState_t wan_transition_exit(WanMgr_IfaceSM_Controller_t* pWanIfaceCtr
     Update_Interface_Status();
     CcspTraceInfo(("%s %d - Interface '%s' - EXITING STATE MACHINE\n", __FUNCTION__, __LINE__, pInterface->Name));
 
-    WanMgr_Set_ISM_RunningStatus(FALSE);
-    
     return WAN_STATE_EXIT;
 }
 
