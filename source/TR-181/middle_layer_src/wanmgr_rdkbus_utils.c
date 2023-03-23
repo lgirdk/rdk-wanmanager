@@ -336,26 +336,6 @@ void WanMgr_SetPortCapabilityForEthIntf (DML_WAN_POLICY eWanPolicy)
     CcspTraceInfo(("%s: result[%s]\n", __FUNCTION__, (result != ANSC_STATUS_SUCCESS)?"FAILED":"SUCCESS"));
 }
 
-/* eth-agent isn't around before wanManager. Therefore portCapability setting fails.
- * Wait for EthAgent bus component to be ready.Do it in a thread to save time (around 5 seconds)
- * WARNING: This logic should be removed after inter-component dependency issues are
- * resolved with the new wanManager architecture implemented by the community.
- */
-void *WanMgr_portCapabilityThread(void *pWanPolicy)
-{
-    if (pWanPolicy != NULL)
-    {
-        pthread_detach(pthread_self());
-        WaitForInterfaceComponentReady("Ethernet");
-        WanMgr_SetPortCapabilityForEthIntf((DML_WAN_POLICY)pWanPolicy);
-    }
-    else
-    {
-        CcspTraceInfo((" %s:%d Argument is NULL \n", __FUNCTION__, __LINE__));
-    }
-    pthread_exit(NULL);
-}
-
 #endif  //FEATURE_RDKB_AUTO_PORT_SWITCH
 
 ANSC_STATUS WanMgr_RdkBus_Get_InterfaceRebootRequired(UINT IfaceIndex, BOOL *RebootRequired)

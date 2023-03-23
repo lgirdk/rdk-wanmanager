@@ -391,6 +391,7 @@ typedef struct _DML_WAN_INTERFACE
     DML_WANIFACE_DSLITE         DSLite;
     DATAMODEL_MARKING           Marking;
     DML_WANIFACE_SUBSCRIBE      Sub;
+    BOOL                        IfaceMgrInitted;
 } DML_WAN_IFACE;
 
 
