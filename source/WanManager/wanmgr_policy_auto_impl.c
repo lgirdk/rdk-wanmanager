@@ -1662,6 +1662,10 @@ static FailOverState_t State_FailOver_ActiveUp_StandbyUp(UINT Active, BOOL Activ
         CcspTraceInfo(("%s-%d : Change state to STATE_FAILOVER_ACTIVE_UP_STANDBY_DOWN\n", __FUNCTION__, __LINE__));
         return STATE_FAILOVER_ACTIVE_UP_STANDBY_DOWN;
     }
+    else if (ActiveStatus && StandbyStatus)
+    {
+        return STATE_FAILOVER_ACTIVE_UP_STANDBY_UP;
+    }
     else if(StandbyStatus)
     {
         //set ActiveLink false for Active Inst
