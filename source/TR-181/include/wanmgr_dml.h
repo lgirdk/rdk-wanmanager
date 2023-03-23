@@ -434,6 +434,7 @@ typedef struct _DML_WAN_INTERFACE
     DATAMODEL_MARKING           Marking;
     DML_WANIFACE_SUBSCRIBE      Sub;
     eWanState_t                 eCurrentState; 
+    BOOL                        IfaceMgrInitted;
 } DML_WAN_IFACE;
 
 
