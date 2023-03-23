@@ -166,7 +166,6 @@ ANSC_STATUS WanMgr_RdkBus_setDhcpv6DnsServerInfo(void);
 bool WanMgr_RestartUpdatePPPinfo(DML_WAN_IFACE *pWanIfaceData);
 
 #ifdef FEATURE_RDKB_AUTO_PORT_SWITCH
-void *WanMgr_portCapabilityThread(void *pWanPolicy);
 void WanMgr_SetPortCapabilityForEthIntf(DML_WAN_POLICY eWanPolicy);
 #endif  //FEATURE_RDKB_AUTO_PORT_SWITCH
 
