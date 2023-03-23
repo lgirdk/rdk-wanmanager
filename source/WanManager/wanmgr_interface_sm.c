@@ -272,14 +272,21 @@ static int wan_tearDownMapt()
  * @brief Get the status of Interface State Machine.
  * @return TRUE on running else FALSE
  ************************************************************************************/
-BOOL WanMgr_Get_ISM_RunningStatus()
+BOOL WanMgr_Get_ISM_RunningStatus(UINT idx)
 {
     BOOL status = FALSE;
     WanMgr_Config_Data_t* pWanConfigData = WanMgr_GetConfigData_locked();
     if(pWanConfigData != NULL)
     {
         DML_WANMGR_CONFIG* pWanConfig = &(pWanConfigData->data);
-        status = pWanConfig->Interface_SM_Running;
+        if (pWanConfig->ISMStatus & (1UL << idx))
+        {
+            status = TRUE;
+        }
+        else
+        {
+            status = FALSE;
+        }
         WanMgrDml_GetConfigData_release(pWanConfigData);
     }
     return status;
@@ -288,14 +295,22 @@ BOOL WanMgr_Get_ISM_RunningStatus()
 /************************************************************************************
  * @brief Update the status of Interface State Machine.
  ************************************************************************************/
-void WanMgr_Set_ISM_RunningStatus(bool status)
+void WanMgr_Set_ISM_RunningStatus(UINT idx, bool status)
 {
     WanMgr_Config_Data_t* pWanConfigData = WanMgr_GetConfigData_locked();
     if(pWanConfigData != NULL)
     {
         DML_WANMGR_CONFIG* pWanConfig = &(pWanConfigData->data);
-        pWanConfig->Interface_SM_Running = status;
-        CcspTraceInfo(("%s %d - Status[%s]\n", __FUNCTION__, __LINE__, (status)?"TRUE":"FALSE"));
+
+        if (status)
+        {
+            pWanConfig->ISMStatus |= (1UL << idx);
+        }
+        else
+        {
+            pWanConfig->ISMStatus &= ~(1UL << idx);
+        }
+
         WanMgrDml_GetConfigData_release(pWanConfigData);
     }
 }
@@ -1277,7 +1292,7 @@ static eWanState_t wan_transition_start(WanMgr_IfaceSM_Controller_t* pWanIfaceCt
 
     CcspTraceInfo(("%s %d - Interface '%s' - TRANSITION START\n", __FUNCTION__, __LINE__, pInterface->Name));
 
-    WanMgr_Set_ISM_RunningStatus(TRUE);
+    WanMgr_Set_ISM_RunningStatus(pInterface->uiIfaceIdx, TRUE);
 
     WanManager_GetDateAndUptime( buffer, &uptime );
     LOG_CONSOLE("%s [tid=%ld] Wan_init_start:%d\n", buffer, syscall(SYS_gettid), uptime);
@@ -3157,6 +3172,7 @@ static eWanState_t wan_state_exit(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
     memset(pWanIfaceCtrl->pIfaceData->Wan.Name, 0, sizeof(pWanIfaceCtrl->pIfaceData->Wan.Name));
     /* Clear DHCP data */
     WanManager_ClearDHCPData(pWanIfaceCtrl->pIfaceData);
+    WanMgr_Set_ISM_RunningStatus(pWanIfaceCtrl->pIfaceData->uiIfaceIdx, FALSE);
 
     return WAN_STATE_EXIT;
 }

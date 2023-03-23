@@ -1036,7 +1036,7 @@ static WcAwPolicyState_t Transistion_WanInterfaceUp (WanMgr_Policy_Controller_t 
         return STATE_AUTO_WAN_ERROR;
     }
 
-    if (WanMgr_Get_ISM_RunningStatus() == TRUE)
+    if (WanMgr_Get_ISM_RunningStatus(pWanController->activeInterfaceIdx) == TRUE)
     {
         CcspTraceInfo(("%s %d: Waiting to start new interface state machine \n", __FUNCTION__, __LINE__));
         return STATE_AUTO_WAN_INTERFACE_DOWN;
@@ -1222,7 +1222,7 @@ static WcAwPolicyState_t State_WaitingForIfaceTearDown (WanMgr_Policy_Controller
     }
 
     // check if iface sm is running
-    if (WanMgr_Get_ISM_RunningStatus() == TRUE)
+    if (WanMgr_Get_ISM_RunningStatus(pWanController->activeInterfaceIdx) == TRUE)
     {
         return STATE_AUTO_WAN_INTERFACE_TEARDOWN;
     }
@@ -1308,7 +1308,7 @@ static WcAwPolicyState_t State_RebootingPlatform (WanMgr_Policy_Controller_t * p
     }
 
     // check if interface state machine is still running
-    if (WanMgr_Get_ISM_RunningStatus() == TRUE)
+    if (WanMgr_Get_ISM_RunningStatus(pWanController->activeInterfaceIdx) == TRUE)
     {
         CcspTraceInfo(("%s %d: Iface state machine still running..\n", __FUNCTION__, __LINE__));
         return STATE_AUTO_WAN_REBOOT_PLATFORM;
@@ -1426,7 +1426,7 @@ static WcAwPolicyState_t State_WaitingForInterfaceSMExit(WanMgr_Policy_Controlle
 
     pFixedInterface->SelectionStatus = WAN_IFACE_NOT_SELECTED;
 
-    if(WanMgr_Get_ISM_RunningStatus() == TRUE)
+    if(WanMgr_Get_ISM_RunningStatus(pWanController->activeInterfaceIdx) == TRUE)
     {
         return STATE_AUTO_WAN_TEARING_DOWN;
     }

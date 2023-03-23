@@ -119,7 +119,7 @@ ANSC_STATUS WanController_Start_StateMachine(DML_WAN_POLICY swan_policy)
             DML_WANMGR_CONFIG* pWanConfig = &(pWanConfigData->data);
 
             WanEnable = pWanConfig->Enable;
-            WanStateMachineRunning = pWanConfig->Interface_SM_Running;
+            WanStateMachineRunning = pWanConfig->ISMStatus > 0 ? TRUE : FALSE;
             wan_policy = pWanConfig->Policy;
             WanPolicyChanged = pWanConfig->PolicyChanged;
             if((pWanConfig->PolicyChanged) && (WanStateMachineRunning == FALSE))
