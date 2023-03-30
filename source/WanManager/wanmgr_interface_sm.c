@@ -472,6 +472,10 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     snprintf(cmd,sizeof(cmd),"resolvconf -d %s.udhcpc",pInterface->Wan.Name);
     system(cmd);
 
+    // The default DNS resolution timeout is set to 5 seconds. Change it to a lower value.
+    snprintf(cmd,sizeof(cmd),"echo options timeout:2 | resolvconf -a %s.udhcpc",pInterface->Wan.Name);
+    system(cmd);
+
     if (addIPv4)
     {
         char buf[256] = {'\0'};
