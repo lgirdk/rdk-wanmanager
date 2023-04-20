@@ -1278,8 +1278,15 @@ static WcAwPolicyState_t State_InterfaceReconfiguration (WanMgr_Policy_Controlle
         }
         else
         {
+#ifdef _LG_MV2_PLUS_
+            //Note : Workaround, needs to be revisited.
+            //set false to all the interface with phy path Ethernet
+            //WanMgr_RdkBus_setEthernetUpstream(FALSE);
+            system("rm -rf /nvram/ethwan_interface");
+#else
             //set false to all the interface with phy path Ethernet
             WanMgr_RdkBus_setEthernetUpstream(FALSE);
+#endif
         }
 #endif
         if (WanMgr_CheckIfPlatformReconfiguringRequired (pWanController) == TRUE)
