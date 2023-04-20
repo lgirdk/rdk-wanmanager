@@ -851,6 +851,7 @@ Client_GetParamStringValue
 
 	else if (strcmp(ParamName, "Interface") == 0)
     {
+        WanMgr_DmlDhcpcGetCfg(NULL, &pDhcpc->Cfg);
         DmlGetInstanceByKeywordFromPandM(pDhcpc->Cfg.Interface, &instanceNumber);
         snprintf(interface, DATAMODEL_PARAM_LENGTH, PAM_IF_TABLE_OBJECT, instanceNumber);
 
