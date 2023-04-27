@@ -1492,6 +1492,17 @@ static void startDhcpClients (DML_WAN_IFACE *pInterface)
     erouter_mode = atoi(buf);
 
 #ifdef _LG_MV2_PLUS_
+    if (erouter_mode != 1 && erouter_mode != 0) // Dont run dibbler in IPv4 only mode and bridge mode
+#else
+    if (erouter_mode != 1) // Dont run dibbler in IPv4 only
+#endif
+    {
+        /* Start DHCPv6 Client */
+        pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
+        CcspTraceInfo(("%s %d - Started dhcpv6 client on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
+    }
+
+#ifdef _LG_MV2_PLUS_
     // Only Request the erouter0 IP in router mode. Don't request the erouter0 IP in bridge mode.
     if (erouter_mode != 2 && erouter_mode != 0) // Dont run udhcpc in IPV6 only mode and bridge mode
 #else
@@ -1502,17 +1513,6 @@ static void startDhcpClients (DML_WAN_IFACE *pInterface)
         /* Start DHCPv4 client */
         pInterface->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(pInterface->Wan.Name);
         CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv4_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp4cPid));
-    }
-
-#ifdef _LG_MV2_PLUS_
-    if (erouter_mode != 1 && erouter_mode != 0) // Dont run dibbler in IPv4 only mode and bridge mode
-#else
-    if (erouter_mode != 1) // Dont run dibbler in IPv4 only
-#endif
-    {
-        /* Start DHCPv6 Client */
-        pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
-        CcspTraceInfo(("%s %d - Started dhcpv6 client on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
     }
 }
 
@@ -2463,16 +2463,16 @@ static eWanState_t wan_state_obtaining_ip_addresses(WanMgr_IfaceSM_Controller_t*
     {
         if (pInterface->Wan.EnableDHCP == TRUE)
         {
+            if (pInterface->IP.Dhcp6cPid <= 0)
+            {
+                pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
+                CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
+            }
             // EnableDHCP changed to TRUE
             if (pInterface->IP.Dhcp4cPid <= 0)
             {
                 pInterface->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(pInterface->Wan.Name);
                 CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv4_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp4cPid));
-            }
-            if (pInterface->IP.Dhcp6cPid <= 0)
-            {
-                pInterface->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(pInterface->Wan.Name);
-                CcspTraceInfo(("%s %d - Started dhcpc on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, pInterface->Wan.Name, pInterface->IP.Dhcp6cPid));
             }
         }
         else
