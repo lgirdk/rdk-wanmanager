@@ -731,6 +731,12 @@ static int checkIpv6LanAddressIsReadyToUse()
     the same event when interface is down, so we ensure send the UP event only
     when interface has an IPV6-prefix.
     */
+
+#ifdef MULTILAN_FEATURE
+    sysevent_get(sysevent_fd, sysevent_token, "lan_ipaddr_v6", addr, sizeof(addr));
+    if (strlen(addr) > 0)
+        address_flag = 1;
+#else
     if (!getifaddrs(&ifap)) {
         for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
             if(strncmp(ifa->ifa_name,ETH_BRIDGE_NAME, strlen(ETH_BRIDGE_NAME)))
@@ -746,7 +752,7 @@ static int checkIpv6LanAddressIsReadyToUse()
         }//for loop
         freeifaddrs(ifap);
     }//getifaddr close
-
+#endif
     if(address_flag == 0) {
         CcspTraceError(("%s %d address_flag Failed\n", __FUNCTION__, __LINE__));
         return -1;
