@@ -2748,6 +2748,7 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_WAN_IFACE* pIfaceData)
         }
         else
         {
+            char buf[32];
             /*TODO: Revisit this*/
             //call function for changing the prlft and vallft
             // FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE : Handle Ip renew in handler thread. 
@@ -2755,6 +2756,9 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_WAN_IFACE* pIfaceData)
             {
                 CcspTraceError(("Life Time Setting Failed"));
             }
+            sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
+            if (strcmp(buf, WAN_STATUS_STARTED))
+                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STARTED, 0);
             sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_RADVD_RESTART, NULL, 0);
 #ifdef FEATURE_IPOE_HEALTH_CHECK
             pIfaceData->IP.Ipv6Renewed = TRUE;
