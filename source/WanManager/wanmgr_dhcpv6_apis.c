@@ -752,16 +752,6 @@ WanMgr_DmlDhcpv6cGetEnabled
     UNREFERENCED_PARAMETER(hContext);
     BOOL bEnabled = FALSE;
     char out[256] = {0};
-    BOOL dibblerEnabled = FALSE;
-
-// For XB3, AXB6 if dibbler flag enabled, check dibbler-client process status
-#if defined(_COSA_INTEL_XB3_ARM_) || defined(INTEL_PUMA7)
-        char buf[8];
-        if(( syscfg_get( NULL, "dibbler_client_enable_v2", buf, sizeof(buf))==0) && (strcmp(buf, "true") == 0))
-    {
-        dibblerEnabled = TRUE;
-    }
-#endif
 
 #if defined (_COSA_BCM_ARM_) || defined (_HUB4_PRODUCT_REQ_)
     FILE *fp = popen("ps |grep -i dibbler-client | grep -v grep", "r");
@@ -770,12 +760,7 @@ WanMgr_DmlDhcpv6cGetEnabled
    FILE *fp = popen("/usr/sbin/dibbler-client status |grep  client", "r");
 
 #else
-    FILE *fp;
-    // For XB3, AXB6 if dibbler flag enabled, check dibbler-client process status
-    if(dibblerEnabled)
-        fp = popen("ps |grep -i dibbler-client | grep -v grep", "r");
-    else
-            fp = popen("ps |grep -i ti_dhcp6c | grep erouter0 | grep -v grep", "r");
+    FILE *fp = popen("ps |grep -i dibbler-client | grep -v grep", "r");
 #endif
 
     if ( fp != NULL){
@@ -787,10 +772,7 @@ WanMgr_DmlDhcpv6cGetEnabled
             if ( strstr(out, "RUNNING,") )
                 bEnabled = TRUE;
 #else
-    // For XB3, AXB6 if dibbler flag enabled, check dibbler-client process status
-    if ( dibblerEnabled && _ansc_strstr(out, "dibbler-client") )
-                bEnabled = TRUE;
-        if ( _ansc_strstr(out, "erouter_dhcp6c") )
+            if ( _ansc_strstr(out, "dibbler-client") )
                 bEnabled = TRUE;
 #endif
        }
