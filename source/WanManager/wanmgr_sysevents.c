@@ -1050,7 +1050,29 @@ static ANSC_STATUS wanmgr_snmpv3_restart()
 
 ANSC_STATUS wanmgr_services_restart()
 {
-    wanmgr_sshd_restart();
+    char lan_ssh_access[8];
+    char wan_ssh_access[8];
+    int sshd_restart = 0;
+
+    syscfg_get(NULL, "mgmt_wan_sshaccess", wan_ssh_access, sizeof(wan_ssh_access));
+    if (strcmp(wan_ssh_access, "1") == 0)
+    {
+        sshd_restart = 1;
+    }
+    else
+    {
+        syscfg_get(NULL, "mgmt_lan_sshaccess", lan_ssh_access, sizeof(lan_ssh_access));
+        if (strcmp(lan_ssh_access, "1") == 0)
+        {
+            sshd_restart = 1;
+        }
+    }
+
+    if (sshd_restart)
+    {
+        wanmgr_sshd_restart();
+    }
+
 #ifdef SNMPV3_ENABLED
     wanmgr_snmpv3_restart();
 #endif // SNMPV3_ENABLED
