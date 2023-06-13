@@ -1440,6 +1440,10 @@ static ANSC_STATUS wanmgr_snmpv3_restart()
 
 ANSC_STATUS wanmgr_services_restart()
 {
+    char lan_ssh_access[8];
+    char wan_ssh_access[8];
+    int sshd_restart = 0;
+
     /** 
      * Below WAN services will be refreshed during below use cases
      * 1. WAN refresh
@@ -1449,7 +1453,26 @@ ANSC_STATUS wanmgr_services_restart()
      * in progress. Like snmpv3 query may happen from outside of CPE and may reconnect,
      * Someone trying to connect CPE via reversessh and it may delay or reconnect
      */
-    wanmgr_sshd_restart();
+
+    syscfg_get(NULL, "mgmt_wan_sshaccess", wan_ssh_access, sizeof(wan_ssh_access));
+    if (strcmp(wan_ssh_access, "1") == 0)
+    {
+        sshd_restart = 1;
+    }
+    else
+    {
+        syscfg_get(NULL, "mgmt_lan_sshaccess", lan_ssh_access, sizeof(lan_ssh_access));
+        if (strcmp(lan_ssh_access, "1") == 0)
+        {
+            sshd_restart = 1;
+        }
+    }
+
+    if (sshd_restart)
+    {
+        wanmgr_sshd_restart();
+    }
+
 #ifdef SNMPV3_ENABLED
     wanmgr_snmpv3_restart();
 #endif // SNMPV3_ENABLED
