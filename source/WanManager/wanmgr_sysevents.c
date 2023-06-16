@@ -829,10 +829,13 @@ int do_toggle_v6_status (void)
     if (CheckV6DefaultRule(wanInterface) != TRUE)
     {
         CcspTraceInfo(("%s %d toggle initiated\n", __FUNCTION__, __LINE__));
+        char cmd[256];
 
-        ret = v_secure_system("echo 2 > /proc/sys/net/ipv6/conf/%s/accept_ra ; "
-                              "echo 0 > /proc/sys/net/ipv6/conf/%s/autoconf",
-                              wanInterface, wanInterface);
+        snprintf(cmd, sizeof(cmd), "echo 2 > /proc/sys/net/ipv6/conf/%s/accept_ra; "
+                                   "echo 0 > /proc/sys/net/ipv6/conf/%s/autoconf",
+                                   wanInterface, wanInterface);
+        ret = system(cmd);
+
 #ifdef _LG_OFW_
         ret = v_secure_system("/usr/bin/rdisc6 -w 1 -r 1 %s", wanInterface);
 
