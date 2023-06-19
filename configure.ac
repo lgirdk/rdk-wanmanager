@@ -54,6 +54,21 @@ AC_HEADER_STDC
 
 SYSTEMD_CFLAGS=" "
 SYSTEMD_LDFLAGS=" "
+IPOEHC_CFLAGS=" "
+
+AC_ARG_ENABLE([ipoehc],
+              AS_HELP_STRING([--enable-ipoehc],[enable ipoe hc feature (default is no)]),
+              [IPOE_HEALTH_CHECK=$enableval],
+              [IPOE_HEALTH_CHECK="no"])
+
+case "$IPOE_HEALTH_CHECK" in
+  yes) IPOEHC_CFLAGS="-DFEATURE_IPOE_HEALTH_CHECK" ;;
+  no) echo "ipoehc is disabled." ;;
+  *) AC_MSG_ERROR([bad value $IPOE_HEALTH_CHECK for --enable-ipoehc ]) ;;
+esac
+
+AM_CONDITIONAL([FEATURE_IPOE_HEALTH_CHECK], [test "$IPOE_HEALTH_CHECK" = "yes"])
+AC_SUBST(IPOEHC_CFLAGS)
 
 AC_ARG_ENABLE([notify],
         AS_HELP_STRING([--enable-notify],[enable systemd notify]),
