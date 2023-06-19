@@ -64,6 +64,8 @@ typedef struct WanMgr_IfaceSM_Ctrl_st
     INT                     VirIfIdx;
 #ifdef FEATURE_IPOE_HEALTH_CHECK
     UINT                    IhcPid;
+    UINT                    Ihc_mg0_pid;
+    UINT                    Ihc_voip0_pid;
     wanmgr_ihc_status_t     IhcV4Status;
     wanmgr_ihc_status_t     IhcV6Status;
 #endif
