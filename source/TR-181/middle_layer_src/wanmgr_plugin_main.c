@@ -67,6 +67,9 @@
 #endif /** WAN_MANAGER_UNIFICATION_ENABLED */
 #include "wanmgr_dml_dhcpv4.h"
 #include "wanmgr_dml_dhcpv6.h"
+#ifdef FEATURE_IPOE_HEALTH_CHECK
+#include "wanmgr_ipoe_hc_dml.h"
+#endif
 
 void *                  g_pDslhDmlAgent;
 extern ANSC_HANDLE      g_MessageBusHandle_Irep;
@@ -578,6 +581,16 @@ int ANSC_EXPORT_API WanManagerDmlInit(ULONG uMaxVersionSupported, void* hCosaPlu
 
     pPlugInfo->RegisterFunction(pPlugInfo->hContext, "SentOption_GetEntryCount", SentOption_GetEntryCount);
 
+#ifdef FEATURE_IPOE_HEALTH_CHECK
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "IPoEHealthCheck_GetParamBoolValue", IPoEHealthCheck_GetParamBoolValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "IPoEHealthCheck_SetParamBoolValue", IPoEHealthCheck_SetParamBoolValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "IPoEHealthCheck_GetParamUlongValue", IPoEHealthCheck_GetParamUlongValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "IPoEHealthCheck_SetParamUlongValue", IPoEHealthCheck_SetParamUlongValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "IPoEHealthCheck_GetParamStringValue", IPoEHealthCheck_GetParamStringValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "IPoEHealthCheck_SetParamStringValue", IPoEHealthCheck_SetParamStringValue);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "IPoEHealthCheck_Validate", IPoEHealthCheck_Validate);
+    pPlugInfo->RegisterFunction(pPlugInfo->hContext, "IPoEHealthCheck_Commit", IPoEHealthCheck_Commit);
+#endif
 
 
     /* Create backend framework */
