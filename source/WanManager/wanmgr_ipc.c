@@ -26,6 +26,11 @@
 #include "wanmgr_sysevents.h"
 #include "wanmgr_dhcpv4_apis.h"
 
+#ifdef FEATURE_IPOE_HEALTH_CHECK
+#include "wanmgr_ipoe_hc_apis.h"
+#define MAX_ALLOWED_FORCED_RENEW 5
+#endif
+
 #define WANMGR_MAX_IPC_PROCCESS_TRY             5
 #define WANMGR_IPC_PROCCESS_TRY_WAIT_TIME       100000 //us
 
@@ -186,6 +191,18 @@ ANSC_STATUS WanMgr_SetInterfaceStatus(char *ifName, wanmgr_iface_status_t state)
 }
 
 #ifdef FEATURE_IPOE_HEALTH_CHECK
+ANSC_STATUS Wan_restart_ipoe_hc (void)
+{
+     if (DmlIPoESetEnable(false) == ANSC_STATUS_FAILURE)
+           return ANSC_STATUS_FAILURE;
+
+     sleep(1);
+
+     if (DmlIPoESetEnable(true) == ANSC_STATUS_FAILURE)
+           return ANSC_STATUS_FAILURE;
+
+     return ANSC_STATUS_SUCCESS;
+}
 
 static ANSC_STATUS WanMgr_IpcNewIhcMsg(ipc_ihc_data_t *pIhcMsg)
 {
@@ -212,6 +229,31 @@ static ANSC_STATUS WanMgr_IpcNewIhcMsg(ipc_ihc_data_t *pIhcMsg)
             if (Wan_ForceRenewDhcpIPv4(pIhcMsg->ifName) != ANSC_STATUS_SUCCESS)
             {
                 CcspTraceError(("[%s-%d] Failed to process IPoE v6 Echo Renew Event \n", __FUNCTION__, __LINE__));
+                return ANSC_STATUS_FAILURE;
+            }
+            break;
+        case IPOE_MSG_IHC_ECHO_RENEW_MGMT:
+            CcspTraceInfo(("[%s-%d] Received IPOE_MSG_IHC_ECHO_RENEW from IHC for intf: %s \n", __FUNCTION__, __LINE__, pIhcMsg->ifName));
+            if (Wan_ForceRenewVlan(pIhcMsg->ifName) != ANSC_STATUS_SUCCESS)
+            {
+                CcspTraceError(("[%s-%d] Failed to process IPoE mg0 Echo Renew Event \n", __FUNCTION__, __LINE__));
+                return ANSC_STATUS_FAILURE;
+            }
+            break;
+        case IPOE_MSG_IHC_ECHO_RENEW_VOIP:
+            CcspTraceInfo(("[%s-%d] Received IPOE_MSG_IHC_ECHO_RENEW from IHC for intf: %s \n", __FUNCTION__, __LINE__, pIhcMsg->ifName));
+            if (Wan_ForceRenewVlan(pIhcMsg->ifName) != ANSC_STATUS_SUCCESS)
+            {
+                CcspTraceError(("[%s-%d] Failed to process IPoE mg0 Echo Renew Event \n", __FUNCTION__, __LINE__));
+                return ANSC_STATUS_FAILURE;
+            }
+            break;
+        case IPOE_MSG_IHC_RESTART_DUO_BINDING_ERROR:
+            CcspTraceInfo(("[%s-%d] Received IPOE_MSG_IHC_RESTART_DUO_BINDING_ERROR from IHC for intf: %s \n", __FUNCTION__, __LINE__, pIhcMsg->ifName));
+            ANSC_STATUS err = Wan_restart_ipoe_hc();
+            if (err != ANSC_STATUS_SUCCESS)
+            {
+                CcspTraceError(("[%s-%d] Failed to restart all interfaces \n", __FUNCTION__, __LINE__));
                 return ANSC_STATUS_FAILURE;
             }
             break;
@@ -269,6 +311,44 @@ static ANSC_STATUS Wan_ForceRenewDhcpIPv4(char *ifName)
     return  ANSC_STATUS_SUCCESS; 
 }
 
+ANSC_STATUS Wan_ForceRenewVlan(char *ifName)
+{
+    ULONG pid = 0;
+    int actions_counter = 0;
+
+    if (GetNumberOfIPoEActions(&actions_counter) != ANSC_STATUS_SUCCESS)
+    {
+        CcspTraceInfo(("Not able to get the total number of renew request coming from ipoe hc process .. continue anyway ..\n"));
+    }
+
+    if (actions_counter > MAX_ALLOWED_FORCED_RENEW)
+    {
+        CcspTraceInfo(("Too many requests received by ipoe hc to renew IP .. ignore this request.\n"));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    if (strcmp(ifName, "mg0") == 0)
+    {
+        pid = GetMgtIntfPid();
+    }
+    else
+    {
+        pid = GetVoiceIntfPid();
+    }
+
+    if (pid != 0)
+    {
+        CcspTraceInfo(("sending SIGUSR1 to %s[pid=%d], this will let the %s to send renew packet out \n", DHCPV4_CLIENT_NAME, pid, DHCPV4_CLIENT_NAME));
+        util_signalProcess(pid, SIGUSR1);
+        SetNumberOfIPoEActions(ifName);
+    }
+    else
+    {
+        CcspTraceError(("Failed to get pid of interface %s !! \n"));
+    }
+
+    return ANSC_STATUS_SUCCESS;
+}
 #endif
 
 ANSC_STATUS Wan_ForceRenewDhcpIPv6(char *ifName)
