@@ -29,6 +29,13 @@
 #include "wanmgr_utils.h"
 #include "ipc_msg.h"
 
+#ifdef FEATURE_IPOE_HEALTH_CHECK
+#include "wanmgr_ipoe_hc_internal.h"
+#include "wanmgr_ipoe_hc_apis.h"
+#include "wanmgr_plugin_main_apis.h"
+extern WANMGR_BACKEND_OBJ *g_pWanMgrBE;
+#endif
+
 /* amount of time to sleep between collect process attempt if timeout was specified. */
 #define COLLECT_WAIT_INTERVAL_MS 40
 #define APP_TERMINATE_TIMEOUT (5 * MSECS_IN_SEC)
@@ -751,9 +758,17 @@ UINT WanManager_StartIpoeHealthCheckService(const char *ifName)
     }
 
     int IhcPid = 0;
-    char cmdArgs[BUFLEN_128] = {0};
+    char cmdArgs[128];
 
-    snprintf(cmdArgs, BUFLEN_128, "-i %s", ifName);
+    // Get params from DM
+    PCOSA_DATAMODEL_LGI_IPOEHC pMyObject = (PCOSA_DATAMODEL_LGI_IPOEHC) g_pWanMgrBE->hIPoE_hc;
+    if (pMyObject == NULL)
+    {
+        CcspTraceError(("Not able to get params for IPoE HC process to start\n"));
+        return 0;
+    }
+
+    snprintf(cmdArgs, sizeof(cmdArgs), "-i %s -s %d -r %d -l %d ", ifName, pMyObject->RetryInterval, pMyObject->IPRegularInterval, pMyObject->RetryLimit );
     CcspTraceInfo(("%s [%d]: Starting IHC with args - %s %s\n", __FUNCTION__, __LINE__, IHC_CLIENT_NAME, cmdArgs));
 
     IhcPid = WanManager_DoStartApp(IHC_CLIENT_NAME, cmdArgs);
