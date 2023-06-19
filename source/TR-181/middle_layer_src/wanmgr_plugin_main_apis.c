@@ -193,6 +193,11 @@ ANSC_STATUS BackEndManagerInitialize(ANSC_HANDLE hThisObject)
     pMyObject->hDhcpv6        = (ANSC_HANDLE)WanMgr_Dhcpv6Create();
     AnscTraceWarning(("  WanMgr_Dhcpv6Create done!\n"));
 
+#ifdef FEATURE_IPOE_HEALTH_CHECK
+    pMyObject->hIPoE_hc       = (ANSC_HANDLE)WanMgr_IPOE_HC_Create();
+    AnscTraceWarning(("  WanMgr_IPOE_HC_Create done!\n"));
+#endif
+
     return returnStatus;
 }
 
@@ -235,6 +240,13 @@ ANSC_STATUS BackEndManagerRemove(ANSC_HANDLE hThisObject)
     {
         WanMgr_Dhcpv6Remove((ANSC_HANDLE)pMyObject->hDhcpv6);
     }
+
+#ifdef FEATURE_IPOE_HEALTH_CHECK
+    if ( pMyObject->hIPoE_hc )
+    {
+        WanMgr_IPOE_HC_Remove((ANSC_HANDLE)pMyObject->hIPoE_hc);
+    }
+#endif
 
     /* Remove self */
     AnscFreeMemory((ANSC_HANDLE)pMyObject);
