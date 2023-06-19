@@ -957,11 +957,6 @@ BOOL WanIfCfg_GetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL* 
                 *pBool = pWanDmlIface->Wan.EnableDSLite;
                 ret = TRUE;
             }
-            if (strcmp(ParamName, "EnableIPoEHealthCheck") == 0)
-            {
-                *pBool = pWanDmlIface->Wan.EnableIPoE;
-                ret = TRUE;
-            }
             if (strcmp(ParamName, "EnableMAPT") == 0)
             {
                 *pBool = pWanDmlIface->Wan.EnableMAPT;
@@ -1037,11 +1032,6 @@ BOOL WanIfCfg_SetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL b
             if (strcmp(ParamName, "EnableDSLite") == 0)
             {
                 pWanDmlIface->Wan.EnableDSLite = bValue;
-                ret = TRUE;
-            }
-            if (strcmp(ParamName, "EnableIPoEHealthCheck") == 0)
-            {
-                pWanDmlIface->Wan.EnableIPoE = bValue;
                 ret = TRUE;
             }
             if (strcmp(ParamName, "EnableMAPT") == 0)
