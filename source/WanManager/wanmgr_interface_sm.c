@@ -289,6 +289,37 @@ int check_multivlan_enabled (void)
 }
 #endif
 
+static int sysctl_iface_set(const char *path, const char *ifname, const char *content)
+{
+    char buf[128];
+    char *filename;
+    size_t len;
+    int fd;
+
+    if (ifname) {
+        snprintf(buf, sizeof(buf), path, ifname);
+        filename = buf;
+    }
+    else
+        filename = path;
+
+    if ((fd = open(filename, O_WRONLY)) < 0) {
+        perror("Failed to open file");
+        return -1;
+    }
+
+    len = strlen(content);
+    if (write(fd, content, len) != (ssize_t) len) {
+        perror("Failed to write to file");
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+
+    return 0;
+}
+
 /************************************************************************************
  * @brief Get the status of Interface State Machine.
  * @return TRUE on running else FALSE
@@ -1546,6 +1577,12 @@ static void startDhcpClients (DML_WAN_IFACE *pInterface)
 
     syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
     erouter_mode = atoi(buf);
+
+    if (erouter_mode == 1)
+    {
+        // Disable ipv6 in ipv4 only mode
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", pInterface->Wan.Name, "1");
+    }
 
 #ifdef _LG_MV2_PLUS_
     if (erouter_mode != 1 && erouter_mode != 0) // Dont run dibbler in IPv4 only mode and bridge mode
