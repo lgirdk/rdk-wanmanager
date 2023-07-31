@@ -167,7 +167,11 @@ ANSC_STATUS wanmgr_sysevents_ipv4Info_set(const ipc_dhcpv4_data_t* dhcp4Info, co
 
     sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_IPV4_TIME_ZONE, dhcp4Info->timeZone, 0);
 
-    sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_DHCPV4_NTP_SERVER, dhcp4Info->ntpServer, 0);
+
+    if (strlen(dhcp4Info->ntpServer) >0)
+    {
+        sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_DHCPV4_NTP_SERVER, dhcp4Info->ntpServer, 0);
+    }
 
     sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_FIELD_IPV4_DOMAIN, dhcp4Info->domainName, 0);
 
