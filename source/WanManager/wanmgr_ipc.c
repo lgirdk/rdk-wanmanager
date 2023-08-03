@@ -345,7 +345,7 @@ static ANSC_STATUS Wan_StopDhcpIPv6(char *ifName)
 {
 
     /* Kill DHCPv6 client */
-    if (WanManager_StopDhcpv6Client(TRUE) != ANSC_STATUS_SUCCESS)
+    if (WanManager_StopDhcpv6Client(ifName) != ANSC_STATUS_SUCCESS)
     {
         CcspTraceInfo(("Failed to kill DHCPv6 Client \n"));
     }
@@ -359,14 +359,12 @@ ANSC_STATUS Wan_ForceRenewDhcpIPv6(char *ifName)
 
     /*send triggered renew request to DHCPv6C*/
     WanManager_StopDhcpv6Client(ifName);
+    WanMgr_SetInterfaceStatus(ifName, WANMGR_IFACE_CONNECTION_IPV6_DOWN);
     CcspTraceInfo(("Dhcpv6 client has been killed. Restart it \n"));
+    sleep(1);
     WanManager_StartDhcpv6Client(ifName);
 
-#if 0
-    return  WanMgr_SetInterfaceStatus(ifName, WANMGR_IFACE_CONNECTION_IPV6_DOWN);
-#else
     return  ANSC_STATUS_SUCCESS; 
-#endif
 }
 
 static void* IpcServerThread( void *arg )
