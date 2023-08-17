@@ -785,7 +785,8 @@ WanMgr_DmlDhcpv6cGetInfo
 
     if (pDhcpc)
     {
-        if (pDhcpc->Cfg.bEnabled)
+        //temp fix :- to be reverted after dhcp manager changes
+        if (!system("busybox pidof dibbler-client"))
             g_dhcpv6_client.Info.Status = pDhcpc->Info.Status = DML_DHCP_STATUS_Enabled;
         else
             g_dhcpv6_client.Info.Status = pDhcpc->Info.Status = DML_DHCP_STATUS_Disabled;
