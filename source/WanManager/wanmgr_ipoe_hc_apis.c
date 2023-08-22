@@ -287,5 +287,12 @@ ANSC_STATUS SaveIPOEHCParamInDB (void)
         WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
     }
 
+    if (pMyObject->CfgChanged)
+    {
+        // Restart process
+        Wan_restart_ipoe_hc();
+        pMyObject->CfgChanged = FALSE;
+    }
+
     return ANSC_STATUS_SUCCESS;
 }
