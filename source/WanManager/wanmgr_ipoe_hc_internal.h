@@ -24,6 +24,7 @@ typedef struct _COSA_DATAMODEL_LGI_IPOEHC_CLASS_CONTENT
     long unsigned   IPRegularInterval;
     long unsigned   RetryLimit;
     long unsigned   RetryInterval;
+    BOOL            CfgChanged;
 }
 COSA_DATAMODEL_LGI_IPOEHC, *PCOSA_DATAMODEL_LGI_IPOEHC;
 
