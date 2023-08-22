@@ -293,5 +293,6 @@ ANSC_STATUS SaveIPOEHCParamInDB (void)
         Wan_restart_ipoe_hc();
         pMyObject->CfgChanged = FALSE;
     }
+
     return ANSC_STATUS_SUCCESS;
 }

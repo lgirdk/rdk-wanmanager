@@ -83,19 +83,31 @@ BOOL IPoEHealthCheck_SetParamUlongValue (ANSC_HANDLE hInsContext, char *ParamNam
 
     if (strcmp(ParamName, "RegularInterval") == 0)
     {
-        pMyObject->IPRegularInterval = Value;
+        if (pMyObject->IPRegularInterval != Value)
+        {
+            pMyObject->IPRegularInterval = Value;
+            pMyObject->CfgChanged = TRUE;
+        }
         return TRUE;
     }
 
     if (strcmp(ParamName, "RetryInterval") == 0)
     {
-        pMyObject->RetryInterval = Value;
+        if (pMyObject->RetryInterval != Value)
+        {
+            pMyObject->RetryInterval = Value;
+            pMyObject->CfgChanged = TRUE;
+        }
         return TRUE;
     }
 
     if (strcmp(ParamName, "Limit") == 0)
     {
-        pMyObject->RetryLimit = Value;
+        if (pMyObject->RetryLimit != Value)
+        {
+            pMyObject->RetryLimit = Value;
+            pMyObject->CfgChanged = TRUE;
+        }
         return TRUE;
     } 
 
