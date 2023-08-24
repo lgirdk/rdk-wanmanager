@@ -2738,6 +2738,8 @@ static eWanState_t wan_state_standby(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
     }
     else if (pInterface->SelectionStatus == WAN_IFACE_ACTIVE)
     {
+        char buf[12];
+
         if (pInterface->IP.Ipv6Status == WAN_IFACE_IPV6_STATE_UP)
         {
             if (!BridgeWait)
@@ -2760,7 +2762,10 @@ static eWanState_t wan_state_standby(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
                 wanmgr_Ipv6Toggle();
             }
         }
-        if (pInterface->IP.Ipv6Status != WAN_IFACE_IPV6_STATE_UP || !BridgeWait)
+
+        if ((pInterface->IP.Ipv6Status != WAN_IFACE_IPV6_STATE_UP) ||
+            (!BridgeWait) ||
+            ((syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf)) == 0) && (strcmp(buf, "0") == 0)))
         {
             if (pInterface->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_UP)
             {
