@@ -624,15 +624,18 @@ static void *WanManagerSyseventHandler(void *args)
             {
                 /* NTP Status sync will be missed in case of quick sync failure and following time sync success from NTPD daemon..,So handling that scenario here */
                 /* SKYH4-6572 setting NTP STATUS to 3 (which means *synchronized*)  upon receiving SYSEVENT_SYNC_NTP_STATUS event from NTPD daemon on time sync */
+                CcspTraceInfo(("%s %d: SYSEVENT_SYNC_NTP_STATUS receved \n", __FUNCTION__, __LINE__));
                 system("syscfg set ntp_status 3");
                 system("sysevent set ntp_time_sync 1");
             }
             else if (strcmp(name,SYSEVENT_NTP_TIME_SYNC) == 0)
             {
+                CcspTraceInfo(("%s %d: SYSEVENT_NTP_TIME_SYNC receved \n", __FUNCTION__, __LINE__));
                 /*This script to set the ipv4-timeoffset sysevent value with "Europe/CET"
                  * or "Europe/London" time zone based on serial number.
                  * SKYH4-6730 This is required to set Timeoffset for Local time*/
-                v_secure_system("/etc/sky/sync_timeoffset.sh");
+                //TBD
+                //v_secure_system("/etc/sky/sync_timeoffset.sh");
             }
 #endif
             else if ( strcmp(name, SYSEVENT_IPV6_ENABLE) == 0 )
