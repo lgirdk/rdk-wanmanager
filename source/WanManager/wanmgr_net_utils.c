@@ -761,7 +761,6 @@ int WanManager_ProcessMAPTConfiguration(ipc_mapt_data_t *dhcp6cMAPTMsgBody, cons
     char cmdBMRConfig[BUFLEN_256];
     char cmdStartMAPT[BUFLEN_256];
     char cmdStartMAPTMeshBr[BUFLEN_256];
-    char cmdDisableMapFiltering[BUFLEN_64];
     int psidValue = 0;
     int ipv4IndexValue = 0;
     char ipAddressString[BUFLEN_32] = "";
@@ -1024,17 +1023,11 @@ int WanManager_ProcessMAPTConfiguration(ipc_mapt_data_t *dhcp6cMAPTMsgBody, cons
 #endif  //IVI_MULTI_BRIDGE_SUPPORT
 #endif  //IVI_KERNEL_SUPPORT
 
-    snprintf(cmdDisableMapFiltering, sizeof(cmdDisableMapFiltering), "echo 0 > /proc/sys/net/ipv4/conf/%s/rp_filter", vlanIf);
-
 #ifdef FEATURE_MAPT_DEBUG
-    MaptInfo("mapt: Disable RP Filtering:%s", cmdDisableMapFiltering);
+    MaptInfo("mapt: Disable RP Filtering: echo 0 > /proc/sys/net/ipv4/conf/%s/rp_filter", vlanIf);
 #endif
 
-    if ((ret = WanManager_DoSystemActionWithStatus("mapt", cmdDisableMapFiltering)) < RETURN_OK)
-    {
-        CcspTraceError(("Failed to run: %s:%d", cmdDisableMapFiltering, ret));
-        return ret;
-    }
+    sysctl_iface_set("/proc/sys/net/ipv4/conf/%s/rp_filter", vlanIf, "0");
 
 #ifdef NAT46_KERNEL_SUPPORT
     char cmdinterfaceCreate[BUFLEN_512];

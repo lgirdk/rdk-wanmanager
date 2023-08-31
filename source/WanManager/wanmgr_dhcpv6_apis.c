@@ -1850,9 +1850,9 @@ static void *InterfaceEventHandler_thrd(void *data)
                         }
                         if(tbuff[strlen(tbuff)-1] == '0')
                         {
-                            ret = v_secure_system("sysctl -w net.ipv6.conf.%s.autoconf=1",Inf_name);
+                            ret = sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", Inf_name, "1");
 			    if(ret != 0) {
-                                CcspTraceWarning(("%s: Failure in executing command via v_secure_system. ret:[%d] \n",__FUNCTION__,ret));
+                                CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
                             }             
                             ret = v_secure_system("ifconfig %s down;ifconfig %s up",Inf_name,Inf_name);
 			    if(ret != 0) {
@@ -2146,10 +2146,10 @@ dhcpv6c_dbg_thrd(void * in)
 
                         if(tbuff[strlen(tbuff)-1] == '0')
                         {
-                            ret = v_secure_system("sysctl -w net.ipv6.conf.%s.autoconf=1",token);
+                            ret = sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", token, "1");
 			    if(ret != 0) {
-                            CcspTraceWarning(("%s: Failure in executing command via v_secure_system. ret:[%d] \n", __FUNCTION__,ret));
-                            }
+                                CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
+                            }             
                             ret = v_secure_system("ifconfig %s down;ifconfig %s up",token,token);
 			    if(ret != 0) {
                                 CcspTraceWarning(("%s: Failure in executing command via v_secure_system. ret:[%d] \n",__FUNCTION__, ret));

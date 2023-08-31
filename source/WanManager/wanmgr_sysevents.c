@@ -843,14 +843,14 @@ int do_toggle_v6_status (void)
     {
         CcspTraceInfo(("%s %d toggle initiated\n", __FUNCTION__, __LINE__));
 
-        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.accept_ra=2", wanInterface);
-        if (ret != 0) {
-            CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
+        if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra", wanInterface, "2") != 0)
+        {
+            CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
         }
 
-        ret = v_secure_system("sysctl -w net.ipv6.conf.%s.autoconf=0", wanInterface);
-        if (ret != 0) {
-            CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
+        if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", wanInterface, "0") != 0)
+        {
+            CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
         }
 
         ret = v_secure_system("/usr/bin/rdisc6 -w 3 -r 1 %s", wanInterface);
@@ -876,14 +876,14 @@ int Force_IPv6_toggle (char* wanInterface)
     int ret = 0;
     CcspTraceInfo(("%s %d force toggle initiated\n", __FUNCTION__, __LINE__));
 
-    ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=1", wanInterface);
-    if (ret != 0) {
-        CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
+    if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", wanInterface, "1") != 0)
+    {
+        CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
     }
 
-    ret = v_secure_system("sysctl -w net.ipv6.conf.%s.disable_ipv6=0", wanInterface);
-    if (ret != 0) {
-        CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
+    if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/disable_ipv6", wanInterface, "0") != 0)
+    {
+        CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
     }
 
     return ret;
