@@ -24,6 +24,7 @@
 #include "wanmgr_sysevents.h"
 #include "wanmgr_rdkbus_utils.h"
 #include "wanmgr_ipc.h"
+#include "wanmgr_utils.h"
 #include "secure_wrapper.h"
 
 int sysevent_fd = -1;
@@ -1060,19 +1061,18 @@ void WanMgr_Configure_accept_ra(DML_VIRTUAL_IFACE * pVirtIf, BOOL EnableRa)
 
     CcspTraceInfo(("%s %d %s accept_ra for interface %s\n", __FUNCTION__, __LINE__,EnableRa?"Enabling":"Disabling", pVirtIf->Name));
    
-    int ret = 0;
-    ret = v_secure_system("sysctl -w net.ipv6.conf.%s.accept_ra=%d",pVirtIf->Name, (EnableRa?2:0));
-    if(ret != 0) {
-        CcspTraceWarning(("%s : Failure in executing command via v_secure_system. ret:[%d] \n",__FUNCTION__, ret));
+    if (sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra", pVirtIf->Name, EnableRa ? "2" : "0") != 0)
+    {
+        CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
     }
 
     if(EnableRa)
     {
         CcspTraceInfo(("%s %d Enabling forwarding for interface %s\n", __FUNCTION__, __LINE__,pVirtIf->Name));
-        v_secure_system("sysctl -w net.ipv6.conf.%s.forwarding=1",pVirtIf->Name);
-        v_secure_system("sysctl -w net.ipv6.conf.%s.accept_ra_pinfo=0",pVirtIf->Name);
-        v_secure_system("sysctl -w net.ipv6.conf.%s.accept_ra_defrtr=1",pVirtIf->Name);
-        v_secure_system("sysctl -w net.ipv6.conf.all.forwarding=1");
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", pVirtIf->Name, "1");
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_pinfo", pVirtIf->Name, "0");
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_defrtr", pVirtIf->Name, "1");
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/all/forwarding", NULL, "1");
         CcspTraceInfo(("%s %d Reset the ipv6 toggle after ra accept \n", __FUNCTION__, __LINE__));
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_TOGGLE, "TRUE", 0);
     }

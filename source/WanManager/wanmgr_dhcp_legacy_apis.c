@@ -145,7 +145,7 @@ void enable_IPv6(char* if_name)
         _get_shell_output3(fp, tbuff, sizeof(tbuff));
         if(tbuff[strlen(tbuff)-1] == '0')
         {
-                v_secure_system("sysctl -w net.ipv6.conf.%s.autoconf=1",if_name);
+                sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/autoconf", if_name, "1");
                 v_secure_system("ifconfig %s down;ifconfig %s up",if_name,if_name);
         }
 

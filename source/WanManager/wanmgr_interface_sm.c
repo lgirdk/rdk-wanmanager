@@ -1085,7 +1085,7 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     //Enabling IP forwarding 
     CcspTraceInfo(("%s %d - net.ipv4.ip_forward set to 1 \n", __FUNCTION__, __LINE__));
-    v_secure_system("sysctl -w net.ipv4.ip_forward=1");
+    sysctl_iface_set("/proc/sys/net/ipv4/ip_forward", NULL, "1");
 
     if (strstr(pInterface->BaseInterface, "Ethernet"))
     {
