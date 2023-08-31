@@ -158,4 +158,7 @@ void WanManager_Util_GetShell_output(char *cmd, char *out, int len);
 
 ANSC_STATUS WanMgr_RestartUpdateCfg (const char * param, int idx, char * output, int size);
 ANSC_STATUS WanMgr_RestartUpdateCfg_Bool (const char * param, int idx, BOOL* output);
+
+int sysctl_iface_set(const char *path, const char *ifname, const char *content);
+
 #endif /* _WANMGR_UTILS_H_ */
