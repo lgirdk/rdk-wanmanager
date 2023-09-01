@@ -35,5 +35,6 @@ ANSC_STATUS WanMgr_StartIpcServer(); /*IPC server to handle WAN Manager clients*
 ANSC_STATUS WanMgr_CloseIpcServer(void);
 ANSC_STATUS Wan_ForceRenewDhcpIPv6(char * ifName);
 ANSC_STATUS Wan_ForceRenewVlan(char * ifName);
+ANSC_STATUS Wan_ForceRenewDhcpIPv4(char * ifName);
 
 #endif /*_WANMGR_IPC_H_*/
