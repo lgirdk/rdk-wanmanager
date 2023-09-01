@@ -140,6 +140,8 @@
 #define SYSEVENT_DHCPV6_NTP_SERVER    "dhcpv6_ntp_server"
 #define SYSEVENT_NTPD_RESTART         "ntpd-restart"
 
+#define SYSEVENT_DHCPV4_RESTART       "dhcp_client_restart_mv3"
+
 //firewall restart
 #define SYSEVENT_FIREWALL_RESTART "firewall-restart"
 #define SYSEVENT_FIREWALL_STATUS "firewall-status"

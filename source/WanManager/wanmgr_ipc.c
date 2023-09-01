@@ -46,10 +46,6 @@ extern token_t sysevent_token;
 
 
 /* ---- Private Functions ------------------------------------ */
-#ifdef FEATURE_IPOE_HEALTH_CHECK
-static ANSC_STATUS Wan_ForceRenewDhcpIPv4(char * ifName);
-#endif /*FEATURE_IPOE_HEALTH_CHECK*/
-
 
 
 /* ---- Private Variables ------------------------------------ */
@@ -298,7 +294,7 @@ static ANSC_STATUS WanMgr_IpcNewIhcMsg(ipc_ihc_data_t *pIhcMsg)
     return ANSC_STATUS_SUCCESS;
 }
 
-static ANSC_STATUS Wan_ForceRenewDhcpIPv4(char *ifName)
+ANSC_STATUS Wan_ForceRenewDhcpIPv4(char *ifName)
 {
 
     /*send triggered renew request to DHCPC*/
