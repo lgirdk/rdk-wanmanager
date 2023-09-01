@@ -502,6 +502,10 @@ static void *WanManagerSyseventHandler(void *args)
     async_id_t factory_reset_status_asyncid;
 #endif /* FEATURE_MAPT */
 
+#if defined _LG_MV3_
+    async_id_t dhcp_client_restart_mv3_asyncid;
+#endif
+
 #if defined (_HUB4_PRODUCT_REQ_)
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_ULA_ADDRESS, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_ULA_ADDRESS, &lan_ula_address_event_asyncid);
@@ -551,6 +555,10 @@ static void *WanManagerSyseventHandler(void *args)
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_MESH_WAN_LINK_STATUS, &mesh_wan_link_status_asyncid);
 #endif /* RDKB_EXTENDER_ENABLED */
 
+#if defined _LG_MV3_
+    sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV4_RESTART, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV4_RESTART, &dhcp_client_restart_mv3_asyncid);
+#endif
 
     for(;;)
     {
@@ -783,6 +791,13 @@ static void *WanManagerSyseventHandler(void *args)
             {
                 sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_NTPD_RESTART, NULL, 0);
             }
+#if defined _LG_MV3_
+           else if (strcmp(name, SYSEVENT_DHCPV4_RESTART) == 0)
+           {
+               CcspTraceWarning(("%s line %d: calling force v4 renew for %s \n", __FUNCTION__, __LINE__, val));
+               Wan_ForceRenewDhcpIPv4(val);
+           }
+#endif
             else
             {
                 CcspTraceWarning(("%s %d undefined event %s:%s \n", __FUNCTION__, __LINE__, name, val));
