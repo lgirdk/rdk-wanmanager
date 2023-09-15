@@ -644,11 +644,11 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
         remove(RESOLV_CONF_FILE);
     }
 
-    snprintf(cmd,sizeof(cmd),"resolvconf -d %s.udhcpc",pInterface->Wan.Name);
+    snprintf(cmd,sizeof(cmd),"resolvconf -d %s.udhcpc",p_VirtIf->Name);
     system(cmd);
 
     // The default DNS resolution timeout is set to 5 seconds. Change it to a lower value.
-    snprintf(cmd,sizeof(cmd),"echo options timeout:2 | resolvconf -a %s.udhcpc",pInterface->Wan.Name);
+    snprintf(cmd,sizeof(cmd),"echo options timeout:2 | resolvconf -a %s.udhcpc",p_VirtIf->Name);
     system(cmd);
 
     if (addIPv4)
@@ -658,14 +658,14 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
         char *tok = NULL;
         int idx = 0;
 
-        snprintf(dns, sizeof(dns), "%s", pInterface->IP.Ipv4Data.dnsServer);
+        snprintf(dns, sizeof(dns), "%s", p_VirtIf->IP.Ipv4Data.dnsServer);
         tok = strtok(dns, " ");
 
         while (tok)
         {
             if (IsValidDnsServer(AF_INET, tok) == RETURN_OK)
             {
-                snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_WANIFNAME_DNS_INDEX, pInterface->Wan.Name, idx);
+                snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_WANIFNAME_DNS_INDEX, p_VirtIf->Name, idx);
                 sysevent_set(sysevent_fd, sysevent_token, syseventParam, tok, 0);
                 snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_FIELD_IPV4_DNS_INDEX, idx++);
                 sysevent_set(sysevent_fd, sysevent_token, syseventParam, tok, 0);
@@ -673,7 +673,7 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
                 snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%s ", tok);
 
                 CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, tok, RESOLV_CONF_FILE));
-                snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.udhcpc", tok, pInterface->Wan.Name);
+                snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.udhcpc", tok, p_VirtIf->Name);
                 system(cmd);
 
                 valid_dns = TRUE;
@@ -687,15 +687,15 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
             sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", buf, 0);
 
             snprintf(buf, sizeof(buf), "%d", idx);
-            snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_DNS_NUMBER, pInterface->Wan.Name);
+            snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_DNS_NUMBER, p_VirtIf->Name);
             sysevent_set(sysevent_fd, sysevent_token, syseventParam, buf, 0);
         }
 
-        if (strlen(pInterface->IP.Ipv4Data.domainName) > 0)
+        if (strlen(p_VirtIf->IP.Ipv4Data.domainName) > 0)
         {
             // Update domain name in resolv.conf
-            CcspTraceInfo(("%s %d: adding domainname  %s >> %s\n", __FUNCTION__, __LINE__, pInterface->IP.Ipv4Data.domainName, RESOLV_CONF_FILE));
-            snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | resolvconf -a %s.udhcpc", pInterface->IP.Ipv4Data.domainName, pInterface->Wan.Name);
+            CcspTraceInfo(("%s %d: adding domainname  %s >> %s\n", __FUNCTION__, __LINE__, p_VirtIf->IP.Ipv4Data.domainName, RESOLV_CONF_FILE));
+            snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | resolvconf -a %s.udhcpc", p_VirtIf->IP.Ipv4Data.domainName, pInterface->Name);
             system(cmd);
         }
     }
@@ -703,10 +703,10 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     if (addIPv6)
     {
         // v6 DNS1
-        if(IsValidDnsServer(AF_INET6, pInterface->IP.Ipv6Data.nameserver) == RETURN_OK)
+        if(IsValidDnsServer(AF_INET6, p_VirtIf->IP.Ipv6Data.nameserver) == RETURN_OK)
         {
             // v6 DNS1 is valid
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_DNS_PRIMARY, pInterface->IP.Ipv6Data.nameserver, 0);
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_DNS_PRIMARY, p_VirtIf->IP.Ipv6Data.nameserver, 0);
             valid_dns = TRUE;
         }
         else
@@ -716,10 +716,10 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
         }
 
         // v6 DNS2
-        if(IsValidDnsServer(AF_INET6, pInterface->IP.Ipv6Data.nameserver1) == RETURN_OK)
+        if(IsValidDnsServer(AF_INET6, p_VirtIf->IP.Ipv6Data.nameserver1) == RETURN_OK)
         {
             // v6 DNS2 is valid
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_DNS_SECONDARY, pInterface->IP.Ipv6Data.nameserver1, 0);
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_DNS_SECONDARY, p_VirtIf->IP.Ipv6Data.nameserver1, 0);
             valid_dns = TRUE;
         }
         else
@@ -738,7 +738,7 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     else
     {
         CcspTraceInfo(("%s %d - No valid nameserver is available, adding loopback address for nameserver\n", __FUNCTION__,__LINE__));
-        snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.udhcpc",LOOPBACK,pInterface->Wan.Name);
+        snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.udhcpc",LOOPBACK,p_VirtIf->Name);
         system(cmd);
     }
 
