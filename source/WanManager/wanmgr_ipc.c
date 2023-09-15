@@ -356,12 +356,9 @@ static ANSC_STATUS Wan_StopDhcpIPv6(char *ifName)
 ANSC_STATUS Wan_ForceRenewDhcpIPv6(char *ifName)
 {
 
-    /*send triggered renew request to DHCPv6C*/
     WanManager_StopDhcpv6Client(ifName);
     WanMgr_SetInterfaceStatus(ifName, WANMGR_IFACE_CONNECTION_IPV6_DOWN);
-    CcspTraceInfo(("Dhcpv6 client has been killed. Restart it \n"));
-    sleep(1);
-    WanManager_StartDhcpv6Client(ifName);
+    CcspTraceInfo(("Dhcpv6 client has been killed, Let interface SM restart it \n"));
 
     return  ANSC_STATUS_SUCCESS; 
 }
