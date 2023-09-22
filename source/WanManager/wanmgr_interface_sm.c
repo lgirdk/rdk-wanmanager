@@ -3271,7 +3271,7 @@ static eWanState_t wan_state_standby(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
                 wanmgr_Ipv6Toggle();
             }
         }
-        if (p_VirtIf->IP.Ipv6Status != WAN_IFACE_IPV6_STATE_UP || !BridgeWait)
+        if (p_VirtIf->IP.Ipv6Status != WAN_IFACE_IPV6_STATE_UP || !BridgeWait || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_NO_IP)
         {
             if (p_VirtIf->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_UP)
             {
