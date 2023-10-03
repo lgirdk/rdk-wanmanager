@@ -2432,7 +2432,7 @@ static eWanState_t wan_transition_ipv6_down(WanMgr_IfaceSM_Controller_t* pWanIfa
     else
     {
 
-        if (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, p_VirtIf->Name) != TRUE)
+        if (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, NULL/*p_VirtIf->Name*/) != TRUE)
         {
             /* Start DHCPv6 Client */
             CcspTraceInfo(("%s %d - Starting dibbler-client on interface %s \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
@@ -2561,7 +2561,7 @@ static eWanState_t wan_transition_mapt_feature_refresh(WanMgr_IfaceSM_Controller
 
         for(i= 0; i < 10; i++)
         {
-            if (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, p_VirtIf->Name) == TRUE)
+            if (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, NULL/*p_VirtIf->Name*/) == TRUE)
             {
                 // Before starting a V6 client, it may take some time to get the REPLAY for RELEASE from Previous V6 client.
                 // So wait for 1 to 10 secs for the process of Release & Kill the existing client
@@ -3333,7 +3333,7 @@ static eWanState_t wan_state_ipv4_leased(WanMgr_IfaceSM_Controller_t* pWanIfaceC
     if(p_VirtIf->IP.RefreshDHCP == TRUE &&
       p_VirtIf->IP.IPv6Source == DML_WAN_IP_SOURCE_DHCP &&
       p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK &&
-      WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, p_VirtIf->Name) != TRUE)
+      WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, NULL/*p_VirtIf->Name*/) != TRUE)
     {
         /* Start DHCPv6 Client */
         p_VirtIf->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(p_VirtIf, pInterface->IfaceType);
