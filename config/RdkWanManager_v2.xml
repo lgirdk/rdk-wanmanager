@@ -1414,5 +1414,48 @@
         </objects>
 	</object>
 <?endif?>
+<?ifdef FEATURE_IPOE_HEALTH_CHECK?>
+        <object>
+            <name>X_LGI-COM_IPoEHealthCheck</name>
+            <objectType>object</objectType>
+            <functions>
+                <func_GetParamBoolValue>IPoEHealthCheck_GetParamBoolValue</func_GetParamBoolValue>
+                <func_SetParamBoolValue>IPoEHealthCheck_SetParamBoolValue</func_SetParamBoolValue>
+                <func_GetParamUlongValue>IPoEHealthCheck_GetParamUlongValue</func_GetParamUlongValue>
+                <func_SetParamUlongValue>IPoEHealthCheck_SetParamUlongValue</func_SetParamUlongValue>
+                <func_GetParamStringValue>IPoEHealthCheck_GetParamStringValue</func_GetParamStringValue>
+                <func_SetParamStringValue>IPoEHealthCheck_SetParamStringValue</func_SetParamStringValue>
+                <func_Validate>IPoEHealthCheck_Validate</func_Validate>
+                <func_Commit>IPoEHealthCheck_Commit</func_Commit>
+                <func_Rollback>IPoEHealthCheck_Rollback</func_Rollback>
+            </functions>
+            <parameters>
+                <parameter>
+                  <name>Enable</name>
+                  <type>boolean</type>
+                  <syntax>bool</syntax>
+                  <writable>true</writable>
+                </parameter>
+                <parameter>
+                  <name>RegularInterval</name>
+                  <type>unsignedInt[30:120]</type>
+                  <syntax>uint32</syntax>
+                  <writable>true</writable>
+                </parameter>
+                <parameter>
+                  <name>Limit</name>
+                  <type>unsignedInt[1:10]</type>
+                  <syntax>uint32</syntax>
+                  <writable>true</writable>
+	        </parameter>
+                <parameter>
+                  <name>RetryInterval</name>
+                  <type>unsignedInt[1:30]</type>
+                  <syntax>uint32</syntax>
+                  <writable>true</writable>
+                </parameter>
+            </parameters>
+          </object>
+<?endif?>
     </objects>
 </dataModelInfo>
