@@ -728,15 +728,14 @@ static unsigned WanManager_GetMAPTbits(unsigned value, int pos, int num)
  */
 static ANSC_STATUS WanManager_GetLANIPAddress(char *ipAddress, size_t length)
 {
-    char lan_ip_address[IP_ADDR_LENGTH] = {0};
+    char lan_ip_address[IP_ADDR_LENGTH];
+    char lan_subnet_mask[IP_ADDR_LENGTH];
 
     if (syscfg_get(NULL, SYSCFG_LAN_IP_ADDRESS, lan_ip_address, sizeof(lan_ip_address)) != ANSC_STATUS_SUCCESS)
     {
         CcspTraceError(("Failed to get LAN IP address \n"));
         return ANSC_STATUS_FAILURE;
     }
-
-    char lan_subnet_mask[IP_ADDR_LENGTH] = {0};
 
     if (syscfg_get(NULL, SYSCFG_LAN_NET_MASK, lan_subnet_mask, sizeof(lan_subnet_mask)) != ANSC_STATUS_SUCCESS)
     {
@@ -1257,9 +1256,9 @@ int WanManager_ProcessMAPTConfiguration(ipc_mapt_data_t *dhcp6cMAPTMsgBody, WANM
 
 void WanManager_DisplayMAPTFeatureStatus(void)
 {
-    char isEnabled[BUFLEN_8] = {0};
+    char isEnabled[BUFLEN_8];
 
-    if(syscfg_get(NULL, "upnp_igd_enabled", isEnabled, BUFLEN_8) == 0)
+    if (syscfg_get(NULL, "upnp_igd_enabled", isEnabled, sizeof(isEnabled)) == 0)
     {
         if ( '1' == isEnabled[0] )
         {
@@ -1270,9 +1269,8 @@ void WanManager_DisplayMAPTFeatureStatus(void)
             CcspTraceInfo(("%s - MAP-T_enabled_UPnP_IGD_disabled\n", __FUNCTION__));
         }
     }
-    memset(isEnabled, 0, BUFLEN_8);
 
-    if (syscfg_get(NULL, "dmz_enabled", isEnabled, BUFLEN_8) == 0)
+    if (syscfg_get(NULL, "dmz_enabled", isEnabled, sizeof(isEnabled)) == 0)
     {
         if ( '1' == isEnabled[0] )
         {
@@ -1283,9 +1281,8 @@ void WanManager_DisplayMAPTFeatureStatus(void)
             CcspTraceInfo(("%s - MAP-T_enabled_DMZ_disabled\n", __FUNCTION__));
         }
     }
-    memset(isEnabled, 0, BUFLEN_8);
 
-    if (syscfg_get(NULL, "CosaNAT::port_forward_enabled", isEnabled, BUFLEN_8) == 0)
+    if (syscfg_get("CosaNAT", "port_forward_enabled", isEnabled, sizeof(isEnabled)) == 0)
     {
         if ( '1' == isEnabled[0] )
         {
@@ -1296,9 +1293,8 @@ void WanManager_DisplayMAPTFeatureStatus(void)
             CcspTraceInfo(("%s - MAP-T_enabled_Port_Forwarding_disabled\n", __FUNCTION__));
         }
     }
-    memset(isEnabled, 0, BUFLEN_8);
 
-    if (syscfg_get(NULL, "CosaNAT::port_trigger_enabled", isEnabled, BUFLEN_8) == 0)
+    if (syscfg_get("CosaNAT", "port_trigger_enabled", isEnabled, sizeof(isEnabled)) == 0)
     {
         if ( '1' == isEnabled[0] )
         {
@@ -1309,9 +1305,8 @@ void WanManager_DisplayMAPTFeatureStatus(void)
             CcspTraceInfo(("%s - MAP-T_enabled_Port_Triggering_disabled\n", __FUNCTION__));
         }
     }
-    memset(isEnabled, 0, BUFLEN_8);
 
-    if (syscfg_get(NULL, "mgmt_wan_httpaccess_ert", isEnabled, BUFLEN_8)== 0)
+    if (syscfg_get(NULL, "mgmt_wan_httpaccess_ert", isEnabled, sizeof(isEnabled)) == 0)
     {
         if ( '1' == isEnabled[0] )
         {
@@ -1322,23 +1317,19 @@ void WanManager_DisplayMAPTFeatureStatus(void)
             CcspTraceInfo(("%s - MAP-T_enabled_User_Remote_Mgt_http_disabled\n", __FUNCTION__));
         }
     }
-    else
+    else if (syscfg_get(NULL, "mgmt_wan_httpaccess", isEnabled, sizeof(isEnabled)) == 0)
     {
-        if (syscfg_get(NULL, "mgmt_wan_httpaccess", isEnabled, BUFLEN_8)== 0)
+        if ( '1' == isEnabled[0] )
         {
-            if ( '1' == isEnabled[0] )
-            {
-                CcspTraceInfo(("%s - MAP-T_enabled_User_Remote_Mgt_http_enabled\n", __FUNCTION__));
-            }
-            else
-            {
-                CcspTraceInfo(("%s - MAP-T_enabled_User_Remote_Mgt_http_disabled\n", __FUNCTION__));
-            }
+            CcspTraceInfo(("%s - MAP-T_enabled_User_Remote_Mgt_http_enabled\n", __FUNCTION__));
+        }
+        else
+        {
+            CcspTraceInfo(("%s - MAP-T_enabled_User_Remote_Mgt_http_disabled\n", __FUNCTION__));
         }
     }
-    memset(isEnabled, 0, BUFLEN_8);
 
-    if (syscfg_get(NULL, "mgmt_wan_httpsaccess", isEnabled, BUFLEN_8) == 0)
+    if (syscfg_get(NULL, "mgmt_wan_httpsaccess", isEnabled, sizeof(isEnabled)) == 0)
     {
         if ( '1' == isEnabled[0] )
         {
