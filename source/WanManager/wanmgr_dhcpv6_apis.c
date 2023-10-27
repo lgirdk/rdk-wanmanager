@@ -134,6 +134,17 @@ void _get_shell_output(FILE *fp, char * out, int len)
 
 }
 
+static ANSC_STATUS syscfg_set_string(const char* name, const char* value)
+{
+    ANSC_STATUS ret = ANSC_STATUS_SUCCESS;
+    if (syscfg_set_commit(NULL, name, value) != 0)
+    {
+        CcspTraceError(("syscfg_set failed: %s %s\n", name, value));
+        ret = ANSC_STATUS_FAILURE;
+    }
+
+    return ret;
+}
 
 
 /*
