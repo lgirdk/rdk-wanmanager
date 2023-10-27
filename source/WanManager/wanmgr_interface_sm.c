@@ -403,8 +403,33 @@ static BOOL WanMgr_RestartFindExistingLink (WanMgr_IfaceSM_Controller_t* pWanIfa
     return ret;
 }
 
+static int hasTimePassed(unsigned int n) 
+{
+    // Static variable to store the timestamp of the last invocation
+    static struct timespec last_timestamp = {0, 0};
+    struct timespec current_timestamp;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &current_timestamp);
+
+    // Calculate the time difference in milliseconds
+    unsigned int elapsed_time =
+        (current_timestamp.tv_sec - last_timestamp.tv_sec) * 1000 +
+        (current_timestamp.tv_nsec - last_timestamp.tv_nsec) / 1000000;
+
+    // Check if at least n milliseconds have passed
+    if (elapsed_time >= n) 
+    {
+        last_timestamp = current_timestamp;  // Update the last_timestamp
+        return 1;  // Return true
+    }
+
+    return 0;  // Return false
+}
+
 static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
 {
+    if (!hasTimePassed(1000))
+        return;
+
     if (pWanIfaceCtrl == NULL || pWanIfaceCtrl->WanEnable == FALSE)
     {
         CcspTraceError(("%s %d: invalid args..\n", __FUNCTION__, __LINE__));
