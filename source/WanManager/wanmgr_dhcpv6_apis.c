@@ -1970,7 +1970,7 @@ int setUpLanPrefixIPv6(DML_VIRTUAL_IFACE* pVirtIf)
          */
         memset(cmdLine, 0, sizeof(cmdLine));
 #ifndef _HUB4_PRODUCT_REQ_
-        snprintf(cmdLine, sizeof(cmdLine), "sysevent set ipv6_prefix %s ",v6pref);
+        snprintf(cmdLine, sizeof(cmdLine), "sysevent set ipv6_prefix %s ",pVirtIf->IP.Ipv6Data.sitePrefix);
 #else
         snprintf(cmdLine, sizeof(cmdLine), "sysevent set zebra-restart ");
 #endif
