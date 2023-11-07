@@ -4181,9 +4181,6 @@ static void WanMgr_IfaceMgr_Init(INT iface_idx)
         {
             pWanIfaceData->IfaceMgrInitted = TRUE;
             WaitForInterfaceComponentReady("Ethernet");
-#ifdef FEATURE_RDKB_AUTO_PORT_SWITCH
-            WanMgr_SetPortCapabilityForEthIntf(wan_policy);
-#endif
         }
         WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
     }
