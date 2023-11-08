@@ -672,10 +672,6 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     snprintf(cmd,sizeof(cmd),"resolvconf -d %s.udhcpc",p_VirtIf->Name);
     system(cmd);
 
-    // The default DNS resolution timeout is set to 5 seconds. Change it to a lower value.
-    snprintf(cmd,sizeof(cmd),"echo options timeout:2 | resolvconf -a %s.udhcpc",p_VirtIf->Name);
-    system(cmd);
-
     if (addIPv4)
     {
         char buf[256] = {'\0'};
@@ -756,15 +752,22 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCP_SERVER_RESTART, NULL, 0);
 
-    if (valid_dns == TRUE)
+    if (addIPv4 == TRUE || addIPv6 == TRUE)
     {
-        CcspTraceInfo(("%s %d - Active domainname servers set!\n", __FUNCTION__,__LINE__));
-    }
-    else
-    {
-        CcspTraceInfo(("%s %d - No valid nameserver is available, adding loopback address for nameserver\n", __FUNCTION__,__LINE__));
-        snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.udhcpc",LOOPBACK,p_VirtIf->Name);
+        // The default DNS resolution timeout is set to 5 seconds. Change it to a lower value.
+        snprintf(cmd, sizeof(cmd), "echo options timeout:2 | resolvconf -a %s.udhcpc", p_VirtIf->Name);
         system(cmd);
+
+        if (valid_dns == TRUE)
+        {
+            CcspTraceInfo(("%s %d - Active domainname servers set!\n", __FUNCTION__, __LINE__));
+        }
+        else
+        {
+            CcspTraceInfo(("%s %d - No valid nameserver is available, adding loopback address for nameserver\n", __FUNCTION__, __LINE__));
+            snprintf(cmd, sizeof(cmd), "echo nameserver %s | resolvconf -a %s.udhcpc", LOOPBACK, p_VirtIf->Name);
+            system(cmd);
+        }
     }
 
 #else
