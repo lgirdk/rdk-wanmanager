@@ -28,6 +28,8 @@
 #include "wanmgr_ipc.h"
 #include "wanmgr_utils.h"
 #include "secure_wrapper.h"
+#include <ccsp_syslog.h>
+#include "platform_hal.h"
 
 int sysevent_fd = -1;
 token_t sysevent_token;
@@ -763,6 +765,16 @@ static void *WanManagerSyseventHandler(void *args)
                 {
                     check_lan_wan_ready();
                 }
+#if defined(FEATURE_NETWORK_LOGS) && defined(_LG_MV3_)
+                char modelName[16];
+                if (platform_hal_GetModelName(modelName) == RETURN_OK)
+                {
+                    if (strcmp(modelName, "F5685LGE") == 0)
+                    {
+                        syslog_networklog("NETWORK",LOG_NOTICE,"%s","WAN Interface Up");
+                    }
+                }
+#endif
 
                 fd = open("/tmp/phylink_wan_state_up", O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 
@@ -782,12 +794,23 @@ static void *WanManagerSyseventHandler(void *args)
             {
                 needDibblerRestart = TRUE;
                 v_secure_system("sysevent set dibbler-restart false");
-
+#endif
             }
             else if ((strcmp(name, SYSEVENT_WAN_STATUS) == 0) && (strcmp(val, SYSEVENT_VALUE_STOPPED) == 0))
             {
+#if defined(_DT_WAN_Manager_Enable_)
                 needDibblerRestart = TRUE;
 	        sysevent_set(sysevent_fd, sysevent_token, "sendImmediateRA", "true", 0);
+#endif
+#if defined(FEATURE_NETWORK_LOGS) && defined(_LG_MV3_)
+                char modelName[16];
+                if (platform_hal_GetModelName(modelName) == RETURN_OK)
+                {
+                    if (strcmp(modelName, "F5685LGE") == 0)
+                    {
+                        syslog_networklog("NETWORK",LOG_ERR,"%s","WAN Interface down");
+                    }
+                }
 #endif
             }
 #if defined (RDKB_EXTENDER_ENABLED)
