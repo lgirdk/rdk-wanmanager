@@ -2144,6 +2144,27 @@ ANSC_STATUS WanManager_CheckGivenPriorityExists(INT IfIndex, UINT uiTotalIfaces,
     return retStatus;
 }
 
+ANSC_STATUS WanManager_ConfigurePktFlow(char *activeWanType, char *ifName)
+{
+#ifdef _LG_MV2_PLUS_
+    char cmd[128];
+
+    CcspTraceInfo(("%s:%d %s is active, configuring packet flow..\n", __FUNCTION__, __LINE__, activeWanType));
+    if (strcmp(activeWanType, "WanOE") && strcmp(activeWanType, "CM"))
+    {
+        CcspTraceError(("%s Unknown WAN type (%s)..Can not configure packet flow\n", __FUNCTION__, activeWanType));
+        return ANSC_STATUS_FAILURE;
+    }
+    snprintf(cmd, sizeof(cmd), "latticecli -n \"set AltWan.EthWanInterface %s\"", !strcmp(activeWanType, "WanOE") ? ifName : "disable");
+    system(cmd);
+#else
+    (void)activeWanType;
+    (void)ifName;
+#endif /* !_LG_MV2_PLUS_ */
+
+    return ANSC_STATUS_SUCCESS;
+}
+
 ANSC_STATUS WanManager_CheckGivenTypeExists(INT IfIndex, UINT uiTotalIfaces, DML_WAN_IFACE_TYPE priorityType, INT priority, BOOL *Status)
 {
     ANSC_STATUS             retStatus    = ANSC_STATUS_SUCCESS;
