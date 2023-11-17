@@ -222,6 +222,8 @@ static ANSC_STATUS WanMgr_ActivateGroup(UINT groupId)
         WanMgrDml_GetIfaceGroup_release();
     }
 
+    WanManager_ConfigurePktFlow();
+
     return ANSC_STATUS_SUCCESS;
 }
 
