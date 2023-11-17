@@ -2270,6 +2270,89 @@ ANSC_STATUS WanManager_CheckGivenPriorityExists(INT IfIndex, UINT uiTotalIfaces,
     return retStatus;
 }
 
+ANSC_STATUS WanManager_ConfigurePktFlow(void)
+{
+#ifdef _LG_MV2_PLUS_
+
+    /*
+     * Currently only supports DOCSIS and WanOE interfaces.
+     */
+    char cmd[100];
+    char active_interface[64];
+    char active_displayname[64];
+    char inactive_interface[64];
+    char inactive_displayname[64];
+    unsigned int count, i;
+
+    active_interface[0] = 0;
+    active_displayname[0] = 0;
+    inactive_interface[0] = 0;
+    inactive_displayname[0] = 0;
+
+    count = WanMgr_IfaceData_GetTotalWanIface();
+
+    for (i = 0; i < count; i++)
+    {
+        WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(i);
+
+        if (pWanDmlIfaceData != NULL)
+        {
+            DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
+
+            if (pWanIfaceData->Selection.Status == WAN_IFACE_ACTIVE)
+            {
+                strcpy(active_interface, pWanIfaceData->Name);
+                strcpy(active_displayname, pWanIfaceData->DisplayName);
+            }
+            else
+            {
+                strcpy(inactive_interface, pWanIfaceData->Name);
+                strcpy(inactive_displayname, pWanIfaceData->DisplayName);
+            }
+
+            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+        }
+    }
+
+    if (strcmp(active_displayname, "WanOE") == 0)
+    {
+        CcspTraceInfo(("%s WanOE is active, configuring packet flow..\n", __FUNCTION__));
+
+        snprintf(cmd, sizeof(cmd), "swport_wan %s 1", active_interface);
+        sysctl_iface_set("/proc/driver/dqnet/cmd", NULL, cmd);
+    }
+    else if ((strcmp(active_displayname, "CM") == 0) || (strcmp(active_displayname, "DOCSIS") == 0))
+    {
+        CcspTraceInfo(("%s DOCSIS is active, configuring packet flow..\n", __FUNCTION__));
+
+        if (strcmp(inactive_displayname, "WanOE") == 0)
+        {
+            snprintf(cmd, sizeof(cmd), "swport_wan %s 0", inactive_interface);
+            sysctl_iface_set("/proc/driver/dqnet/cmd", NULL, cmd);
+        }
+        else
+        {
+            CcspTraceError(("%s Unknown inactive interface type (%s)..Can not configure packet flow\n", __FUNCTION__, inactive_displayname));
+            return ANSC_STATUS_FAILURE;
+        }
+    }
+    else
+    {
+        CcspTraceError(("%s Unknown interface type (%s)..Can not configure packet flow\n", __FUNCTION__, active_displayname));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    sysctl_iface_set("/sys/class/net/%s/netdev_group", inactive_interface, "1");
+    sysctl_iface_set("/sys/class/net/%s/netdev_group", active_interface, "2");
+
+    snprintf(cmd, sizeof(cmd), "wandev %s", active_interface);
+    sysctl_iface_set("/proc/driver/flowmgr/cmd", NULL, cmd);
+
+#endif
+
+    return ANSC_STATUS_SUCCESS;
+}
+
 ANSC_STATUS WanManager_CheckGivenTypeExists(INT IfIndex, UINT uiTotalIfaces, DML_WAN_IFACE_TYPE priorityType, INT priority, BOOL *Status)
 {
     ANSC_STATUS             retStatus    = ANSC_STATUS_SUCCESS;
