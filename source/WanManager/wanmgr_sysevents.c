@@ -298,6 +298,11 @@ if ( TRUE == UseWANMACForManagementServices )
     snprintf(value, sizeof(value), "%u",dhcp4Info->leaseTime);
     sysevent_set(sysevent_fd, sysevent_token,name, value, 0);
 
+    if (dhcp4Info->ntpServer[0] != '\0')
+    {
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCPV4_NTP_SERVER, dhcp4Info->ntpServer, 0);
+    }
+
 #endif
     return ANSC_STATUS_SUCCESS;
 }
