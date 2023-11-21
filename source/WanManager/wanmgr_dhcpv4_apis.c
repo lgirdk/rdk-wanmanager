@@ -94,6 +94,7 @@ static ANSC_STATUS wanmgr_dchpv4_get_ipc_msg_info(WANMGR_IPV4_DATA* pDhcpv4Data,
     memcpy(pDhcpv4Data->dhcpServerId, pIpcIpv4Data->dhcpServerId, BUFLEN_64);
     memcpy(pDhcpv4Data->dhcpState, pIpcIpv4Data->dhcpState, BUFLEN_64);
 #endif
+    memcpy(pDhcpv4Data->ntpServer, pIpcIpv4Data->ntpServer, BUFLEN_64);
 
     if( ( TRUE == pIpcIpv4Data->mtuAssigned ) && ( 0 != pIpcIpv4Data->mtuSize ) )
     {
@@ -144,7 +145,8 @@ ANSC_STATUS wanmgr_handle_dhcpv4_event_data(DML_VIRTUAL_IFACE* pVirtIf)
 #if !defined(_LG_OFW_)
       strcmp(pVirtIf->IP.Ipv4Data.dnsServer1, pDhcpcInfo->dnsServer1) ||
 #endif
-      strcmp(pVirtIf->IP.Ipv4Data.domainName, pDhcpcInfo->domainName))
+      strcmp(pVirtIf->IP.Ipv4Data.domainName, pDhcpcInfo->domainName) ||
+      strcmp(pVirtIf->IP.Ipv4Data.ntpServer, pDhcpcInfo->ntpServer))
     {
         CcspTraceInfo(("%s %d - IPV4 configuration changed \n", __FUNCTION__, __LINE__));
         IPv4ConfigChanged = TRUE;
@@ -162,7 +164,7 @@ ANSC_STATUS wanmgr_handle_dhcpv4_event_data(DML_VIRTUAL_IFACE* pVirtIf)
 
     if (pDhcpcInfo->addressAssigned)
     {
-        CcspTraceInfo(("assigned ip=%s netmask=%s gateway=%s dns server=%s,%s leasetime = %d, rebindtime = %d, renewaltime = %d, dhcp state = %s mtu = %d\n",
+        CcspTraceInfo(("assigned ip=%s netmask=%s gateway=%s dns server=%s,%s leasetime = %d, rebindtime = %d, renewaltime = %d, dhcp state = %s mtu = %d, ntpServer=%s\n",
                      pDhcpcInfo->ip,
                      pDhcpcInfo->mask,
                      pDhcpcInfo->gateway,
@@ -172,7 +174,8 @@ ANSC_STATUS wanmgr_handle_dhcpv4_event_data(DML_VIRTUAL_IFACE* pVirtIf)
                      pDhcpcInfo->rebindingTime,
                      pDhcpcInfo->renewalTime,
                      pDhcpcInfo->dhcpState,
-                     pDhcpcInfo->mtuSize));
+                     pDhcpcInfo->mtuSize,
+                     pDhcpcInfo->ntpServer));
 
         if (IPv4ConfigChanged)
         {
