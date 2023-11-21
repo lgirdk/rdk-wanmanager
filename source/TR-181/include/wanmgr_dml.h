@@ -268,6 +268,7 @@ typedef struct _WANMGR_IPV4_DATA
     char dhcpState[BUFLEN_64];         /** Dhcp state. */
     uint32_t leaseTime;                /** Lease time, , if addressAssigned==TRUE */
 #endif
+    char ntpServer[BUFLEN_64];         /** NTP Server IP */
 } WANMGR_IPV4_DATA;
 
 
