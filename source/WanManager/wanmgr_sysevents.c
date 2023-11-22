@@ -258,6 +258,8 @@ ANSC_STATUS wanmgr_set_Ipv4Sysevent(const WANMGR_IPV4_DATA* dhcp4Info, DEVICE_NE
 
     sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_IPV4_TIME_ZONE, dhcp4Info->timeZone, 0);
 
+    sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_FIELD_IPV4_DOMAIN, dhcp4Info->domainName, 0);
+
     snprintf(name,sizeof(name),SYSEVENT_IPV4_DHCP_SERVER,dhcp4Info->ifname);
     sysevent_set(sysevent_fd, sysevent_token,name, dhcp4Info->dhcpServerId,0);
 
