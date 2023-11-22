@@ -693,9 +693,21 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 
                 snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%s ", tok);
 
-                CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, tok, RESOLV_CONF_FILE));
-                snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.udhcpc", tok, p_VirtIf->Name);
-                system(cmd);
+#ifdef _LG_MV3_
+                int table = GET_ROUTE_TABLE(p_VirtIf->Name);
+                if (table > 0)
+                {
+                    CcspTraceInfo(("%s %d: adding custom nameserver %s >> table %d\n", __FUNCTION__, __LINE__, tok, table));
+                    snprintf(cmd, sizeof(cmd), "ip rule add to %s table %d", tok, table);
+                    WanManager_DoSystemAction("SetUpCustomDNSRule:", cmd);
+                }
+                else
+#endif
+                {
+                    CcspTraceInfo(("%s %d: adding nameserver %s >> %s\n", __FUNCTION__, __LINE__, tok, RESOLV_CONF_FILE));
+                    snprintf(cmd,sizeof(cmd),"echo nameserver %s | resolvconf -a %s.udhcpc", tok, p_VirtIf->Name);
+                    system(cmd);
+                }
 
                 valid_dns = TRUE;
             }
@@ -1212,10 +1224,40 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         return RETURN_ERR;
     }
 
-    snprintf(cmdStr, sizeof(cmdStr), "ifconfig %s %s netmask %s broadcast %s mtu %u",
-             p_VirtIf->IP.Ipv4Data.ifname, p_VirtIf->IP.Ipv4Data.ip, p_VirtIf->IP.Ipv4Data.mask, bCastStr, p_VirtIf->IP.Ipv4Data.mtuSize);
-    CcspTraceInfo(("%s %d -  IP configuration = %s \n", __FUNCTION__, __LINE__, cmdStr));
-    WanManager_DoSystemAction("setupIPv4:", cmdStr);
+#ifdef _LG_MV3_
+    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname);
+    if (table > 0)
+    {
+        char bNetAddrStr[IP_ADDR_LENGTH] = {0};
+
+        if (WanManager_GetNetAddrFromIpSubnetMask(p_VirtIf->IP.Ipv4Data.ip, p_VirtIf->IP.Ipv4Data.mask, bNetAddrStr) != RETURN_OK)
+        {
+            CcspTraceError((" %s %d - bad address %s/%s \n", __FUNCTION__, __LINE__, p_VirtIf->IP.Ipv4Data.ip, p_VirtIf->IP.Ipv4Data.mask));
+            return RETURN_ERR;
+        }
+
+        snprintf(cmdStr, sizeof(cmdStr), "ip addr add dev %s local %s/%s broadcast %s noprefixroute",
+                 p_VirtIf->IP.Ipv4Data.ifname, p_VirtIf->IP.Ipv4Data.ip, p_VirtIf->IP.Ipv4Data.mask, bCastStr);
+
+        CcspTraceInfo(("%s %d -  IP configuration = %s \n", __FUNCTION__, __LINE__, cmdStr));
+        WanManager_DoSystemAction("setupIPv4:", cmdStr);
+
+        snprintf(cmdStr, sizeof(cmdStr), "ip route add %s/%s dev %s proto kernel scope link src %s table %d",
+                 bNetAddrStr, p_VirtIf->IP.Ipv4Data.mask, p_VirtIf->IP.Ipv4Data.ifname, p_VirtIf->IP.Ipv4Data.ip, table);
+        WanManager_DoSystemAction("SetUpCustomIPRoute:", cmdStr);
+
+        snprintf(cmdStr, sizeof(cmdStr), "ip rule add from %s table %d", p_VirtIf->IP.Ipv4Data.ip, table);
+        WanManager_DoSystemAction("SetUpCustomIPRule:", cmdStr);
+
+    }
+    else
+#endif
+    {
+        snprintf(cmdStr, sizeof(cmdStr), "ifconfig %s %s netmask %s broadcast %s mtu %u",
+                 p_VirtIf->IP.Ipv4Data.ifname, p_VirtIf->IP.Ipv4Data.ip, p_VirtIf->IP.Ipv4Data.mask, bCastStr, p_VirtIf->IP.Ipv4Data.mtuSize);
+        CcspTraceInfo(("%s %d -  IP configuration = %s \n", __FUNCTION__, __LINE__, cmdStr));
+        WanManager_DoSystemAction("setupIPv4:", cmdStr);
+    }
 
     snprintf(cmdStr, sizeof(cmdStr), "sendarp -s %s -d %s", ETH_BRIDGE_NAME, ETH_BRIDGE_NAME);
     WanManager_DoSystemAction("setupIPv4", cmdStr);
@@ -1248,6 +1290,10 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     }
 
     /** Update required sysevents. */
+#ifdef _LG_MV3_
+    snprintf(cmdStr, sizeof(cmdStr), SYSEVENT_IPV4_STATE, p_VirtIf->IP.Ipv4Data.ifname);
+    sysevent_set(sysevent_fd, sysevent_token, cmdStr, WAN_STATUS_UP, 0);
+#endif
 
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_CONNECTION_STATE, WAN_STATUS_UP, 0);
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_IPV4_LINK_STATE, WAN_STATUS_UP, 0);
@@ -1310,6 +1356,17 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
 
+#ifdef _LG_MV3_
+    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname);
+    if (table > 0)
+    {
+        snprintf(cmdStr, sizeof(cmdStr), "ip route flush table %d", table);
+        WanManager_DoSystemAction("DeleteCustomIPRoute:", cmdStr);
+
+        snprintf(cmdStr, sizeof(cmdStr), "ip rule flush table %d", table);
+        WanManager_DoSystemAction("DeleteCustomIPRule:", cmdStr);
+    }
+#endif
         /** Reset IPv4 DNS configuration. */
     if (RETURN_OK != wan_updateDNS(pWanIfaceCtrl, FALSE, (p_VirtIf->IP.Ipv6Status == WAN_IFACE_IPV6_STATE_UP)))
     {
@@ -1339,6 +1396,11 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     }
 
     /* ReSet the required sysevents. */
+#ifdef _LG_MV3_
+    snprintf(cmdStr, sizeof(cmdStr), SYSEVENT_IPV4_STATE, p_VirtIf->IP.Ipv4Data.ifname);
+    sysevent_set(sysevent_fd, sysevent_token, cmdStr, WAN_STATUS_DOWN, 0);
+#endif
+
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_CONNECTION_STATE, WAN_STATUS_DOWN, 0);
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_IPV4_LINK_STATE, WAN_STATUS_DOWN, 0);
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_STATE, WAN_STATUS_DOWN, 0);
