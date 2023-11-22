@@ -663,7 +663,7 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 
 #if defined(_LG_OFW_)
 
-    char cmd[256];
+    char cmd[512];
     char syseventParam[128];
 
     if (deviceMode == MODEM_MODE)
@@ -703,6 +703,13 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
                     CcspTraceInfo(("%s %d: adding custom nameserver %s >> table %d\n", __FUNCTION__, __LINE__, tok, table));
                     snprintf(cmd, sizeof(cmd), "ip rule add to %s table %d", tok, table);
                     WanManager_DoSystemAction("SetUpCustomDNSRule:", cmd);
+
+                    if (table == 100)
+                    {
+                        snprintf(cmd, sizeof(cmd), "grep -qxF \"nameserver %s\" /tmp/%s-resolv.conf || echo \"nameserver %s\" >> /tmp/%s-resolv.conf",
+                                 tok, p_VirtIf->Name, tok, p_VirtIf->Name);
+                        WanManager_DoSystemAction("SetUpCustomDNSResolvConf:", cmd);
+                    }
                 }
                 else
 #endif
