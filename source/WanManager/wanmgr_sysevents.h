@@ -79,6 +79,7 @@
 #if defined (RDKB_EXTENDER_ENABLED)
 #define SYSEVENT_MESH_WAN_LINK_STATUS "mesh_wan_linkstatus"
 #endif /* RDKB_EXTENDER_ENABLED */
+#define SYSEVENT_IPV4_STATE "ipv4_%s_state" /* for MV3 telcovoicemgr */
 
 /*dhcp server restart*/
 #define SYSEVENT_DHCP_SERVER_RESTART "dhcp_server-restart"
