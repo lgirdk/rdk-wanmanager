@@ -1669,6 +1669,26 @@ int WanManager_GetBCastFromIpSubnetMask(const char* inIpStr, const char* inSubne
    return ret;
 }
 
+int WanManager_GetNetAddrFromIpSubnetMask(const char* inIpStr, const char* inSubnetMaskStr, char *outNetAddrStr)
+{
+   struct in_addr ip;
+   struct in_addr subnetMask;
+   struct in_addr bCast;
+   int ret = RETURN_OK;
+
+   if (inIpStr == NULL || inSubnetMaskStr == NULL || outNetAddrStr == NULL)
+   {
+      return RETURN_ERR;
+   }
+
+   ip.s_addr = inet_addr(inIpStr);
+   subnetMask.s_addr = inet_addr(inSubnetMaskStr);
+   bCast.s_addr = ip.s_addr & subnetMask.s_addr;
+   strncpy(outNetAddrStr, inet_ntoa(bCast),strlen(inet_ntoa(bCast))+1);
+
+   return ret;
+}
+
 int WanManager_DelDefaultGatewayRoute(DEVICE_NETWORKING_MODE DeviceNwMode, BOOL DeviceNwModeChange, const WANMGR_IPV4_DATA* pIpv4Info)
 {
     char cmd[BUFLEN_128]={0};
@@ -1731,9 +1751,20 @@ int WanManager_AddDefaultGatewayRoute(DEVICE_NETWORKING_MODE DeviceNwMode, const
         /* For IPoE, always use gw IP address. */
         if (IsValidIpv4Address(pIpv4Info->gateway) && !(IsZeroIpvxAddress(AF_SELECT_IPV4, pIpv4Info->gateway)))
         {
-            snprintf(cmd, sizeof(cmd), "route add default gw %s dev %s", pIpv4Info->gateway, pIpv4Info->ifname);
-            WanManager_DoSystemAction("SetUpDefaultSystemGateway:", cmd);
-            CcspTraceInfo(("%s %d - The default gateway route entries set!, cmd(%s)\n",__FUNCTION__,__LINE__, cmd));
+#ifdef _LG_MV3_
+            int table = GET_ROUTE_TABLE(pIpv4Info->ifname);
+            if (table > 0)
+            {
+                snprintf(cmd, sizeof(cmd), "ip route add default via %s metric 0 dev %s table %d", pIpv4Info->gateway, pIpv4Info->ifname, table);
+                WanManager_DoSystemAction("SetUpCustomGateway:", cmd);
+            }
+            else
+#endif
+            {
+                snprintf(cmd, sizeof(cmd), "route add default gw %s dev %s", pIpv4Info->gateway, pIpv4Info->ifname);
+                WanManager_DoSystemAction("SetUpDefaultSystemGateway:", cmd);
+                CcspTraceInfo(("%s %d - The default gateway route entries set!, cmd(%s)\n",__FUNCTION__,__LINE__, cmd));
+            }
         }
     }
     else if (DeviceNwMode == MODEM_MODE)   
