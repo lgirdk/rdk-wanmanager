@@ -44,6 +44,13 @@
 #define LAN_BRIDGE_NAME             "brlan0"
 //
 
+#define MGMT_IFNAME                 "mg0"
+#define VOIP_IFNAME                 "voip0"
+
+#define MGMT_TABLE                  100
+#define VOIP_TABLE                  200
+#define GET_ROUTE_TABLE(_ifname) !strcmp(_ifname, MGMT_IFNAME) ? 100 : (!strcmp(_ifname, VOIP_IFNAME) ? 200 : 0)
+
 #define WAN_STATUS_UP   "up"
 #define WAN_STATUS_DOWN "down"
 
@@ -222,6 +229,15 @@ int WanManager_DelDefaultGatewayRoute(DEVICE_NETWORKING_MODE DeviceNwMode, BOOL 
  * @return RETURN_OK upon success else returned error code.
  ****************************************************************************/
 int WanManager_GetBCastFromIpSubnetMask(const char *inIpStr, const char *inSubnetMaskStr, char *outBcastStr);
+
+/***************************************************************************
+ * @brief API used to get network address from IP and subnet mask
+ * @param inIpStr IP address
+ * @param inSubnetMaskStr Subnet mask
+ * @param outNetAddrStr Stores the network address
+ * @return RETURN_OK upon success else returned error code.
+ ****************************************************************************/
+int WanManager_GetNetAddrFromIpSubnetMask(const char *inIpStr, const char *inSubnetMaskStr, char *outNetAddrStr);
 
 /***************************************************************************
  * @brief API used to update ipv4 gateway
