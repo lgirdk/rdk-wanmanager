@@ -746,16 +746,23 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 
 #if defined(_LG_OFW_)
 
-    char cmd[256];
+    char cmd[512];
     char syseventParam[128];
-    int table = GET_ROUTE_TABLE(p_VirtIf->Name);
 
     if (deviceMode == MODEM_MODE)
     {
         // DNS nameserves should not be configured in MODEM mode
         remove(RESOLV_CONF_FILE);
     }
-
+    /* TODO: Enable below code when IPv6Status for mvlan interfaces are fixed.
+     * Currently this parameter returns "Down" even if IPv6 is leased
+     */
+#if 0
+    if (p_VirtIf->IP.DnsCfgPath[0] != '\0')
+    {
+        remove(p_VirtIf->IP.DnsCfgPath);
+    }
+#endif
     snprintf(cmd,sizeof(cmd),"resolvconf -d %s.udhcpc",p_VirtIf->Name);
     system(cmd);
 
@@ -781,11 +788,18 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
                 snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%s ", tok);
 
 #ifdef _LG_MV3_
-                if (table > 0)
+                if (p_VirtIf->IP.RTable > 0)
                 {
-                    CcspTraceInfo(("%s %d: adding custom nameserver %s >> table %d\n", __FUNCTION__, __LINE__, tok, table));
-                    snprintf(cmd, sizeof(cmd), "ip rule add to %s table %d pref 1", tok, table);
+                    CcspTraceInfo(("%s %d: adding custom nameserver %s >> table %d\n", __FUNCTION__, __LINE__, tok, p_VirtIf->IP.RTable));
+                    snprintf(cmd, sizeof(cmd), "ip rule add to %s table %d pref 1", tok, p_VirtIf->IP.RTable);
                     WanManager_DoSystemAction("SetUpCustomDNSRule:", cmd);
+
+                    if (p_VirtIf->IP.DnsCfgPath[0] != '\0')
+                    {
+                        snprintf(cmd, sizeof(cmd), "grep -qxF \"nameserver %s\" %s || echo \"nameserver %s\" >> %s",
+                                 tok, p_VirtIf->IP.DnsCfgPath, tok, p_VirtIf->IP.DnsCfgPath);
+                        WanManager_DoSystemAction("SetUpCustomDNSResolvConf:", cmd);
+                    }
                 }
                 else
 #endif
@@ -802,8 +816,7 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
         }
 
         /* Update wan_dhcp_dns and add domain only if p_VirtIf->Name is the primary WAN */
-        /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-        if (table == 0)
+        if (!strcmp(p_VirtIf->Alias, "DATA"))
         {
             if (valid_dns) {
                 buf[strlen(buf)-1] = '\0';
@@ -854,8 +867,7 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     }
 
     /* restart dhcp-server only if p_VirtIf->Name is the primary (DATA) WAN */
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if (table == 0)
+    if (!strcmp(p_VirtIf->Alias, "DATA"))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCP_SERVER_RESTART, NULL, 0);
     }
@@ -1318,7 +1330,6 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     DEVICE_NETWORKING_MODE DeviceNwMode = pWanIfaceCtrl->DeviceNwMode;
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
-    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname);
 
     /** Setup IPv4: such as
      * "ifconfig eth0 10.6.33.165 netmask 255.255.255.192 broadcast 10.6.33.191 up"
@@ -1334,9 +1345,7 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         return RETURN_ERR;
     }
 
-#ifdef _LG_MV3_
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if (table > 0)
+    if (p_VirtIf->IP.RTable > 0)
     {
         char bNetAddrStr[IP_ADDR_LENGTH] = {0};
 
@@ -1353,14 +1362,13 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         WanManager_DoSystemAction("setupIPv4:", cmdStr);
 
         snprintf(cmdStr, sizeof(cmdStr), "ip route add %s/%s dev %s proto kernel scope link src %s table %d",
-                 bNetAddrStr, p_VirtIf->IP.Ipv4Data.mask, p_VirtIf->IP.Ipv4Data.ifname, p_VirtIf->IP.Ipv4Data.ip, table);
+                 bNetAddrStr, p_VirtIf->IP.Ipv4Data.mask, p_VirtIf->IP.Ipv4Data.ifname, p_VirtIf->IP.Ipv4Data.ip, p_VirtIf->IP.RTable);
         WanManager_DoSystemAction("SetUpCustomIPRoute:", cmdStr);
 
-        snprintf(cmdStr, sizeof(cmdStr), "ip rule add from %s table %d pref 1", p_VirtIf->IP.Ipv4Data.ip, table);
+        snprintf(cmdStr, sizeof(cmdStr), "ip rule add from %s table %d pref 1", p_VirtIf->IP.Ipv4Data.ip, p_VirtIf->IP.RTable);
         WanManager_DoSystemAction("SetUpCustomIPRule:", cmdStr);
     }
     else
-#endif
     {
         snprintf(cmdStr, sizeof(cmdStr), "ifconfig %s %s netmask %s broadcast %s mtu %u",
                  p_VirtIf->IP.Ipv4Data.ifname, p_VirtIf->IP.Ipv4Data.ip, p_VirtIf->IP.Ipv4Data.mask, bCastStr, p_VirtIf->IP.Ipv4Data.mtuSize);
@@ -1392,8 +1400,7 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_CONNECTION_STATE, WAN_STATUS_UP, 0);
 
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if (table == 0)
+    if (!strcmp(p_VirtIf->Alias, "DATA"))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_IPV4_LINK_STATE, WAN_STATUS_UP, 0);
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IPADDR, p_VirtIf->IP.Ipv4Data.ip, 0);
@@ -1416,8 +1423,7 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
     //TODO: Firewall IPv6 FORWARD rules are not working if SYSEVENT_WAN_SERVICE_STATUS is set for REMOTE_IFACE. Modify firewall similar for backup interface similar to primary.
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if ((table == 0) && strcmp(buf, WAN_STATUS_STARTED) && pInterface->IfaceType != REMOTE_IFACE)
+    if ((!strcmp(p_VirtIf->Alias, "DATA")) && strcmp(buf, WAN_STATUS_STARTED) && pInterface->IfaceType != REMOTE_IFACE)
     {
         int  uptime = 0;
         char buffer[64] = {0};
@@ -1490,18 +1496,15 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     DEVICE_NETWORKING_MODE DeviceNwMode = pWanIfaceCtrl->DeviceNwMode;
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
-    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname);
 
-#ifdef _LG_MV3_
-    if (table > 0)
+    if (p_VirtIf->IP.RTable > 0)
     {
-        snprintf(cmdStr, sizeof(cmdStr), "ip route flush table %d", table);
+        snprintf(cmdStr, sizeof(cmdStr), "ip route flush table %d", p_VirtIf->IP.RTable);
         WanManager_DoSystemAction("DeleteCustomIPRoute:", cmdStr);
 
-        snprintf(cmdStr, sizeof(cmdStr), "ip rule flush table %d", table);
+        snprintf(cmdStr, sizeof(cmdStr), "ip rule flush table %d", p_VirtIf->IP.RTable);
         WanManager_DoSystemAction("DeleteCustomIPRule:", cmdStr);
     }
-#endif
 
     /** Reset IPv4 DNS configuration. */
 #if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_) || defined (_RDKB_GLOBAL_PRODUCT_REQ_))
@@ -1555,8 +1558,7 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_CONNECTION_STATE, WAN_STATUS_DOWN, 0);
 
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if (table == 0)
+    if (!strcmp(p_VirtIf->Alias, "DATA"))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_IPV4_LINK_STATE, WAN_STATUS_DOWN, 0);
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_STATE, WAN_STATUS_DOWN, 0);
@@ -1572,8 +1574,7 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     }
 
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if ((table == 0) && (strcmp(buf, WAN_STATUS_STOPPED) != 0) && (p_VirtIf->IP.Ipv6Status == WAN_IFACE_IPV6_STATE_DOWN))
+    if ((!strcmp(p_VirtIf->Alias, "DATA")) && (strcmp(buf, WAN_STATUS_STOPPED) != 0) && (p_VirtIf->IP.Ipv6Status == WAN_IFACE_IPV6_STATE_DOWN))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STOPPED, 0);
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_SERVICE_STATUS, WAN_STATUS_STOPPED, 0);
@@ -1597,7 +1598,6 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
-    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname); 
 
     if (pInterface == NULL)
     {
@@ -1616,8 +1616,7 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         CcspTraceInfo(("%s %d -  IPv6 DNS servers configured successfully \n", __FUNCTION__, __LINE__));
     }
 
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if (table == 0)
+    if (!strcmp(p_VirtIf->Alias, "DATA"))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_CONNECTION_STATE, WAN_STATUS_UP, 0);
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_RADVD_RESTART, NULL, 0);
@@ -1626,8 +1625,7 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIREWALL_RESTART, NULL, 0);
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
     //TODO: Firewall IPv6 FORWARD rules are not working if SYSEVENT_WAN_SERVICE_STATUS is set for REMOTE_IFACE. Modify firewall similar for backup interface similar to primary.
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if ((table == 0) && strcmp(buf, WAN_STATUS_STARTED)&& pInterface->IfaceType != REMOTE_IFACE)
+    if ((!strcmp(p_VirtIf->Alias, "DATA")) && strcmp(buf, WAN_STATUS_STARTED)&& pInterface->IfaceType != REMOTE_IFACE)
     {
         /*TODO: touch /var/wan_started for wan-initialized.path in systemd and register /etc/utopia/post.d/. 
          *This is a comcast specific configuration, should be removed from Wan state machine */
@@ -1710,7 +1708,6 @@ static int wan_tearDownIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
-    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname); 
 
     //TODO: FIXME: XB devices use the DNS of primary for backup and doesn't deconfigure the primary ipv6 prefix from the LAN interface. 
 #if (!(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_))) || defined (_RDKB_GLOBAL_PRODUCT_REQ_)
@@ -1746,8 +1743,7 @@ static int wan_tearDownIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         AnscTraceError(("%s %d -  Failed to remove inactive address \n", __FUNCTION__,__LINE__));
     }
 
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if (table == 0)
+    if (!strcmp(p_VirtIf->Alias, "DATA"))
     {
         // Reset sysvevents.
         char previousPrefix[BUFLEN_48] = {0};
@@ -1801,7 +1797,7 @@ static int wan_tearDownIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
     /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if ((table == 0) && (strcmp(buf, WAN_STATUS_STOPPED) != 0) && ((p_VirtIf->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_DOWN) && (p_VirtIf->MAP.MaptStatus == WAN_IFACE_MAPT_STATE_DOWN)))
+    if ((!strcmp(p_VirtIf->Alias, "DATA")) && (strcmp(buf, WAN_STATUS_STOPPED) != 0) && ((p_VirtIf->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_DOWN) && (p_VirtIf->MAP.MaptStatus == WAN_IFACE_MAPT_STATE_DOWN)))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STOPPED, 0);
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_SERVICE_STATUS, WAN_STATUS_STOPPED, 0);
