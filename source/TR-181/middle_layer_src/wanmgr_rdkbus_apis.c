@@ -335,15 +335,23 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_memset(param_value, 0, sizeof(param_value));
     if (!syscfg_get(NULL, "last_erouter_mode", param_value, sizeof(param_value)))
     {
-       if(atoi(param_value) != 0)
-       {
-           _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.Mode));
-       }
-       else
-       {
-           pVirtIf->IP.Mode = DML_WAN_IP_MODE_NO_IP; //Bridge mode
-       }
-   }
+        char wanmg_enable[8];
+        if (atoi(param_value) != 0)
+        {
+            _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.Mode));
+        }
+        else if (!syscfg_get(NULL, "management_wan_enabled", wanmg_enable, sizeof(wanmg_enable)))
+        {
+            if (atoi(wanmg_enable) == 1)
+            {
+                pVirtIf->IP.Mode = DML_WAN_IP_MODE_NO_IP; // Multi vlan bridge mode case
+            }
+            else
+            {
+                pVirtIf->IP.Mode = DML_WAN_IP_MODE_DUAL_STACK; // Single vlan bridge mode case
+            }
+        }
+    }
 #else
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
