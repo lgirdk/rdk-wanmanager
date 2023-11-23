@@ -319,6 +319,28 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
     AnscCopyString(pVirtIf->IP.Interface, param_value);
 
+#ifdef _LG_MV3_
+    _ansc_memset(param_value, 0, sizeof(param_value));
+    if (!syscfg_get(NULL, "last_erouter_mode", param_value, sizeof(param_value)))
+    {
+        char wanmg_enable[8];
+        if (atoi(param_value) != 0)
+        {
+            _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.Mode));
+        }
+        else if (!syscfg_get(NULL, "management_wan_enabled", wanmg_enable, sizeof(wanmg_enable)))
+        {
+            if (atoi(wanmg_enable) == 1)
+            {
+                pVirtIf->IP.Mode = DML_WAN_IP_MODE_NO_IP; // Multi vlan bridge mode case
+            }
+            else
+            {
+                pVirtIf->IP.Mode = DML_WAN_IP_MODE_DUAL_STACK; // Single vlan bridge mode case
+            }
+        }
+    }
+#else
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_MODE, instancenum, (virtInsNum + 1));
@@ -327,6 +349,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     {
         _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.Mode));
     }
+#endif
 
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
