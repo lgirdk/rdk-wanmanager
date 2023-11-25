@@ -34,6 +34,9 @@
 #include "wanmgr_dhcpv4_apis.h"
 #include "wanmgr_dhcpv6_apis.h"
 
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+#include "telemetry_busmessage_sender.h"
+#endif
 
 #define LOOP_TIMEOUT 50000 // timeout in milliseconds. This is the state machine loop interval
 #define RESOLV_CONF_FILE "/etc/resolv.conf"
@@ -1331,6 +1334,9 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_START, "", 0);
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STARTED, 0);
         CcspTraceInfo(("%s %d - wan-status event set to started \n", __FUNCTION__, __LINE__));
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+        t2_event_d("EVT_RF_INFO_Wan_stat_starting_split", 1);
+#endif
 
         if(p_VirtIf->IP.Ipv4Data.ifname[0] != '\0')
         {
@@ -1514,6 +1520,9 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_START, "", 0);
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STARTED, 0);
         CcspTraceInfo(("%s %d - wan-status event set to started \n", __FUNCTION__, __LINE__));
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+        t2_event_d("EVT_RF_INFO_Wan_stat_starting_split", 1);
+#endif
 
         int  uptime = 0;
         char buffer[64] = {0};
