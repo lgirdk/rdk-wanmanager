@@ -38,6 +38,10 @@
 #include <telemetry_busmessage_sender.h>
 #endif
 
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+#include "telemetry_busmessage_sender.h"
+#endif
+
 #define LOOP_TIMEOUT 50000 // timeout in microseconds. This is the state machine loop interval
 #define RESOLV_CONF_FILE "/etc/resolv.conf"
 #define LOOPBACK "127.0.0.1"
@@ -1357,6 +1361,9 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_SERVICE_STATUS, WAN_STATUS_STARTED, 0);
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STARTED, 0);
         CcspTraceInfo(("%s %d - wan-status event set to started \n", __FUNCTION__, __LINE__));
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+        t2_event_d("EVT_RF_INFO_Wan_stat_starting_split", 1);
+#endif
 
         /*TODO: touch /var/wan_started for wan-initialized.path in systemd and register /etc/utopia/post.d/. 
          *This is a comcast specific configuration, should be removed from Wan state machine */
@@ -1576,6 +1583,10 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
             CcspTraceInfo(("%s %d - Starting post.d from WanManager\n", __FUNCTION__, __LINE__));
             v_secure_system("touch " POSTD_START_FILE "; execute_dir /etc/utopia/post.d/");
         }
+
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+        t2_event_d("EVT_RF_INFO_Wan_stat_starting_split", 1);
+#endif
 
         int  uptime = 0;
         char buffer[64] = {0};
