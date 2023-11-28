@@ -1314,17 +1314,6 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         }
     }
 
-    /** configure DNS */
-    if (RETURN_OK != wan_updateDNS(pWanIfaceCtrl, TRUE, (p_VirtIf->IP.Ipv6Status == WAN_IFACE_IPV6_STATE_UP)))
-    {
-        CcspTraceError(("%s %d - Failed to configure IPv4 DNS servers \n", __FUNCTION__, __LINE__));
-        ret = RETURN_ERR;
-    }
-    else
-    {
-        CcspTraceInfo(("%s %d -  IPv4 DNS servers configures successfully \n", __FUNCTION__, __LINE__));
-    }
-
         /** Set default gatway. */
     if (WanManager_AddDefaultGatewayRoute(DeviceNwMode, &p_VirtIf->IP.Ipv4Data) != RETURN_OK)
     {
@@ -1387,6 +1376,19 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         LOG_CONSOLE("%s [tid=%ld] v4: Wan_init_complete for interface index %d at %d\n", buffer, syscall(SYS_gettid), pWanIfaceCtrl->interfaceIdx, uptime);
 
         WanManager_PrintBootEvents (WAN_INIT_COMPLETE);
+    }
+
+    CcspTraceError(("%s %d - Call wan_updateDNS after wan-status is updated\n", __FUNCTION__, __LINE__));
+
+    /** configure DNS */
+    if (RETURN_OK != wan_updateDNS(pWanIfaceCtrl, TRUE, (p_VirtIf->IP.Ipv6Status == WAN_IFACE_IPV6_STATE_UP)))
+    {
+        CcspTraceError(("%s %d - Failed to configure IPv4 DNS servers \n", __FUNCTION__, __LINE__));
+        ret = RETURN_ERR;
+    }
+    else
+    {
+        CcspTraceInfo(("%s %d -  IPv4 DNS servers configures successfully \n", __FUNCTION__, __LINE__));
     }
 
 #if defined(_DT_WAN_Manager_Enable_)
