@@ -75,45 +75,6 @@ static WcAwPolicyState_t Transistion_WanInterfaceUp (WanMgr_Policy_Controller_t 
 static WcAwPolicyState_t Transition_ResetSelectedInterface (WanMgr_Policy_Controller_t * pWanController);
 static WcAwPolicyState_t Transition_RebootDevice (void);
 
-static int WanMgr_RdkBus_AddAllIntfsToLanBridge (WanMgr_Policy_Controller_t * pWanController, BOOL AddToBridge)
-{
-    if ((pWanController == NULL) || (pWanController->WanEnable != TRUE)
-            || (pWanController->TotalIfaces == 0))
-    {
-        CcspTraceError(("%s %d: Invalid args or Global Wan disabled\n", __FUNCTION__, __LINE__));
-        return ANSC_STATUS_FAILURE;
-    }
-
-    UINT uiLoopCount;
-    int ret = 0;
-
-    for( uiLoopCount = 0; uiLoopCount < pWanController->TotalIfaces; uiLoopCount++ )
-    {
-        WanMgr_Iface_Data_t*   pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
-        if(pWanDmlIfaceData != NULL)
-        {
-            DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
-
-            if (pWanController->GroupInst != pWanIfaceData->Selection.Group)
-            {
-                WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
-                continue;
-            }
-            if (strlen(pWanIfaceData->BaseInterface) > 0)
-            {
-                ret = WanMgr_RdkBus_AddIntfToLanBridge(pWanIfaceData->BaseInterface, AddToBridge);
-                if (ret == ANSC_STATUS_FAILURE)
-                {
-                    CcspTraceError(("%s %d: unable to config LAN bridge for index %d BaseInterface %s\n", __FUNCTION__, __LINE__, uiLoopCount, pWanIfaceData->BaseInterface));
-                }
-            }
-            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
-        }
-    }
-
-    return ANSC_STATUS_SUCCESS;
-
-}
 #if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_))
 //TODO: this is a workaround to support upgarde from Comcast autowan policy to Unification build
 #define MAX_WanModeToIfaceMap 2
@@ -520,8 +481,6 @@ static WcAwPolicyState_t Transition_Start (WanMgr_Policy_Controller_t* pWanContr
         CcspTraceError(("%s %d: Invalid args \n", __FUNCTION__, __LINE__));
         return STATE_AUTO_WAN_ERROR;
     }
-
-    char phyPath[BUFLEN_128] = {0};
     if (pWanController->WanEnable == TRUE)
     {
         // select the previously used Active Link
@@ -530,34 +489,10 @@ static WcAwPolicyState_t Transition_Start (WanMgr_Policy_Controller_t* pWanContr
         {
             CcspTraceInfo(("%s %d: Previous ActiveLink interface from DB is %d\n", __FUNCTION__, __LINE__, pWanController->activeInterfaceIdx));
             // previously used ActiveLink found
-            WanMgr_Iface_Data_t*   pWanDmlIfaceData = WanMgr_GetIfaceData_locked(pWanController->activeInterfaceIdx);
-            DML_WAN_IFACE * pActiveInterface = &(pWanDmlIfaceData->data);
-            if (pActiveInterface != NULL)
-            {
-                if(pWanController->GroupPersistSelectedIface == TRUE)
-                {
-                    CcspTraceInfo(("%s %d GroupPersistSelectedIface is enabled and only last ActiveLink %s ISM will be started\n", __FUNCTION__, __LINE__, pActiveInterface->DisplayName));
-                }
-                strncpy (phyPath, pActiveInterface->BaseInterface, sizeof(phyPath)-1);
-                WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
-                if (strstr(phyPath, "Ethernet") != NULL)
-                {
-                    // previous ActiveLink is an WANoE interface, so remove it from LAN bridge
-                    CcspTraceInfo(("%s %d:  previous ActiveLink is WANoE \n", __FUNCTION__, __LINE__));
-                    WanMgr_RdkBus_AddIntfToLanBridge(phyPath, FALSE);
-                }
-                else
-                {
-                    CcspTraceInfo(("%s %d:  previous ActiveLink is not WANoE \n", __FUNCTION__, __LINE__));
-                    WanMgr_RdkBus_AddAllIntfsToLanBridge(pWanController, FALSE);
-                }
-            }
         }
         else
         {
             CcspTraceInfo(("%s %d: unable to select an previous active interface from psm\n", __FUNCTION__, __LINE__));
-            // No previous ActiveLink available
-            WanMgr_RdkBus_AddAllIntfsToLanBridge(pWanController, FALSE);
             WanMgr_Policy_Auto_GetHighPriorityIface(pWanController);
         }
     }
@@ -621,6 +556,30 @@ static WcAwPolicyState_t Transition_InterfaceSelected (WanMgr_Policy_Controller_
 
     CcspTraceInfo(("%s %d: State changed to STATE_AUTO_WAN_INTERFACE_WAITING \n", __FUNCTION__, __LINE__));
 
+    for( UINT uiLoopCount = 0; uiLoopCount < pWanController->TotalIfaces; uiLoopCount++ )
+    {
+        WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
+        if (pWanDmlIfaceData != NULL)
+        {
+            DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
+
+            if (pWanController->GroupInst != pWanIfaceData->Selection.Group)
+            {
+                WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+                continue;
+            }
+
+            if (strstr(pWanIfaceData->BaseInterface, "Ethernet"))
+            {
+                CcspTraceInfo(("%s %d: Removing WANoE port %s from LAN bridge  \n", __FUNCTION__, __LINE__, pWanIfaceData->Name));
+                if (WanMgr_RdkBus_AddIntfToLanBridge(pWanIfaceData->BaseInterface, FALSE) == ANSC_STATUS_FAILURE)
+                {
+                    CcspTraceError(("%s %d: unable to config LAN bridge for index %d BaseInterface %s\n", __FUNCTION__, __LINE__, uiLoopCount, pWanIfaceData->BaseInterface));
+                }
+            }
+            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+        }
+    }
     return STATE_AUTO_WAN_INTERFACE_WAITING;
 }
 
@@ -860,9 +819,6 @@ static WcAwPolicyState_t Transition_RestartSelectionInterface (WanMgr_Policy_Con
         syscfg_set_commit(NULL, "curr_wan_mode", "0");
     }
 #endif
-
-    // remove all interface from LAN bridge
-    WanMgr_RdkBus_AddAllIntfsToLanBridge(pWanController, FALSE);
 
     if (WanMgr_ResetGroupSelectedIface(pWanController) != ANSC_STATUS_SUCCESS)
     {
@@ -1258,8 +1214,9 @@ static WcAwPolicyState_t State_InterfaceReconfiguration (WanMgr_Policy_Controlle
                 continue;
             }
 
-            if ((strlen(pWanIfaceData->BaseInterface) > 0) && (strstr(pWanIfaceData->BaseInterface, "Ethernet")))
+            if (strstr(pWanIfaceData->BaseInterface, "Ethernet"))
             {
+                CcspTraceInfo(("%s %d: Adding WANoE port %s to LAN bridge  \n", __FUNCTION__, __LINE__, pWanIfaceData->Name));
                 ret = WanMgr_RdkBus_AddIntfToLanBridge(pWanIfaceData->BaseInterface, TRUE);
                 if (ret == ANSC_STATUS_FAILURE)
                 {
