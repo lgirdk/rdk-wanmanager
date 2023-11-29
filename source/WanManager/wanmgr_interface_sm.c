@@ -662,6 +662,7 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 
     char cmd[512];
     char syseventParam[128];
+    int table = GET_ROUTE_TABLE(p_VirtIf->Name);
 
     if (deviceMode == MODEM_MODE)
     {
@@ -694,7 +695,6 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
                 snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "%s ", tok);
 
 #ifdef _LG_MV3_
-                int table = GET_ROUTE_TABLE(p_VirtIf->Name);
                 if (table > 0)
                 {
                     CcspTraceInfo(("%s %d: adding custom nameserver %s >> table %d\n", __FUNCTION__, __LINE__, tok, table));
@@ -722,21 +722,26 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
             tok = strtok(NULL, " ");
         }
 
-        if (valid_dns) {
-            buf[strlen(buf)-1] = '\0';
-            sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", buf, 0);
-
-            snprintf(buf, sizeof(buf), "%d", idx);
-            snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_DNS_NUMBER, p_VirtIf->Name);
-            sysevent_set(sysevent_fd, sysevent_token, syseventParam, buf, 0);
-        }
-
-        if (strlen(p_VirtIf->IP.Ipv4Data.domainName) > 0)
+        /* Update wan_dhcp_dns and add domain only if p_VirtIf->Name is the primary WAN */
+        /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+        if (table == 0)
         {
-            // Update domain name in resolv.conf
-            CcspTraceInfo(("%s %d: adding domainname  %s >> %s\n", __FUNCTION__, __LINE__, p_VirtIf->IP.Ipv4Data.domainName, RESOLV_CONF_FILE));
-            snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | resolvconf -a %s.udhcpc", p_VirtIf->IP.Ipv4Data.domainName, pInterface->Name);
-            system(cmd);
+            if (valid_dns) {
+                buf[strlen(buf)-1] = '\0';
+                sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", buf, 0);
+
+                snprintf(buf, sizeof(buf), "%d", idx);
+                snprintf(syseventParam, sizeof(syseventParam), SYSEVENT_IPV4_DNS_NUMBER, p_VirtIf->Name);
+                sysevent_set(sysevent_fd, sysevent_token, syseventParam, buf, 0);
+            }
+
+            if (strlen(p_VirtIf->IP.Ipv4Data.domainName) > 0)
+            {
+                // Update domain name in resolv.conf
+                CcspTraceInfo(("%s %d: adding domainname  %s >> %s\n", __FUNCTION__, __LINE__, p_VirtIf->IP.Ipv4Data.domainName, RESOLV_CONF_FILE));
+                snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | resolvconf -a %s.udhcpc", p_VirtIf->IP.Ipv4Data.domainName, pInterface->Name);
+                system(cmd);
+            }
         }
     }
 
@@ -769,7 +774,12 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
         }
     }
 
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCP_SERVER_RESTART, NULL, 0);
+    /* restart dhcp-server only if p_VirtIf->Name is the primary (DATA) WAN */
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+    if (table == 0)
+    {
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCP_SERVER_RESTART, NULL, 0);
+    }
 
     if (addIPv4 == TRUE || addIPv6 == TRUE)
     {
@@ -1216,10 +1226,10 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     char *cp = NULL;
     FILE *fp = NULL;
 
-
     DEVICE_NETWORKING_MODE DeviceNwMode = pWanIfaceCtrl->DeviceNwMode;
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
+    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname);
 
     /** Setup IPv4: such as
      * "ifconfig eth0 10.6.33.165 netmask 255.255.255.192 broadcast 10.6.33.191 up"
@@ -1236,7 +1246,7 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     }
 
 #ifdef _LG_MV3_
-    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname);
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
     if (table > 0)
     {
         char bNetAddrStr[IP_ADDR_LENGTH] = {0};
@@ -1296,28 +1306,35 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 #endif
 
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_CONNECTION_STATE, WAN_STATUS_UP, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_IPV4_LINK_STATE, WAN_STATUS_UP, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IPADDR, p_VirtIf->IP.Ipv4Data.ip, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_SUBNET, p_VirtIf->IP.Ipv4Data.mask, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_STATE, WAN_STATUS_UP, 0);
-    if ((fp = fopen("/proc/uptime", "rb")) == NULL)
-    {
-        return RETURN_ERR;
-    }
-    if (fgets(line, sizeof(line), fp) != NULL)
-    {
-        if ((cp = strchr(line, ',')) != NULL)
-            *cp = '\0';
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_START_TIME, line, 0);
-    }
-    fclose(fp);
 
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+    if (table == 0)
+    {
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_IPV4_LINK_STATE, WAN_STATUS_UP, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IPADDR, p_VirtIf->IP.Ipv4Data.ip, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_SUBNET, p_VirtIf->IP.Ipv4Data.mask, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_STATE, WAN_STATUS_UP, 0);
+
+        if ((fp = fopen("/proc/uptime", "rb")) == NULL)
+        {
+            return RETURN_ERR;
+        }
+        if (fgets(line, sizeof(line), fp) != NULL)
+        {
+            if ((cp = strchr(line, ',')) != NULL)
+                *cp = '\0';
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_START_TIME, line, 0);
+        }
+        fclose(fp);
+    }
     if (strstr(pInterface->BaseInterface, "Ethernet"))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_ETHWAN_INITIALIZED, "1", 0);
     }
+
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
-    if (strcmp(buf, WAN_STATUS_STARTED))
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+    if ((table == 0) && (strcmp(buf, WAN_STATUS_STARTED)))
     {
         int  uptime = 0;
         char buffer[64] = {0};
@@ -1375,9 +1392,9 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     DEVICE_NETWORKING_MODE DeviceNwMode = pWanIfaceCtrl->DeviceNwMode;
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
+    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname);
 
 #ifdef _LG_MV3_
-    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname);
     if (table > 0)
     {
         snprintf(cmdStr, sizeof(cmdStr), "ip route flush table %d", table);
@@ -1422,11 +1439,17 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 #endif
 
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_CONNECTION_STATE, WAN_STATUS_DOWN, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_IPV4_LINK_STATE, WAN_STATUS_DOWN, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_STATE, WAN_STATUS_DOWN, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_START_TIME, "0", 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IPADDR, "0.0.0.0", 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_SUBNET, "255.255.255.0", 0);
+
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+    if (table == 0)
+    {
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_IPV4_LINK_STATE, WAN_STATUS_DOWN, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_STATE, WAN_STATUS_DOWN, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_START_TIME, "0", 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IPADDR, "0.0.0.0", 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_SUBNET, "255.255.255.0", 0);
+    }
+
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIREWALL_RESTART, NULL, 0);
     if (strstr(pInterface->BaseInterface, "Ethernet"))
     {
@@ -1434,7 +1457,8 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     }
 
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
-    if ((strcmp(buf, WAN_STATUS_STOPPED) != 0) && (p_VirtIf->IP.Ipv6Status == WAN_IFACE_IPV6_STATE_DOWN))
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+    if ((table == 0) && (strcmp(buf, WAN_STATUS_STOPPED) != 0) && (p_VirtIf->IP.Ipv6Status == WAN_IFACE_IPV6_STATE_DOWN))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STOPPED, 0);
         CcspTraceInfo(("%s %d - wan-status event set to stopped \n", __FUNCTION__, __LINE__));
@@ -1458,6 +1482,7 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
+    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname); 
 
     if (pInterface == NULL)
     {
@@ -1479,9 +1504,13 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         CcspTraceInfo(("%s %d -  IPv6 DNS servers configured successfully \n", __FUNCTION__, __LINE__));
     }
 
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_CONNECTION_STATE, WAN_STATUS_UP, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_RADVD_RESTART, NULL, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCP_SERVER_RESTART, NULL, 0);
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+    if (table == 0)
+    {
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_CONNECTION_STATE, WAN_STATUS_UP, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_RADVD_RESTART, NULL, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCP_SERVER_RESTART, NULL, 0);
+    }
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIREWALL_RESTART, NULL, 0);
 
     if (erouter_mode == 3) //skip setting wan-status to started if we are not yet assigned with ipv4 addr
@@ -1490,7 +1519,8 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     }
 
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
-    if (strcmp(buf, WAN_STATUS_STARTED))
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+    if ((table == 0) && (strcmp(buf, WAN_STATUS_STARTED)))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_START, "", 0);
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STARTED, 0);
@@ -1539,6 +1569,7 @@ static int wan_tearDownIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
+    int table = GET_ROUTE_TABLE(p_VirtIf->IP.Ipv4Data.ifname); 
 
     /** Reset IPv6 DNS configuration. */
     if (RETURN_OK == wan_updateDNS(pWanIfaceCtrl, (p_VirtIf->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_UP), FALSE))
@@ -1557,28 +1588,34 @@ static int wan_tearDownIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         AnscTraceError(("%s %d -  Failed to remove inactive address \n", __FUNCTION__,__LINE__));
     }
 
-    // Reset sysvevents.
-    char previousPrefix[BUFLEN_48] = {0};
-    char previousPrefix_vldtime[BUFLEN_48] = {0};
-    char previousPrefix_prdtime[BUFLEN_48] = {0};
-    /* set ipv6 down sysevent notification. */
-    sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, previousPrefix, sizeof(previousPrefix));
-    sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIXVLTIME, previousPrefix_vldtime, sizeof(previousPrefix_vldtime));
-    sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIXPLTIME, previousPrefix_prdtime, sizeof(previousPrefix_prdtime));
-    if (strncmp(previousPrefix, "", BUFLEN_48) != 0)
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+    if (table == 0)
     {
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIX, previousPrefix, 0);
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIXVLTIME, previousPrefix_vldtime, 0);
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIXPLTIME, previousPrefix_prdtime, 0);
+        // Reset sysvevents.
+        char previousPrefix[BUFLEN_48] = {0};
+        char previousPrefix_vldtime[BUFLEN_48] = {0};
+        char previousPrefix_prdtime[BUFLEN_48] = {0};
+        /* set ipv6 down sysevent notification. */
+        sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, previousPrefix, sizeof(previousPrefix));
+        sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIXVLTIME, previousPrefix_vldtime, sizeof(previousPrefix_vldtime));
+        sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIXPLTIME, previousPrefix_prdtime, sizeof(previousPrefix_prdtime));
+        if (strncmp(previousPrefix, "", BUFLEN_48) != 0)
+        {
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIX, previousPrefix, 0);
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIXVLTIME, previousPrefix_vldtime, 0);
+            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_PREVIOUS_IPV6_PREFIXPLTIME, previousPrefix_prdtime, 0);
+        }
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, "", 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_TR_EROUTER_DHCPV6_CLIENT_PREFIX, "", 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_CONNECTION_STATE, WAN_STATUS_DOWN, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_GLOBAL_IPV6_PREFIX_SET, "", 0);
     }
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, "", 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_TR_EROUTER_DHCPV6_CLIENT_PREFIX, "", 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_CONNECTION_STATE, WAN_STATUS_DOWN, 0);
-    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_GLOBAL_IPV6_PREFIX_SET, "", 0);
+
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIREWALL_RESTART, NULL, 0);
 
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
-    if ((strcmp(buf, WAN_STATUS_STOPPED) != 0) && (p_VirtIf->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_DOWN))
+    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
+    if ((table == 0) && (strcmp(buf, WAN_STATUS_STOPPED) != 0) && (p_VirtIf->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_DOWN))
     {
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STOPPED, 0);
         CcspTraceInfo(("%s %d - wan-status event set to stopped \n", __FUNCTION__, __LINE__));
