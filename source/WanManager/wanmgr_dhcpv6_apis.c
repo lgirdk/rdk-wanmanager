@@ -2068,9 +2068,10 @@ int setUpLanPrefixIPv6(DML_VIRTUAL_IFACE* pVirtIf)
                 snprintf(pVirtIf->IP.Ipv6Data.pdIfAddress, sizeof(pVirtIf->IP.Ipv6Data.pdIfAddress), "%s/64", set_value); // concatenate prefix address with length "/64"
                 syscfg_set_string(SYSCFG_FIELD_IPV6_PREFIX_ADDRESS, pVirtIf->IP.Ipv6Data.pdIfAddress);
                 sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_TR_BRLAN0_DHCPV6_SERVER_ADDRESS, set_value, 0);
+
+                // ipv6_prefix should be set with original prefix length received on WAN interface.
                 CcspTraceInfo(("%s %d new prefix = %s\n", __FUNCTION__, __LINE__, pVirtIf->IP.Ipv6Data.sitePrefix));
-                strncat(prefix, "/64",sizeof(prefix)-1);
-                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, prefix, 0);
+                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, pVirtIf->IP.Ipv6Data.sitePrefix, 0);
             }
         }else /* IFADDRCONF_REMOVE: prefix remove */
         {
