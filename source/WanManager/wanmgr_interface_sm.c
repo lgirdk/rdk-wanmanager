@@ -705,7 +705,7 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
                 if (table > 0)
                 {
                     CcspTraceInfo(("%s %d: adding custom nameserver %s >> table %d\n", __FUNCTION__, __LINE__, tok, table));
-                    snprintf(cmd, sizeof(cmd), "ip rule add to %s table %d", tok, table);
+                    snprintf(cmd, sizeof(cmd), "ip rule add to %s table %d pref 1", tok, table);
                     WanManager_DoSystemAction("SetUpCustomDNSRule:", cmd);
 
                     if (table == 100)
@@ -1307,9 +1307,8 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
                  bNetAddrStr, p_VirtIf->IP.Ipv4Data.mask, p_VirtIf->IP.Ipv4Data.ifname, p_VirtIf->IP.Ipv4Data.ip, table);
         WanManager_DoSystemAction("SetUpCustomIPRoute:", cmdStr);
 
-        snprintf(cmdStr, sizeof(cmdStr), "ip rule add from %s table %d", p_VirtIf->IP.Ipv4Data.ip, table);
+        snprintf(cmdStr, sizeof(cmdStr), "ip rule add from %s table %d pref 1", p_VirtIf->IP.Ipv4Data.ip, table);
         WanManager_DoSystemAction("SetUpCustomIPRule:", cmdStr);
-
     }
     else
 #endif
