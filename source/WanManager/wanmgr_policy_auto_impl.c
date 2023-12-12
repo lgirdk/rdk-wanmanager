@@ -1509,6 +1509,8 @@ void WanMgr_AutoWanSelectionProcess (void* arg)
 
     CcspTraceInfo(("%s %d: SelectionProcess Thread Starting for GroupId(%d) \n", __FUNCTION__, __LINE__, WanController.GroupInst));
 
+    WanManager_WaitForGroupInterfaceComponents(WanController.GroupInst);
+
     aw_sm_state = Transition_Start(&WanController); // do this first before anything else to init variables
 
     while (bRunning)
