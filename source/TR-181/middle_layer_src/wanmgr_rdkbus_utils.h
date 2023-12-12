@@ -210,6 +210,7 @@ ANSC_STATUS WanMgr_GetSelectedIPMode(DML_VIRTUAL_IFACE * pVirtIf);
 ANSC_STATUS  WanMgr_SetDnsConnectivityCheck(BOOL Enable);
 BOOL WanMgr_GetDnsConnectivityCheck(void);
 ANSC_STATUS WanMgr_SetConnectivityCheckTypeToPSM(DML_VIRTUAL_IFACE* pVirtIf, CONNECTIVITY_CHECK_TYPE type);
+ANSC_STATUS WanManager_WaitForGroupInterfaceComponents(UINT GroupInst);
 
 /**
  * @brief Wanmgr_TriggerReboot() - Initiates a device reboot.
