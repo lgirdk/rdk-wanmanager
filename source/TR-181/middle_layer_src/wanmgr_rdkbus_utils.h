@@ -180,4 +180,5 @@ ANSC_STATUS WanMgr_RdkBus_setWanIpInterfaceData(DML_VIRTUAL_IFACE*  pVirtIf);
 
 ANSC_STATUS WanMgr_RdkBusDeleteVlanLink(DML_WAN_IFACE* pInterface );
 
+ANSC_STATUS WanManager_WaitForGroupInterfaceComponents(UINT GroupInst);
 #endif /* _WANMGR_RDKBUS_UTILS_H_ */
