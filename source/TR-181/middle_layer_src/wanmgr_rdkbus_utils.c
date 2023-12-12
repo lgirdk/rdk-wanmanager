@@ -215,6 +215,11 @@ ANSC_STATUS WaitForInterfaceComponentReady(char *pPhyPath)
         strncpy(pCompPath, CELLULAR_COMPONENT_PATH, sizeof(pCompPath));
     }
 
+    if (pCompName[0] == '\0')
+    {
+        CcspTraceError(("component not found for path (%s). Add if necessary\n", pPhyPath));
+        return ANSC_STATUS_FAILURE;
+    }
     while(1)
     {
         checkComponentHealthStatus(pCompName, pCompPath, status,&ret);
@@ -983,4 +988,39 @@ ANSC_STATUS WanMgr_GetSelectedIPMode(DML_VIRTUAL_IFACE * pVirtIf)
     }
     CcspTraceInfo(("%s %d - IP SelectedMode=[%d] IP ModeForceEnable=[%d]\n", __FUNCTION__, __LINE__, pVirtIf->IP.SelectedMode, pVirtIf->IP.ModeForceEnable));
     return ANSC_STATUS_SUCCESS;
+}
+
+ANSC_STATUS WanManager_WaitForGroupInterfaceComponents(UINT GroupInst)
+{
+    int TotalIfaces = WanMgr_IfaceData_GetTotalWanIface();
+    char phyPath[BUFLEN_128] = {0};
+
+    for (UINT uiLoopCount = 0; uiLoopCount < TotalIfaces; uiLoopCount++)
+    {
+        WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
+        if (pWanDmlIfaceData != NULL)
+        {
+            DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
+            if (GroupInst == pWanIfaceData->Selection.Group)
+            {
+                strcpy(phyPath, pWanIfaceData->BaseInterface);
+            }
+            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+
+            if (phyPath[0] != '\0')
+            {
+                /* Currently ccsp-eth-agent is the only component that is
+                 * interacted before the underlying interface SM is initialized.
+                 * Therefore currently only ccsp-eth-agent needs to be waited
+                 */
+                if (!strstr(phyPath, "Ethernet"))
+                {
+                    continue;
+                }
+                /* Wait for interface component without holding the interface lock! */
+                CcspTraceInfo(("%s %d: Wait for Phy component to be ready.. (%s) \n", __FUNCTION__, __LINE__, phyPath));
+                WaitForInterfaceComponentReady(phyPath);
+            }
+        }
+    }
 }
