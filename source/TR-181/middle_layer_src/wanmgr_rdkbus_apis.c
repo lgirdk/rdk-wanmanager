@@ -332,8 +332,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     AnscCopyString(pVirtIf->IP.Interface, param_value);
 
 #ifdef _LG_MV3_
-    _ansc_memset(param_value, 0, sizeof(param_value));
-    if (!syscfg_get(NULL, "last_erouter_mode", param_value, sizeof(param_value)))
+    if (!strcmp(pVirtIf->Alias, "DATA") && !syscfg_get(NULL, "last_erouter_mode", param_value, sizeof(param_value)))
     {
         char wanmg_enable[8];
         if (atoi(param_value) != 0)
@@ -352,17 +351,18 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
             }
         }
     }
-#else
-    _ansc_memset(param_name, 0, sizeof(param_name));
-    _ansc_memset(param_value, 0, sizeof(param_value));
-    _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_MODE, instancenum, (virtInsNum + 1));
-    retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
-    {
-        _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.Mode));
-    }
+    else
 #endif
-
+    { // _LG_MV3_ else condition begins 
+         _ansc_memset(param_name, 0, sizeof(param_name));
+         _ansc_memset(param_value, 0, sizeof(param_value));
+         _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_MODE, instancenum, (virtInsNum + 1));
+         retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
+         if (retPsmGet == CCSP_SUCCESS)
+         {
+             _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.Mode));
+         }
+    }
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_V4SOURCE, instancenum, (virtInsNum + 1));
