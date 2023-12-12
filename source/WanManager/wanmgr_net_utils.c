@@ -611,7 +611,6 @@ uint32_t WanManager_StartDhcpv4Client(DML_VIRTUAL_IFACE* pVirtIf, char* baseInte
 #endif
     dhcp_params params;
     uint32_t pid = 0;
-    char wanmg_enable[8];
 
     memset (&params, 0, sizeof(dhcp_params));
     params.ifname = pVirtIf->Name;
@@ -620,18 +619,6 @@ uint32_t WanManager_StartDhcpv4Client(DML_VIRTUAL_IFACE* pVirtIf, char* baseInte
 
     CcspTraceInfo(("Starting DHCPv4 Client for iface: %s \n", params.ifname));
     pid = start_dhcpv4_client(&params);
-
-    syscfg_get(NULL, "management_wan_enabled", wanmg_enable, sizeof(wanmg_enable));
-    if (strcmp(wanmg_enable, "1") == 0)
-    {
-        params.ifname = "mg0";
-        params.ifType = WAN_LOCAL_IFACE;
-        start_dhcpv4_client(&params);
-
-        params.ifname = "voip0";
-        params.ifType = WAN_LOCAL_IFACE;
-        start_dhcpv4_client(&params);
-    }
 
     return pid;
 }
@@ -651,7 +638,6 @@ ANSC_STATUS WanManager_StopDhcpv4Client(char * iface_name, unsigned char IsRelea
 #endif
 
     dhcp_params params;
-    char wanmg_enable[8];
     ANSC_STATUS ret;
 
     memset (&params, 0, sizeof(dhcp_params));
@@ -659,16 +645,6 @@ ANSC_STATUS WanManager_StopDhcpv4Client(char * iface_name, unsigned char IsRelea
     params.is_release_required = IsReleaseNeeded;
 
     ret = stop_dhcpv4_client(&params);
-
-    syscfg_get(NULL, "management_wan_enabled", wanmg_enable, sizeof(wanmg_enable));
-    if (strcmp(wanmg_enable, "1") == 0)
-    {
-        params.ifname = "mg0";
-        stop_dhcpv4_client(&params);
-
-        params.ifname = "voip0";
-        stop_dhcpv4_client(&params);
-    }
 
     return ret;
 }
