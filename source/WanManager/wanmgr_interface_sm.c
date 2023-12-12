@@ -4518,7 +4518,6 @@ int WanMgr_StartInterfaceStateMachine(WanMgr_IfaceSM_Controller_t *wanIf)
     return iErrorCode ;
 }
 
-
 void WanMgr_IfaceSM_Init(WanMgr_IfaceSM_Controller_t* pWanIfaceSMCtrl, INT iface_idx, INT VirIfIdx)
 {
     if(pWanIfaceSMCtrl != NULL)
