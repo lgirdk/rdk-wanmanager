@@ -206,4 +206,6 @@ int WanMgr_SetMAPTEnableToPSM(DML_VIRTUAL_IFACE* pVirtIf, BOOL Enable);
  **************************************************************************************/
 ANSC_STATUS WanMgr_GetSelectedIPMode(DML_VIRTUAL_IFACE * pVirtIf);
 
+ANSC_STATUS WanManager_WaitForGroupInterfaceComponents(UINT GroupInst);
+
 #endif /* _WANMGR_RDKBUS_UTILS_H_ */
