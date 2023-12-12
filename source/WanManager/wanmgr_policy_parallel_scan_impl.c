@@ -1084,6 +1084,8 @@ void WanMgr_ParallelScanSelectionProcess (void* arg)
         WanController.pWanActiveIfaceData = WanMgr_GetIfaceData_locked(WanController.activeInterfaceIdx);
     }
 
+    WanManager_WaitForGroupInterfaceComponents(WanController.GroupInst);
+
     ps_sm_state = Transition_Start(&WanController); // do this first before anything else to init variables
 
     while (bRunning)
