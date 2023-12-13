@@ -379,6 +379,8 @@ typedef struct _DML_WANIFACE_IP
     ipc_dhcpv6_data_t*          pIpcIpv6Data;
     int                         Dhcp4cPid;
     int                         Dhcp6cPid;
+    UINT                        RTable;
+    CHAR                        DnsCfgPath[BUFLEN_64];
 } DML_WANIFACE_IP;
 
 #ifdef FEATURE_MAPT
