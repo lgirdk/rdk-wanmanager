@@ -1997,6 +1997,11 @@ BOOL WanIfIpCfg_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULO
             *puLong = p_VirtIf->IP.PreferredMode;
             ret = TRUE;
         }
+        if (strcmp(ParamName, "RTable") == 0)
+        {
+            *puLong = p_VirtIf->IP.RTable;
+            ret = TRUE;
+        }
         WanMgr_VirtualIfaceData_release(p_VirtIf);
     }
 
@@ -2085,6 +2090,16 @@ BOOL WanIfIpCfg_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULO
             }
             ret = TRUE;
         }
+        if (strcmp(ParamName, "RTable") == 0)
+        {
+            if(p_VirtIf->IP.RTable != uValue)
+            {
+                p_VirtIf->IP.RTable = uValue;
+                p_VirtIf->IP.RefreshDHCP = TRUE;
+                CcspTraceInfo(("%s %d RTable.%s changed for %s to %d. Refreshing DHCP \n", __FUNCTION__, __LINE__, ParamName, p_VirtIf->Name,p_VirtIf->IP.IPv4Source));
+            }
+            ret = TRUE;
+        }
         WanMgr_VirtualIfaceData_release(p_VirtIf);
     }
 
@@ -2143,7 +2158,20 @@ ULONG WanIfIpCfg_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, c
                 ret = 1;
             }
         }
-
+        if (strcmp(ParamName, "DNSCfgPath") == 0)
+        {
+            /* collect value */
+            if ( ( sizeof( p_VirtIf->IP.DnsCfgPath ) - 1 ) < *pUlSize )
+            {
+                AnscCopyString( pValue, p_VirtIf->IP.DnsCfgPath );
+                ret = 0;
+            }
+            else
+            {
+                *pUlSize = sizeof( p_VirtIf->IP.DnsCfgPath );
+                ret = 1;
+            }
+        }
         WanMgr_VirtualIfaceData_release(p_VirtIf);
     }
 
@@ -2185,6 +2213,11 @@ BOOL WanIfIpCfg_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, ch
         if (strcmp(ParamName, "Interface") == 0)
         {
             AnscCopyString(p_VirtIf->IP.Interface, pString);
+            ret = TRUE;
+        }
+        if (strcmp(ParamName, "DNSCfgPath") == 0)
+        {
+            AnscCopyString(p_VirtIf->IP.DnsCfgPath, pString);
             ret = TRUE;
         }
         WanMgr_VirtualIfaceData_release(p_VirtIf);
