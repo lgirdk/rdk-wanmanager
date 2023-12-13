@@ -735,7 +735,8 @@ void WanMgr_VirtIface_Init(DML_VIRTUAL_IFACE * pVirtIf, UINT iface_index)
     pVirtIf->VLAN.NoOfInterfaceEntries = 0;
     memset(pVirtIf->VLAN.VLANInUse,0, sizeof(pVirtIf->VLAN.VLANInUse));
     pVirtIf->Reset = FALSE;
-    memset(pVirtIf->IP.Interface, 0, 64);
+    memset(pVirtIf->IP.Interface, 0, sizeof(pVirtIf->IP.Interface));
+    memset(pVirtIf->IP.DnsCfgPath, 0, sizeof(pVirtIf->IP.DnsCfgPath));
     pVirtIf->IP.Ipv4Status = WAN_IFACE_IPV4_STATE_DOWN;
     pVirtIf->IP.Ipv6Status = WAN_IFACE_IPV6_STATE_DOWN;
     pVirtIf->IP.IPv4Source= DML_WAN_IP_SOURCE_DHCP;
@@ -751,6 +752,7 @@ void WanMgr_VirtIface_Init(DML_VIRTUAL_IFACE * pVirtIf, UINT iface_index)
     memset(&(pVirtIf->IP.Ipv6Data), 0, sizeof(WANMGR_IPV6_DATA));
     pVirtIf->IP.pIpcIpv4Data = NULL;
     pVirtIf->IP.pIpcIpv6Data = NULL;
+    pVirtIf->IP.RTable = 0;
     pVirtIf->MAP.MaptStatus = WAN_IFACE_MAPT_STATE_DOWN;
     memset(pVirtIf->MAP.Path, 0, 64);
     pVirtIf->MAP.MaptChanged = FALSE;
