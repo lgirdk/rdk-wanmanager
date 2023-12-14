@@ -44,13 +44,6 @@
 #define LAN_BRIDGE_NAME             "brlan0"
 //
 
-#define MGMT_IFNAME                 "mg0"
-#define VOIP_IFNAME                 "voip0"
-
-#define MGMT_TABLE                  100
-#define VOIP_TABLE                  200
-#define GET_ROUTE_TABLE(_ifname) !strcmp(_ifname, MGMT_IFNAME) ? 100 : (!strcmp(_ifname, VOIP_IFNAME) ? 200 : 0)
-
 #define WAN_STATUS_UP   "up"
 #define WAN_STATUS_DOWN "down"
 
