@@ -1743,6 +1743,7 @@ int WanManager_AddDefaultGatewayRoute(DEVICE_NETWORKING_MODE DeviceNwMode, const
 {
     char cmd[BUFLEN_128]={0};
     int ret = RETURN_OK;
+    unsigned int table = 0;
 
     if (DeviceNwMode == GATEWAY_MODE)
     {
@@ -1751,15 +1752,19 @@ int WanManager_AddDefaultGatewayRoute(DEVICE_NETWORKING_MODE DeviceNwMode, const
         /* For IPoE, always use gw IP address. */
         if (IsValidIpv4Address(pIpv4Info->gateway) && !(IsZeroIpvxAddress(AF_SELECT_IPV4, pIpv4Info->gateway)))
         {
-#ifdef _LG_MV3_
-            int table = GET_ROUTE_TABLE(pIpv4Info->ifname);
+            DML_VIRTUAL_IFACE *p_VirtIf = WanMgr_GetVirtualIfaceByName_locked(pIpv4Info->ifname);
+
+            if (p_VirtIf != NULL)
+            {
+                table = p_VirtIf->IP.RTable;
+                WanMgr_VirtualIfaceData_release(pIpv4Info->ifname);
+            }
             if (table > 0)
             {
                 snprintf(cmd, sizeof(cmd), "ip route add default via %s metric 0 dev %s table %d", pIpv4Info->gateway, pIpv4Info->ifname, table);
                 WanManager_DoSystemAction("SetUpCustomGateway:", cmd);
             }
             else
-#endif
             {
                 snprintf(cmd, sizeof(cmd), "route add default gw %s dev %s", pIpv4Info->gateway, pIpv4Info->ifname);
                 WanManager_DoSystemAction("SetUpDefaultSystemGateway:", cmd);
