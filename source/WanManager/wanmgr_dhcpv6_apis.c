@@ -1874,6 +1874,11 @@ int setUpLanPrefixIPv6(DML_VIRTUAL_IFACE* pVirtIf)
         return RETURN_ERR;
     }
 
+    if (strcmp(pVirtIf->Alias, "DATA"))
+    {
+        return RETURN_OK;
+    }
+
     CcspTraceInfo(("%s %d Updating SYSEVENT_CURRENT_WAN_IFNAME %s\n", __FUNCTION__, __LINE__,pVirtIf->IP.Ipv6Data.ifname));
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IFNAME, pVirtIf->IP.Ipv6Data.ifname, 0);
 
