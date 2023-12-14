@@ -193,10 +193,17 @@ ANSC_STATUS wanmgr_set_Ipv4Sysevent(const WANMGR_IPV4_DATA* dhcp4Info, DEVICE_NE
     char value[BUFLEN_64] = {0};
     char ipv6_status[BUFLEN_16] = {0};
     char ifaceMacAddress[BUFLEN_128] = {0};
-    int table = GET_ROUTE_TABLE(dhcp4Info->ifname);
+    char alias[BUFLEN_64] = {0};
 
-    /* TODO: DATA WAN should be detected from WanManager Configuration:Alias */
-    if (table == 0)
+    DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_GetVirtualIfaceByName_locked(dhcp4Info->ifname);
+
+    if (p_VirtIf != NULL)
+    {
+        strcpy(alias, p_VirtIf->Alias);
+        WanMgr_VirtualIfaceData_release(dhcp4Info->ifname);
+    }
+
+    if (!strcmp(alias, "DATA"))
     {
         // same as SYSEVENT_IPV4_IP_ADDRESS. But this is required in other components
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_WAN_ADDRESS, dhcp4Info->ip, 0);
@@ -208,7 +215,7 @@ ANSC_STATUS wanmgr_set_Ipv4Sysevent(const WANMGR_IPV4_DATA* dhcp4Info, DEVICE_NE
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IFNAME, name, sizeof(name));
     if (DeviceNwMode == GATEWAY_MODE)
     {
-        if ((table == 0) && ((strlen(name) == 0) || (strcmp(name, dhcp4Info->ifname) != 0)) && (strlen(dhcp4Info->ifname) > 0))
+        if ((!strcmp(alias, "DATA")) && ((strlen(name) == 0) || (strcmp(name, dhcp4Info->ifname) != 0)) && (strlen(dhcp4Info->ifname) > 0))
         {
             sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IFNAME, dhcp4Info->ifname, 0);
         }
