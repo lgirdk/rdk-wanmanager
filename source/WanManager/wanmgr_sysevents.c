@@ -1077,7 +1077,7 @@ int do_toggle_v6_status (void)
             CcspTraceWarning(("%s-%d : Failure writing to /proc file\n", __FUNCTION__, __LINE__));
         }
 
-        ret = v_secure_system("/usr/bin/rdisc6 -w 3 -r 1 %s", wanInterface);
+        ret = v_secure_system("/usr/bin/rdisc6 -w 3000 -r 1 %s", wanInterface);
         if (ret != 0) {
             CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
         }
