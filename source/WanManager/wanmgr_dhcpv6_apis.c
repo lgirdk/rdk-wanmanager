@@ -1584,6 +1584,8 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
        return ANSC_STATUS_BAD_PARAMETER;
     }
 
+    CcspTraceInfo(("%s %d - Enter\n", __FUNCTION__, __LINE__));
+
     BOOL connected = FALSE;
     char set_value[BUFLEN_64];
 
