@@ -142,6 +142,19 @@ ANSC_STATUS wanmgr_sysevents_ipv6Info_init()
     return ANSC_STATUS_SUCCESS;
 }
 
+int set_ntp_sysevent(char *ntpserver)
+{
+    char oldntpserver[BUFLEN_128];
+    sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_DHCPV4_NTP_SERVER, oldntpserver, sizeof(oldntpserver));
+
+    //Avoid multiple restart of ntp server if the option received is same
+    if(!strcmp(oldntpserver, ntpserver))
+        return 0;
+
+    sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_DHCPV4_NTP_SERVER, ntpserver, 0);
+    return 0;
+}
+
 ANSC_STATUS wanmgr_sysevents_ipv4Info_set(const ipc_dhcpv4_data_t* dhcp4Info, const char *wanIfName)
 {
     char name[BUFLEN_64] = {0};
@@ -167,7 +180,7 @@ ANSC_STATUS wanmgr_sysevents_ipv4Info_set(const ipc_dhcpv4_data_t* dhcp4Info, co
 
     if (strlen(dhcp4Info->ntpServer) >0)
     {
-        sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_DHCPV4_NTP_SERVER, dhcp4Info->ntpServer, 0);
+        set_ntp_sysevent(dhcp4Info->ntpServer);
     }
 
     sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_FIELD_IPV4_DOMAIN, dhcp4Info->domainName, 0);
@@ -285,7 +298,7 @@ ANSC_STATUS wanmgr_set_Ipv4Sysevent(const WANMGR_IPV4_DATA* dhcp4Info, DEVICE_NE
 
     if (dhcp4Info->ntpServer[0] != '\0')
     {
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCPV4_NTP_SERVER, dhcp4Info->ntpServer, 0);
+        set_ntp_sysevent(dhcp4Info->ntpServer);
     }
 
 #endif
@@ -596,6 +609,7 @@ static void *WanManagerSyseventHandler(void *args)
     async_id_t mesh_wan_link_status_asyncid;
 #endif /* RDKB_EXTENDER_ENABLED */
     async_id_t dhcpv6_ntp_server_asyncid;
+    async_id_t dhcpv4_ntp_server_asyncid;
 
 #if defined (FEATURE_MAPT) || defined(FEATURE_SUPPORT_MAPT_NAT46)
     async_id_t factory_reset_status_asyncid;
@@ -645,6 +659,9 @@ static void *WanManagerSyseventHandler(void *args)
 
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV6_NTP_SERVER, &dhcpv6_ntp_server_asyncid);
+
+    sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV4_NTP_SERVER, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV4_NTP_SERVER, &dhcpv4_ntp_server_asyncid);
 
 #if defined(FEATURE_MAPT) || defined(FEATURE_SUPPORT_MAPT_NAT46)
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_MAPT_FEATURE_ENABLE, TUPLE_FLAG_EVENT);
@@ -978,7 +995,7 @@ static void *WanManagerSyseventHandler(void *args)
                 }
             }
 #endif
-            else if (strcmp(name, SYSEVENT_DHCPV6_NTP_SERVER) == 0)
+            else if ((strcmp(name, SYSEVENT_DHCPV6_NTP_SERVER) == 0) || (strcmp(name, SYSEVENT_DHCPV4_NTP_SERVER) == 0))
             {
                 sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_NTPD_RESTART, NULL, 0);
             }
