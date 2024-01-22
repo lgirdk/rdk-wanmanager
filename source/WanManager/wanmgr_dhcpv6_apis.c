@@ -1797,23 +1797,26 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
         }
         else
         {
-            char buf[32];
-            /*TODO: Revisit this*/
-            //call function for changing the prlft and vallft
-            // FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE : Handle Ip renew in handler thread. 
-#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_))  //TODO: V6 handled in PAM
-            if ((WanManager_Ipv6AddrUtil(pVirtIf->Name, SET_LFT, pNewIpcMsg->prefixPltime, pNewIpcMsg->prefixVltime) < 0))
+            if (!strcmp(pVirtIf->Alias,"DATA"))
             {
-                CcspTraceError(("Life Time Setting Failed"));
-            }
-            sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
-            if (strcmp(buf, WAN_STATUS_STARTED))
-                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STARTED, 0);
-            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_RADVD_RESTART, NULL, 0);
+                char buf[32];
+                /*TODO: Revisit this*/
+                //call function for changing the prlft and vallft
+                // FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE : Handle Ip renew in handler thread. 
+#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_))  //TODO: V6 handled in PAM
+                if ((WanManager_Ipv6AddrUtil(pVirtIf->Name, SET_LFT, pNewIpcMsg->prefixPltime, pNewIpcMsg->prefixVltime) < 0))
+                {
+                    CcspTraceError(("Life Time Setting Failed"));
+                }
+                sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
+                if (strcmp(buf, WAN_STATUS_STARTED))
+                    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, WAN_STATUS_STARTED, 0);
+                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_RADVD_RESTART, NULL, 0);
 #endif
 #ifdef FEATURE_IPOE_HEALTH_CHECK
-            pVirtIf->IP.Ipv6Renewed = TRUE;
+                pVirtIf->IP.Ipv6Renewed = TRUE;
 #endif
+            }
         }
         // update current IPv6 Data
         memcpy(&(pVirtIf->IP.Ipv6Data), &(Ipv6DataTemp), sizeof(WANMGR_IPV6_DATA));
