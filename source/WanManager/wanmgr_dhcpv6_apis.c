@@ -1794,6 +1794,18 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
         {
             CcspTraceInfo(("IPv6 configuration has been changed \n"));
             pVirtIf->IP.Ipv6Changed = TRUE;
+
+            if (!strcmp(pVirtIf->Alias,"DATA"))
+            {
+                if (!strcmp(Ipv6DataTemp.address, ""))              //If erouter0 IPv6 address is null
+                {
+                    v_secure_system("service_dslite stop &");
+                }
+                else
+                {
+                    v_secure_system("service_dslite restart &");
+                }
+            }
         }
         else
         {
