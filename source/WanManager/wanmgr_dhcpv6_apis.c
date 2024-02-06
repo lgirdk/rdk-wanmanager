@@ -1842,6 +1842,18 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
             CcspTraceInfo(("IPv6 configuration has been changed \n"));
             pVirtIf->IP.Ipv6Changed = TRUE;
 
+            if (!strcmp(pVirtIf->Alias,"DATA"))
+            {
+                if (!strcmp(Ipv6DataTemp.address, ""))              //If erouter0 IPv6 address is null
+                {
+                    v_secure_system("service_dslite stop &");
+                }
+                else
+                {
+                    v_secure_system("service_dslite restart &");
+                }
+            }
+
             char param_name[256] = {0};
             snprintf(param_name, sizeof(param_name), "Device.X_RDK_WanManager.Interface.%d.VirtualInterface.%d.IP.IPv6Address",  pVirtIf->baseIfIdx+1, pVirtIf->VirIfIdx+1);
             WanMgr_Rbus_EventPublishHandler(param_name, Ipv6DataNew.address,RBUS_STRING);
