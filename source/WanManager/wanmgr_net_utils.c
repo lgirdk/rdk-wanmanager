@@ -468,6 +468,9 @@ int WanManager_StartDhcpv6Client(DML_VIRTUAL_IFACE* pVirtIf, IFACE_TYPE IfaceTyp
         pid = -1;
     }
     pVirtIf->IP.Dhcp6cPid = pid;
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+    t2_event_s("EVT_SYS_SH_DHCPV6Client_restart_split", "Restarting DHCP Client for v6");
+#endif
 
     return pid;
 }
