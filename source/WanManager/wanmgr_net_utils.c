@@ -57,6 +57,9 @@
 #include <netdb.h>
 #endif
 
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+#include <telemetry_busmessage_sender.h>
+#endif
 #define BROADCAST_IP "255.255.255.255"
 /* To ignore link local addresses configured as DNS servers,
  * it covers the range 169.254.x.x */
@@ -536,6 +539,11 @@ int WanManager_StartDhcpv4Client(DML_VIRTUAL_IFACE* pVirtIf, char* baseInterface
         CcspTraceError(("%s %d: dhcpv4 client failed to start. Returing pid -1.\n", __FUNCTION__, __LINE__));
         pid = -1;
     }
+
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+    t2_event_s("EVT_SYS_SH_DHCPV4Client_restart_split", "Restarting DHCP Client for v4");
+#endif
+
     pVirtIf->IP.Dhcp4cPid = pid;
     return pid;
 }
