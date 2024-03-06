@@ -1815,7 +1815,7 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
                 /*TODO: Revisit this*/
                 //call function for changing the prlft and vallft
                 // FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE : Handle Ip renew in handler thread. 
-#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_))  //TODO: V6 handled in PAM
+#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) || defined(FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE)  //TODO: V6 handled in PAM
                 if ((WanManager_Ipv6AddrUtil(pVirtIf->Name, SET_LFT, pNewIpcMsg->prefixPltime, pNewIpcMsg->prefixVltime) < 0))
                 {
                     CcspTraceError(("Life Time Setting Failed"));
