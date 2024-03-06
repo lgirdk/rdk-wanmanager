@@ -745,11 +745,53 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     int ret = RETURN_OK;
 
 #if defined(_LG_OFW_)
-
     char cmd[512];
     char syseventParam[128];
     char resolv_file[80];
     char resolv_envs[256];
+
+#ifdef _LG_MV2_PLUS_
+#define VAR_RESOLV_FILE "/var/tmp/resolv.conf"
+#define VAR_RESOLVPROXY_FILE "/var/tmp/resolv.dnsproxy"
+#define VAR_RESOLVPROXY_FILE_TMP "/var/tmp/resolv.dnsproxy.tmp"
+
+    if (!strcmp(p_VirtIf->Alias, "DATA"))
+    {
+        char dns_relay[BUFLEN_256] = {0};
+        char *dmQuery = "Device.DNS.Relay.Enable";
+
+        if (ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dns_relay))
+        {
+            CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
+        }
+        if (strcmp(dns_relay, "true") == 0)
+        {
+            FILE *fp = fopen(VAR_RESOLVPROXY_FILE_TMP, "w");
+            if (fp == NULL)
+            {
+                CcspTraceError(("%s %d - Open %s error!\n", __FUNCTION__, __LINE__, VAR_RESOLVPROXY_FILE_TMP));
+                return RETURN_ERR;
+            }
+            fprintf(fp, "nameserver 127.0.0.1\nnameserver ::1\n");
+            fclose(fp);
+            CcspTraceInfo(("%s %d: DNS Relay is enabled\n", __FUNCTION__, __LINE__));
+        }
+        else
+        {
+            if (symlink(VAR_RESOLV_FILE, VAR_RESOLVPROXY_FILE_TMP) != 0) {
+                CcspTraceError(("%s %d - Symlink %s error!\n", __FUNCTION__, __LINE__, VAR_RESOLVPROXY_FILE_TMP));
+                return RETURN_ERR;
+            }
+            CcspTraceInfo(("%s %d: DNS Relay is disabled\n", __FUNCTION__, __LINE__));
+        }
+
+        if (rename(VAR_RESOLVPROXY_FILE_TMP, VAR_RESOLVPROXY_FILE) != 0)
+        {
+            CcspTraceError(("%s %d - Rename %s error!\n", __FUNCTION__, __LINE__, VAR_RESOLVPROXY_FILE));
+            return RETURN_ERR;
+        }
+    }
+#endif /* _LG_MV2_PLUS_ */
 
 #ifdef _LG_MV3_
     if (p_VirtIf->IP.RTable > 0)
@@ -828,7 +870,7 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
             {
                 // Update domain name in resolv.conf
                 CcspTraceInfo(("%s %d: adding domainname  %s >> %s\n", __FUNCTION__, __LINE__, p_VirtIf->IP.Ipv4Data.domainName, resolv_file));
-                snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | %sresolvconf -a %s.udhcpc", p_VirtIf->IP.Ipv4Data.domainName, resolv_envs, pInterface->Name);
+                snprintf(cmd, sizeof(cmd), "echo -n domain '%s' | %sresolvconf -a %s.udhcpc", p_VirtIf->IP.Ipv4Data.domainName, resolv_envs, p_VirtIf->Name);
                 system(cmd);
             }
         }
@@ -1707,7 +1749,7 @@ static int wan_tearDownIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
 
     //TODO: FIXME: XB devices use the DNS of primary for backup and doesn't deconfigure the primary ipv6 prefix from the LAN interface. 
-#if (!(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_))) || defined (_RDKB_GLOBAL_PRODUCT_REQ_)
+#if (!(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_))) || defined (_RDKB_GLOBAL_PRODUCT_REQ_) || defined (_LG_OFW_)
 #if defined (_RDKB_GLOBAL_PRODUCT_REQ_)
     unsigned char BackupWanDnsSupport = TRUE;
 
