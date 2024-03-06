@@ -625,6 +625,7 @@ static void *WanManagerSyseventHandler(void *args)
 #if defined _LG_MV3_
     async_id_t dhcp_client_restart_mv3_asyncid;
 #endif
+    async_id_t dns_restart_asyncid;
 
 #if defined (_HUB4_PRODUCT_REQ_)
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_ULA_ADDRESS, TUPLE_FLAG_EVENT);
@@ -691,6 +692,8 @@ static void *WanManagerSyseventHandler(void *args)
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV4_RESTART, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DHCPV4_RESTART, &dhcp_client_restart_mv3_asyncid);
 #endif
+    sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DNS_RESTART, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_DNS_RESTART, &dns_restart_asyncid);
 
     for(;;)
     {
@@ -1009,6 +1012,23 @@ static void *WanManagerSyseventHandler(void *args)
                Wan_ForceRenewDhcpIPv4(val);
            }
 #endif
+           else if (strcmp(name, SYSEVENT_DNS_RESTART) == 0)
+           {
+               char ifName[BUFLEN_64] = {0};
+
+               sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IFNAME, ifName, sizeof(ifName));
+               if (ifName[0] != 0)
+               {
+                   DML_VIRTUAL_IFACE *p_VirtIf = WanMgr_GetVirtualIfaceByName_locked(ifName);
+
+                   if (p_VirtIf != NULL)
+                   {
+                       CcspTraceWarning(("%s line %d: %s reset DNS configuration \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+                       p_VirtIf->Reset = TRUE;
+                       WanMgr_VirtualIfaceData_release(ifName);
+                   }
+               }
+           }
             else
             {
                 CcspTraceWarning(("%s %d undefined event %s:%s \n", __FUNCTION__, __LINE__, name, val));
