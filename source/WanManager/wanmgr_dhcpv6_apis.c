@@ -1645,7 +1645,7 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
     }
 
     /* dhcp6c receives prefix delegation for LAN */
-    if (pNewIpcMsg->prefixAssigned && !IS_EMPTY_STRING(pNewIpcMsg->sitePrefix))
+    if (pNewIpcMsg->prefixAssigned && !IS_EMPTY_STRING(pNewIpcMsg->sitePrefix) && !strcmp(pVirtIf->Alias,"DATA"))
     {
         if (pNewIpcMsg->prefixCmd == IFADDRCONF_ADD &&
             pNewIpcMsg->prefixPltime != 0 && pNewIpcMsg->prefixVltime != 0)
