@@ -251,7 +251,7 @@ ANSC_STATUS WanManager_get_interface_mac(char *interfaceName, char* macAddress, 
 ANSC_STATUS WanManager_getGloballyUniqueIfAddr6(const char *ifname, char *ipAddr, uint32_t *prefixLen);
 bool IsDefaultRoutePresent(char *IfaceName, bool IsV4);
 
-ANSC_STATUS WanManager_ConfigurePktFlow(void);
+ANSC_STATUS WanManager_ConfigurePktFlow(char *activeWanType, char *ifName);
 
 #ifdef FEATURE_802_1P_COS_MARKING
 ANSC_HANDLE WanManager_AddIfaceMarking(DML_WAN_IFACE* pWanDmlIface, ULONG* pInsNumber);
