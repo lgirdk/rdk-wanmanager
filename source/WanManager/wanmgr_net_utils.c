@@ -335,6 +335,7 @@ int WanManager_Ipv6AddrUtil(char *ifname, Ipv6OperType opr, int preflft, int val
     char prefix[BUFLEN_48] = {0};
     char prefixAddr[BUFLEN_48] = {0};
     char IfaceName[BUFLEN_16] = {0};
+    char prefixlen[12];
     int BridgeMode = 0;
 
     memset(prefix, 0, sizeof(prefix));
@@ -351,6 +352,12 @@ int WanManager_Ipv6AddrUtil(char *ifname, Ipv6OperType opr, int preflft, int val
         }
         BridgeMode = atoi(Output);
         CcspTraceInfo(("%s-%d: <<DEBUG>> bridge_mode sysevent value set to =%d \n", __FUNCTION__, __LINE__,  BridgeMode));
+    }
+
+    memset(prefixlen, 0, sizeof(prefixlen));
+    sysevent_get(sysevent_fd, sysevent_token, "ipv6_prefix-length", prefixlen, sizeof(prefixlen));
+    if (prefixlen[0] == 0) {
+        strcpy(prefixlen, "64");
     }
 
     /*TODO:
@@ -386,7 +393,7 @@ int WanManager_Ipv6AddrUtil(char *ifname, Ipv6OperType opr, int preflft, int val
 #endif /** _RDKB_GLOBAL_PRODUCT_REQ_ */
                 {
                     memset(cmdLine, 0, sizeof(cmdLine));
-                    snprintf(cmdLine, sizeof(cmdLine), "ip -6 addr del %s/64 dev %s", prefixAddr, IfaceName);
+                    snprintf(cmdLine, sizeof(cmdLine), "ip -6 addr del %s/%s dev %s", prefixAddr, prefixlen, IfaceName);
                     if (WanManager_DoSystemActionWithStatus("ip -6 addr del ADDR dev xxxx", cmdLine) != 0)
                         CcspTraceError(("failed to run cmd: %s", cmdLine));
                 }
@@ -421,7 +428,7 @@ int WanManager_Ipv6AddrUtil(char *ifname, Ipv6OperType opr, int preflft, int val
             if (strlen(prefixAddr) > 0)
             {
                 memset(cmdLine, 0, sizeof(cmdLine));
-                snprintf(cmdLine, sizeof(cmdLine), "ip -6 addr change %s dev %s valid_lft %d preferred_lft %d ", prefixAddr, IfaceName, vallft, preflft);
+                snprintf(cmdLine, sizeof(cmdLine), "ip -6 addr change %s/%s dev %s valid_lft %d preferred_lft %d ", prefixAddr, prefixlen, IfaceName, vallft, preflft);
                 if (WanManager_DoSystemActionWithStatus("processDhcp6cStateChanged: ip -6 addr change L3IfName", (cmdLine)) != 0)
                     CcspTraceError(("failed to run cmd: %s", cmdLine));
 
