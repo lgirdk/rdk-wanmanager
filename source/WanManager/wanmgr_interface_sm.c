@@ -471,7 +471,11 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
     //Check if IPv6 dhcp client is still running - handling runtime crash of dhcp client
     if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) &&  // IP.Mode supports V6
         p_VirtIf->IP.IPv6Source == DML_WAN_IP_SOURCE_DHCP &&                                                    // uses DHCP client
-        (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, NULL/*p_VirtIf->Name*/) != TRUE))                          // but DHCP client not running
+#if defined _LG_MV3_
+        (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, p_VirtIf->Name) != TRUE))                          // but DHCP client not running
+#else
+        (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, NULL/*p_VirtIf->Name*/) != TRUE)) 
+#endif
     {
         p_VirtIf->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(p_VirtIf, pInterface->IfaceType);
         CcspTraceInfo(("%s %d - SELFHEAL - Started dhcp6c on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, p_VirtIf->Name, p_VirtIf->IP.Dhcp6cPid));
@@ -2414,7 +2418,11 @@ static eWanState_t wan_transition_ipv6_down(WanMgr_IfaceSM_Controller_t* pWanIfa
     else
     {
 
+#if defined _LG_MV3_
+        if (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, p_VirtIf->Name) != TRUE)
+#else
         if (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, NULL/*p_VirtIf->Name*/) != TRUE)
+#endif
         {
             /* Start DHCPv6 Client */
             CcspTraceInfo(("%s %d - Starting dibbler-client on interface %s \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
