@@ -1197,9 +1197,9 @@ void WanMgr_Configure_accept_ra(DML_VIRTUAL_IFACE * pVirtIf, BOOL EnableRa)
      * Use Device.PPP.Interface.1.IPv6CP.RemoteInterfaceIdentifier get default ipv6 route .
      */
 
-    if( pVirtIf->PPP.Enable == TRUE)
+    if( pVirtIf->PPP.Enable == TRUE || strcmp(pVirtIf->Alias, "DATA") != 0)
     {
-        CcspTraceWarning(("%s-%d : %s is a PPP interface. Not changing accept_ra \n", __FUNCTION__, __LINE__,pVirtIf->Name));
+        CcspTraceWarning(("%s-%d : %s is a PPP/Management interface. Not changing accept_ra \n", __FUNCTION__, __LINE__,pVirtIf->Name));
         return;
     }
 
