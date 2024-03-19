@@ -223,6 +223,7 @@ ANSC_STATUS wanmgr_set_Ipv4Sysevent(const WANMGR_IPV4_DATA* dhcp4Info, DEVICE_NE
 
         // same as SYSEVENT_IPV4_SUBNET. But this is required in other components
         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_WAN_SUBNET, dhcp4Info->mask, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_DEFAULT_ROUTER, dhcp4Info->gateway, 0);
     }
 
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IFNAME, name, sizeof(name));
@@ -262,7 +263,6 @@ ANSC_STATUS wanmgr_set_Ipv4Sysevent(const WANMGR_IPV4_DATA* dhcp4Info, DEVICE_NE
 
     snprintf(name, sizeof(name), SYSEVENT_IPV4_GW_ADDRESS, dhcp4Info->ifname);
     sysevent_set(sysevent_fd, sysevent_token,name, dhcp4Info->gateway, 0);
-    sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_IPV4_DEFAULT_ROUTER, dhcp4Info->gateway, 0);
 
     snprintf(name,sizeof(name), SYSEVENT_IPV4_MTU_SIZE, dhcp4Info->ifname);
     snprintf(value, sizeof(value), "%u",dhcp4Info->mtuSize);
