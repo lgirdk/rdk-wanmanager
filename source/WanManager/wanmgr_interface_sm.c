@@ -678,9 +678,14 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 
     if (!strcmp(p_VirtIf->Alias, "DATA"))
     {
-        char dns_relay[2];
-        syscfg_get(NULL, "dns_relay_enable", dns_relay, sizeof(dns_relay));
-        if (dns_relay[0] == '1')
+        char dns_relay[BUFLEN_256] = {0};
+        char *dmQuery = "Device.DNS.Relay.Enable";
+
+        if (ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dns_relay))
+        {
+            CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
+        }
+        if (strcmp(dns_relay, "true") == 0)
         {
             FILE *fp = fopen(VAR_RESOLVPROXY_FILE_TMP, "w");
             if (fp == NULL)
@@ -1588,7 +1593,7 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         return ret;
     }
 
-#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) //TODO: V6 handled in PAM
+#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) || defined (_LG_OFW_) //TODO: V6 handled in PAM
     /** Reset IPv6 DNS configuration. */
     if (wan_updateDNS(pWanIfaceCtrl, (p_VirtIf->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_UP), TRUE) != RETURN_OK)
     {
@@ -1676,7 +1681,7 @@ static int wan_tearDownIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
 
-#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) //TODO: V6 handled in PAM
+#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) || defined (_LG_OFW_) //TODO: V6 handled in PAM
     /** Reset IPv6 DNS configuration. */
     if (RETURN_OK == wan_updateDNS(pWanIfaceCtrl, (p_VirtIf->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_UP), FALSE))
     {
