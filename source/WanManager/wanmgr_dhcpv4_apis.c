@@ -69,6 +69,38 @@ extern char g_Subsystem[32];
 #define DHCP_STATE_UP      "Up"
 #define DHCP_STATE_DOWN    "Down"
 
+
+static void update_wan_mtu (uint32_t *mtuSize)
+{
+    char wan_mtu[12];
+
+    if (syscfg_get(NULL, "wan_mtu", wan_mtu, sizeof(wan_mtu)) == 0)
+    {
+        uint32_t mtu = atoi(wan_mtu);
+
+#ifdef INTEL_PUMA7
+#if !defined(DOCSIS_EXTENDED_MTU_SUPPORT)
+        if (mtu > 1500)
+        {
+            mtu = 1500;
+            snprintf(wan_mtu, sizeof(wan_mtu), "%u", mtu);
+            syscfg_set(NULL, "wan_mtu", wan_mtu);
+        }
+#endif
+        if (mtu > 0)
+#else
+#ifdef _LG_MV3_
+ if ((mtu > 0) && (mtu <= 2000))
+#else
+ if ((mtu > 0) && (mtu <= 1500))
+#endif
+#endif
+        {
+            *mtuSize = mtu;
+        }
+    }
+}
+
 static ANSC_STATUS wanmgr_dchpv4_get_ipc_msg_info(WANMGR_IPV4_DATA* pDhcpv4Data, ipc_dhcpv4_data_t* pIpcIpv4Data)
 {
     if((pDhcpv4Data == NULL) || (pIpcIpv4Data == NULL))
@@ -222,6 +254,11 @@ ANSC_STATUS wanmgr_handle_dhcpv4_event_data(DML_VIRTUAL_IFACE* pVirtIf)
         // update current IPv4 data
         wanmgr_dchpv4_get_ipc_msg_info(&(pVirtIf->IP.Ipv4Data), pDhcpcInfo);
         WanManager_UpdateInterfaceStatus(pVirtIf, WANMGR_IFACE_CONNECTION_UP);
+
+        if (strcmp(pVirtIf->Alias, "DATA") == 0)
+        {
+            update_wan_mtu(&(pVirtIf->IP.Ipv4Data.mtuSize));
+        }
     }
     else if (pDhcpcInfo->isExpired)
     {
