@@ -2607,8 +2607,11 @@ static eWanState_t wan_transition_ipv6_down(WanMgr_IfaceSM_Controller_t* pWanIfa
     }
     else
     {
-
+#if defined _LG_MV3_
+        if (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, p_VirtIf->Name) != TRUE)
+#else
         if (WanManager_IsApplicationRunning(DHCPV6_CLIENT_NAME, NULL/*p_VirtIf->Name*/) != TRUE)
+#endif
         {
             /* Start DHCPv6 Client */
             CcspTraceInfo(("%s %d - Starting dibbler-client on interface %s \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
