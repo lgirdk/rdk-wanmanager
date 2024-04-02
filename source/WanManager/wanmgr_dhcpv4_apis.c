@@ -232,6 +232,11 @@ ANSC_STATUS wanmgr_handle_dhcpv4_event_data(DML_VIRTUAL_IFACE* pVirtIf)
         wanmgr_dchpv4_get_ipc_msg_info(&(pVirtIf->IP.Ipv4Data), pDhcpcInfo);
         pVirtIf->IP.Ipv4Data.leaseReceivedTime = up_time;
         WanManager_UpdateInterfaceStatus(pVirtIf, WANMGR_IFACE_CONNECTION_UP);
+
+        if (strcmp(pVirtIf->Alias, "DATA") == 0)
+        {
+            update_wan_mtu(&(pVirtIf->IP.Ipv4Data.mtuSize));
+        }
     }
     else if (pDhcpcInfo->isExpired)
     {
