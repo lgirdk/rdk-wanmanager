@@ -2017,12 +2017,14 @@ int setUpLanPrefixIPv6(DML_VIRTUAL_IFACE* pVirtIf)
             sysevent_set(sysevent_fd, sysevent_token, "lan_ipaddr_v6", globalIP, 0);
             sysevent_set(sysevent_fd, sysevent_token, "lan_prefix_set", globalIP, 0); //TODO: This was a event to Wanmanager. if no other process listens to it. remove it.
         }
+#if !defined (_LG_OFW_)
         memset(cmdLine, 0, sizeof(cmdLine));
         snprintf(cmdLine, sizeof(cmdLine), "ip -6 route add %s dev %s", pVirtIf->IP.Ipv6Data.sitePrefix, COSA_DML_DHCPV6_SERVER_IFNAME);
         if (WanManager_DoSystemActionWithStatus(__FUNCTION__, cmdLine) != 0)
         {
             CcspTraceError(("failed to run cmd: %s", cmdLine));
         }
+#endif
     }
 
     /* Sysevent set moved from wanmgr_handle_dhcpv6_event_data */
