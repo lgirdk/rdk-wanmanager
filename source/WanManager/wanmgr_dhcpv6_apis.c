@@ -1959,12 +1959,6 @@ int setUpLanPrefixIPv6(DML_VIRTUAL_IFACE* pVirtIf)
         // send an event to wanmanager that Global-prefix is set
         sysevent_set(sysevent_fd, sysevent_token, "lan_prefix_set", globalIP, 0);
 #endif
-        memset(cmdLine, 0, sizeof(cmdLine));
-        snprintf(cmdLine, sizeof(cmdLine), "ip -6 route add %s dev %s", pVirtIf->IP.Ipv6Data.sitePrefix, COSA_DML_DHCPV6_SERVER_IFNAME);
-        if (WanManager_DoSystemActionWithStatus(__FUNCTION__, cmdLine) != 0)
-        {
-            CcspTraceError(("failed to run cmd: %s", cmdLine));
-        }
 #ifdef _COSA_INTEL_XB3_ARM_
         memset(cmdLine, 0, sizeof(cmdLine));
         snprintf(cmdLine, sizeof(cmdLine), "ip -6 route add %s dev %s table erouter", pVirtIf->IP.Ipv6Data.sitePrefix, COSA_DML_DHCPV6_SERVER_IFNAME);
