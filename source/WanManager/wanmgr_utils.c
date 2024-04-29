@@ -1146,3 +1146,34 @@ int sysctl_iface_set(const char *path, const char *ifname, const char *content)
 
     return 0;
 }
+
+void update_wan_mtu (uint32_t *mtuSize)
+{
+    char wan_mtu[12];
+
+    if (syscfg_get(NULL, "wan_mtu", wan_mtu, sizeof(wan_mtu)) == 0)
+    {
+        uint32_t mtu = atoi(wan_mtu);
+
+#ifdef INTEL_PUMA7
+#if !defined(DOCSIS_EXTENDED_MTU_SUPPORT)
+        if (mtu > 1500)
+        {
+            mtu = 1500;
+            snprintf(wan_mtu, sizeof(wan_mtu), "%u", mtu);
+            syscfg_set(NULL, "wan_mtu", wan_mtu);
+        }
+#endif
+        if (mtu > 0)
+#else
+#ifdef _LG_MV3_
+ if ((mtu > 0) && (mtu <= 2000))
+#else
+ if ((mtu > 0) && (mtu <= 1500))
+#endif
+#endif
+        {
+            *mtuSize = mtu;
+        }
+    }
+}
