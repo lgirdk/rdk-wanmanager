@@ -1422,6 +1422,10 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         LOG_CONSOLE("%s [tid=%ld] v4: Wan_init_complete for interface index %d at %d\n", buffer, syscall(SYS_gettid), pWanIfaceCtrl->interfaceIdx, uptime);
 
         WanManager_PrintBootEvents (WAN_INIT_COMPLETE);
+
+        /* Enable IP forwarding just in case the primary WAN is configured as DSLite */
+        CcspTraceInfo(("%s %d -  Enable IP forwarding \n", __FUNCTION__, __LINE__));
+        sysctl_iface_set("/proc/sys/net/ipv4/ip_forward", NULL, "1");
     }
 
     CcspTraceError(("%s %d - Call wan_updateDNS after wan-status is updated\n", __FUNCTION__, __LINE__));
@@ -1569,6 +1573,38 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         return RETURN_ERR;
     }
 
+#ifdef _LG_OFW_
+    /* ASSUMPTION: DSLite is only configured for the primary interface */
+    /* Enable DSLite if the interface is in IPv6 Only mode, it's active with a
+       valid IPv6 address and it's the DATA interface
+     */
+    if (p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY &&
+        pInterface->Selection.Status == WAN_IFACE_ACTIVE &&
+        strcmp(p_VirtIf->IP.Ipv6Data.address, "") &&
+        !strcmp(p_VirtIf->Alias, "DATA"))
+    {
+        char dslite_status[BUFLEN_16] = {0};
+        char dslite_enable[BUFLEN_16] = {0};
+
+        syscfg_get(NULL, "dslite_enable", dslite_enable, sizeof(dslite_enable));
+        sysevent_get(sysevent_fd, sysevent_token, "dslite_service-status", dslite_status, sizeof(dslite_status));
+        if (!strcmp(dslite_enable, "1") && strcmp(dslite_status, "started"))
+        {
+            while (CheckV6DefaultRule(p_VirtIf->Name) != TRUE)
+            {
+                CcspTraceInfo(("%s %d - Default route is not present. Sending ICMPv6 Router Discovery \n", __FUNCTION__, __LINE__));
+
+                if (v_secure_system("/usr/bin/rdisc6 -w 1000 -r 1 %s", p_VirtIf->Name))
+                {
+                    CcspTraceWarning(("%s %d: Failure in executing command via v_secure_system. ret:[%d]\n", __FUNCTION__, __LINE__, ret));
+                }
+            }
+            CcspTraceInfo(("%s %d -  Enabling DSLite for the active interface (%s) \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+            v_secure_system("service_dslite start");
+        }
+    }
+#endif
+
     syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
     erouter_mode = (buf[0] != 0) ? atoi(buf) : -1;
 
@@ -1670,6 +1706,24 @@ static int wan_tearDownIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
+
+#ifdef _LG_OFW_
+    /* ASSUMPTION: DSLite is only configured for the primary interface */
+    if (p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY &&
+        !strcmp(p_VirtIf->Alias, "DATA"))
+    {
+        char dslite_status[BUFLEN_16] = {0};
+        char dslite_enable[BUFLEN_16] = {0};
+
+        syscfg_get(NULL, "dslite_enable", dslite_enable, sizeof(dslite_enable));
+        sysevent_get(sysevent_fd, sysevent_token, "dslite_service-status", dslite_status, sizeof(dslite_status));
+        if (!strcmp(dslite_enable, "1") && !strcmp(dslite_status, "started"))
+        {
+            CcspTraceInfo(("%s %d -  Disabling DSLite (%s) \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+            v_secure_system("service_dslite stop");
+        }
+    }
+#endif
 
 #if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) || defined (_LG_OFW_) //TODO: V6 handled in PAM
     /** Reset IPv6 DNS configuration. */
