@@ -1072,7 +1072,7 @@ static void check_lan_wan_ready()
     return;
 }
 
-static int CheckV6DefaultRule (char *wanInterface)
+int CheckV6DefaultRule (char *wanInterface)
 {
     char output[256];
     int ret = FALSE;

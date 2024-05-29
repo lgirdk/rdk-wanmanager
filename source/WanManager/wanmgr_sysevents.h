@@ -318,4 +318,6 @@ void wanmgr_get_wan_interface(char *wanInterface);
 
 void  wanmgr_setWanLedState(eWanState_t state);
 
+int CheckV6DefaultRule (char *wanInterface);
+
 #endif //_WANMGR_SYSEVENTS_H_
