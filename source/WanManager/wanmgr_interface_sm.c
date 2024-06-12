@@ -651,16 +651,30 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 #define VAR_RESOLVPROXY_FILE "/var/tmp/resolv.dnsproxy"
 #define VAR_RESOLVPROXY_FILE_TMP "/var/tmp/resolv.dnsproxy.tmp"
 
-    if (!strcmp(p_VirtIf->Alias, "DATA"))
+    if ((addIPv4 || addIPv6) &&
+        !strcmp(p_VirtIf->Alias, "DATA") &&
+        pInterface->Selection.Status == WAN_IFACE_ACTIVE)
     {
-        char dns_relay[BUFLEN_256] = {0};
-        char *dmQuery = "Device.DNS.Relay.Enable";
+        char dns_relay[BUFLEN_16] = {0};
+        char dns_v4_proxy_enable[BUFLEN_16] = {0};
 
-        if (ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValueFromAnyComp (dmQuery, dns_relay))
+        syscfg_get(NULL, "dns_relay_enable", dns_relay, sizeof(dns_relay));
+        syscfg_get(NULL, "dns_v4_proxy_enable", dns_v4_proxy_enable, sizeof(dns_v4_proxy_enable));
+
+        /* ASSUMPTION: If IP.Mode = DML_WAN_IP_MODE_IPV6_ONLY, DSlite mode for that interface is enabled */
+        if (strcmp(dns_relay, "1") &&
+            strcmp(dns_v4_proxy_enable, "1") &&
+            (p_VirtIf->IP.Mode != DML_WAN_IP_MODE_IPV6_ONLY))
         {
-            CcspTraceError(("%s-%d: %s, Failed to get param value\n", __FUNCTION__, __LINE__, dmQuery));
+            CcspTraceInfo(("%s %d: DSLite for %s and DNS Relay features are all disabled\n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+
+            if (symlink(VAR_RESOLV_FILE, VAR_RESOLVPROXY_FILE_TMP) != 0)
+            {
+                CcspTraceError(("%s %d - Symlink %s error!\n", __FUNCTION__, __LINE__, VAR_RESOLVPROXY_FILE_TMP));
+                return RETURN_ERR;
+            }
         }
-        if (strcmp(dns_relay, "true") == 0)
+        else
         {
             FILE *fp = fopen(VAR_RESOLVPROXY_FILE_TMP, "w");
             if (fp == NULL)
@@ -668,19 +682,31 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
                 CcspTraceError(("%s %d - Open %s error!\n", __FUNCTION__, __LINE__, VAR_RESOLVPROXY_FILE_TMP));
                 return RETURN_ERR;
             }
-            fprintf(fp, "nameserver 127.0.0.1\nnameserver ::1\n");
-            fclose(fp);
-            CcspTraceInfo(("%s %d: DNS Relay is enabled\n", __FUNCTION__, __LINE__));
-        }
-        else
-        {
-            if (symlink(VAR_RESOLV_FILE, VAR_RESOLVPROXY_FILE_TMP) != 0) {
-                CcspTraceError(("%s %d - Symlink %s error!\n", __FUNCTION__, __LINE__, VAR_RESOLVPROXY_FILE_TMP));
-                return RETURN_ERR;
+            if (!strcmp(dns_relay, "1"))
+            {
+                fprintf(fp, "nameserver ::1\nnameserver 127.0.0.1\n");
+                CcspTraceInfo(("%s %d: DNS Relay is enabled\n", __FUNCTION__, __LINE__));
             }
-            CcspTraceInfo(("%s %d: DNS Relay is disabled\n", __FUNCTION__, __LINE__));
-        }
+            else /* Either IPv4 Only proxy or DSLite is enabled */
+            {
+                if (!strcmp(dns_v4_proxy_enable, "1"))
+                {
+                    CcspTraceInfo(("%s %d: IPv4 Only DNS Relay is enabled\n", __FUNCTION__, __LINE__));
+                }
+                else
+                {
+                    CcspTraceInfo(("%s %d: DSLite mode is enabled\n", __FUNCTION__, __LINE__));
+                }
 
+                if (addIPv6 && IsValidDnsServer(AF_INET6, p_VirtIf->IP.Ipv6Data.nameserver) == RETURN_OK)
+                {
+                    fprintf(fp, "nameserver %s\n", p_VirtIf->IP.Ipv6Data.nameserver);
+                }
+                /* Add IPv4 lo later so that IPv6 queries will use WAN DNS server IP */
+                fprintf(fp, "nameserver 127.0.0.1\n");
+            }
+            fclose(fp);
+        }
         if (rename(VAR_RESOLVPROXY_FILE_TMP, VAR_RESOLVPROXY_FILE) != 0)
         {
             CcspTraceError(("%s %d - Rename %s error!\n", __FUNCTION__, __LINE__, VAR_RESOLVPROXY_FILE));
@@ -770,6 +796,10 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
                 system(cmd);
             }
         }
+    }
+    else
+    {
+        sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", "", 0);
     }
 
     if (addIPv6)
