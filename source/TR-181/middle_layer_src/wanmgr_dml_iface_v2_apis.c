@@ -280,7 +280,7 @@ ULONG WanIf_GetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char* 
                    ret = 1;
                }
             }
-#if !RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             else if (strcmp(ParamName, "Alias") == 0)
             {
                /* collect value */
@@ -404,7 +404,7 @@ BOOL WanIf_SetParamStringValue(ANSC_HANDLE hInsContext, char* ParamName, char* p
                 AnscCopyString(pWanDmlIface->Name, pString);
                 ret = TRUE;
             }
-#if !RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "Alias") == 0)
             {
                 AnscCopyString(pWanDmlIface->AliasName, pString);
@@ -655,13 +655,13 @@ BOOL WanIf_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG* p
                 *puLong = pWanDmlIface->Selection.Status;
                 ret = TRUE;
             }
-#ifndef RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "BaseInterfaceStatus") == 0)
             {
                 *puLong = pWanDmlIface->BaseInterfaceStatus;
                 ret = TRUE;
             }
-#endif /** RBUS_BUILD_FLAG_ENABLE */
+#endif
             WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
         }
     }
@@ -711,13 +711,13 @@ BOOL WanIf_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG uV
                 pWanDmlIface->VirtIfList->OperationalStatus = uValue;
                 ret = TRUE;
             }
-#ifndef RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "BaseInterfaceStatus") == 0)
             {
                 pWanDmlIface->BaseInterfaceStatus = uValue;
                 ret = TRUE;
             }
-#endif /** RBUS_BUILD_FLAG_ENABLE */
+#endif
             WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
         }
     }
@@ -1134,13 +1134,13 @@ BOOL WanIfSelectionCfg_GetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamNam
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             //* check the parameter name and return the corresponding value */
-#ifndef RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "Enable") == 0)
             {
                 *pBool = pWanDmlIface->Selection.Enable;
                 ret = TRUE;
             }
-#endif //RBUS_BUILD_FLAG_ENABLE
+#endif
             if (strcmp(ParamName, "RequiresReboot") == 0)
             {
                 *pBool = pWanDmlIface->Selection.RequiresReboot;
@@ -1191,13 +1191,13 @@ BOOL WanIfSelectionCfg_SetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamNam
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-#ifndef RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "Enable") == 0)
             {
                 pWanDmlIface->Selection.Enable  = bValue;
                 ret = TRUE;
             }
-#endif //RBUS_BUILD_FLAG_ENABLE
+#endif
 
             if (strcmp(ParamName, "RequiresReboot") == 0)
             {
@@ -1763,7 +1763,7 @@ BOOL WanVirtualIf_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, U
     if(p_VirtIf != NULL)
     {
         /* check the parameter name and return the corresponding value */
-#if !RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
         if (strcmp(ParamName, "Status") == 0)
         {
             *puLong = p_VirtIf->Status;
@@ -1818,7 +1818,7 @@ BOOL WanVirtualIf_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, U
     if(p_VirtIf != NULL)
     {
         /* check the parameter name and set the corresponding value */
-#if !RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
 	if (strcmp(ParamName, "Status") == 0)
         {
             p_VirtIf->Status = uValue;

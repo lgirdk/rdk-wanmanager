@@ -725,7 +725,7 @@ BOOL WanIfCfg_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
                 *puLong = pWanDmlIface->Selection.Timeout;
                 ret = TRUE;
             }
-#if !RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "Status") == 0)
             {
                 *puLong = pWanDmlIface->VirtIfList->Status;
@@ -742,7 +742,7 @@ BOOL WanIfCfg_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
                 *puLong = pWanDmlIface->Selection.Priority;
                 ret = TRUE;
             }
-#if !RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "LinkStatus") == 0)
             {
                 *puLong = pWanDmlIface->VirtIfList->VLAN.Status;
@@ -872,7 +872,7 @@ BOOL WanIfCfg_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
                 }
 
             }
-#if !RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "LinkStatus") == 0)
             {
                 pWanDmlIface->VirtIfList->VLAN.Status = uValue;
@@ -929,13 +929,13 @@ BOOL WanIfCfg_GetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL* 
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             //* check the parameter name and return the corresponding value */
-#ifndef RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "Enable") == 0)
             {
                 *pBool = pWanDmlIface->Selection.Enable;
                 ret = TRUE;
             }
-#endif //RBUS_BUILD_FLAG_ENABLE
+#endif
             if (strcmp(ParamName, "Refresh") == 0)
             {
                 //TODO: Update all Virtual interfaces
@@ -1023,13 +1023,13 @@ BOOL WanIfCfg_SetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL b
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-#ifndef RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "Enable") == 0)
             {
                 pWanDmlIface->Selection.Enable  = bValue;
                 ret = TRUE;
             }
-#endif //RBUS_BUILD_FLAG_ENABLE
+#endif
             if (strcmp(ParamName, "Refresh") == 0)
             {
                 //TODO: Update all Virtual interfaces
@@ -1421,7 +1421,7 @@ BOOL WanIfPhy_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
 
             /* check the parameter name and set the corresponding value */
-#if !RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             if (strcmp(ParamName, "Status") == 0)
             {
                 *puLong = pWanDmlIface->BaseInterfaceStatus;
@@ -1472,7 +1472,7 @@ BOOL WanIfPhy_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG
         if(pWanDmlIfaceData != NULL)
         {
             DML_WAN_IFACE* pWanDmlIface = &(pWanDmlIfaceData->data);
-#if !RBUS_BUILD_FLAG_ENABLE
+#if !defined(RBUS_BUILD_FLAG_ENABLE)
             /* check the parameter name and set the corresponding value */
             if (strcmp(ParamName, "Status") == 0)
             {
