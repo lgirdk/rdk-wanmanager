@@ -19,7 +19,9 @@
 
 #ifndef _WANMGR_RBUS_H_
 #define _WANMGR_RBUS_H_
-#ifdef RBUS_BUILD_FLAG_ENABLE
+
+#if defined(RBUS_BUILD_FLAG_ENABLE)
+
 #include "ansc_platform.h"
 #include <rbus/rbus.h>
 #include "ccsp_base_api.h"
@@ -167,7 +169,9 @@ void WanMgr_Rbus_SubscribeDML(void);
 void WanMgr_Rbus_UnSubscribeDML(void);
 ANSC_STATUS WanMgr_RestartUpdateRemoteIface();
 ANSC_STATUS WanMgr_WanRemoteIfaceConfigure(WanMgr_DeviceChangeEvent * pDeviceChangeEvent);
+
 #endif //RBUS_BUILD_FLAG_ENABLE
+
 #if defined (_HUB4_PRODUCT_REQ_) || defined(_PLATFORM_RASPPBERRYPI_)
 BOOL WanMgr_Rbus_discover_components(char const *ModuleList);
 #endif //_HUB4_PRODUCT_REQ_

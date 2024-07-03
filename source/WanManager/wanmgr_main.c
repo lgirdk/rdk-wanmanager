@@ -91,7 +91,8 @@ static void waitUntilSystemReady()
     int wait_time = 0;
 
     CcspTraceInfo(("%s %d Entered \n", __FUNCTION__, __LINE__));
-#ifdef RBUS_BUILD_FLAG_ENABLE
+
+#if defined(RBUS_BUILD_FLAG_ENABLE)
     WanMgr_Rbus_SubscribeWanReady();
 
     while(wait_time <= 180)

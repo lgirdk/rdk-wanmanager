@@ -17,7 +17,8 @@
  * limitations under the License.
 */
 
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
+
 #include "wanmgr_data.h"
 #include "wanmgr_net_utils.h"
 #include "wanmgr_rbus_handler_apis.h"
@@ -1750,7 +1751,8 @@ ANSC_STATUS WanMgr_RestartUpdateRemoteIface()
     }
     return ANSC_STATUS_SUCCESS;
 }
-#endif
+
+#endif //RBUS_BUILD_FLAG_ENABLE
 
 #if defined(_HUB4_PRODUCT_REQ_) ||  defined(_PLATFORM_RASPBERRYPI_)
 BOOL WanMgr_Rbus_discover_components(char const *pModuleList)

@@ -25,9 +25,10 @@
 #include "wanmgr_ipc.h"
 #include "wanmgr_controller.h"
 #include "secure_wrapper.h"
-#ifdef RBUS_BUILD_FLAG_ENABLE
+
+#if defined(RBUS_BUILD_FLAG_ENABLE)
 #include "wanmgr_rbus_handler_apis.h"
-#endif //RBUS_BUILD_FLAG_ENABLE
+#endif
 
 ANSC_STATUS WanMgr_Core_Init(void)
 {
@@ -54,10 +55,10 @@ ANSC_STATUS WanMgr_Core_Init(void)
 ANSC_STATUS WanMgr_Core_Start(void)
 {
     ANSC_STATUS retStatus = ANSC_STATUS_SUCCESS;
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
     WanMgr_Rbus_UpdateLocalWanDb();
     WanMgr_Rbus_SubscribeDML();
-#endif // RBUS_BUILD_FLAG_ENABLE
+#endif
     WanMgr_UpdatePrevData();
     WanMgr_RdkBus_setDhcpv6DnsServerInfo();
 #ifdef FEATURE_802_1P_COS_MARKING

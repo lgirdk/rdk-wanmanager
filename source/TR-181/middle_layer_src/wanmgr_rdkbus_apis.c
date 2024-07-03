@@ -38,10 +38,11 @@
 #include "wanmgr_rdkbus_apis.h"
 #include "dmsb_tr181_psm_definitions.h"
 #include "wanmgr_net_utils.h"
-#ifdef RBUS_BUILD_FLAG_ENABLE
+
+#if defined(RBUS_BUILD_FLAG_ENABLE)
 #include "wanmgr_rbus_handler_apis.h"
-#endif //RBUS_BUILD_FLAG_ENABLE
-//
+#endif
+
 #define PSM_ENABLE_STRING_TRUE  "TRUE"
 #define PSM_ENABLE_STRING_FALSE  "FALSE"
 #define PPP_LINKTYPE_PPPOA "PPPoA"
@@ -1728,7 +1729,7 @@ ANSC_STATUS Update_Interface_Status()
     CHAR    prevCurrentActiveInterface[BUFLEN_64] = {0};
     CHAR    prevCurrentStandbyInterface[BUFLEN_64] = {0};
 
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
     CHAR    CurrentWanStatus[BUFLEN_16] = "Down";
     bool    publishAvailableStatus  = FALSE;
     bool    publishActiveStatus = FALSE;
@@ -1785,7 +1786,7 @@ ANSC_STATUS Update_Interface_Status()
                     if(pWanIfaceData->Selection.Status == WAN_IFACE_ACTIVE)
                     {
                         snprintf(newIface->CurrentActive, sizeof(newIface->CurrentActive), "%s", p_VirtIf->Name);
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
                         snprintf(CurrentWanStatus,sizeof(CurrentWanStatus), "%s", (p_VirtIf->Status == WAN_IFACE_STATUS_UP)?"Up":"Down");
 #endif
 #if defined(FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE)
@@ -1853,7 +1854,7 @@ ANSC_STATUS Update_Interface_Status()
             strncpy(prevInterfaceAvailableStatus,pWanDmlData->InterfaceAvailableStatus, sizeof(prevInterfaceAvailableStatus)-1);
             memset(pWanDmlData->InterfaceAvailableStatus,0, sizeof(pWanDmlData->InterfaceAvailableStatus));
             strncpy(pWanDmlData->InterfaceAvailableStatus,InterfaceAvailableStatus, sizeof(pWanDmlData->InterfaceAvailableStatus) - 1);
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
             publishAvailableStatus = TRUE;
 #endif
         }
@@ -1862,7 +1863,7 @@ ANSC_STATUS Update_Interface_Status()
             strncpy(prevInterfaceActiveStatus,pWanDmlData->InterfaceActiveStatus, sizeof(prevInterfaceActiveStatus)-1);
             memset(pWanDmlData->InterfaceActiveStatus,0, sizeof(pWanDmlData->InterfaceActiveStatus));
             strncpy(pWanDmlData->InterfaceActiveStatus,InterfaceActiveStatus, sizeof(pWanDmlData->InterfaceActiveStatus)-1);
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
             publishActiveStatus = TRUE;
 #endif
         }
@@ -1875,9 +1876,9 @@ ANSC_STATUS Update_Interface_Status()
                 strncpy(prevCurrentActiveInterface,pWanDmlData->CurrentActiveInterface, sizeof(prevCurrentActiveInterface) - 1);
                 memset(pWanDmlData->CurrentActiveInterface, 0, sizeof(pWanDmlData->CurrentActiveInterface));
                 strncpy(pWanDmlData->CurrentActiveInterface,CurrentActiveInterface, sizeof(pWanDmlData->CurrentActiveInterface) - 1);
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
                 publishCurrentActiveInf = TRUE;
-#endif //RBUS_BUILD_FLAG_ENABLE
+#endif
             }
         }
         else
@@ -1885,7 +1886,7 @@ ANSC_STATUS Update_Interface_Status()
             CcspTraceInfo(("%s %d -CurrentActiveInterface- No update\n",__FUNCTION__,__LINE__));
         }
 
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
         if(strcmp(pWanDmlData->CurrentStatus, CurrentWanStatus) != 0)
         { 
             CcspTraceInfo(("%s %d -Publishing Wan CurrentStatus change - old status [%s] => new status [%s]\n",__FUNCTION__,__LINE__,pWanDmlData->CurrentStatus, CurrentWanStatus));
@@ -1901,13 +1902,13 @@ ANSC_STATUS Update_Interface_Status()
             strncpy(prevCurrentStandbyInterface, pWanDmlData->CurrentStandbyInterface, sizeof(prevCurrentStandbyInterface) - 1);
             memset(pWanDmlData->CurrentStandbyInterface, 0, sizeof(pWanDmlData->CurrentStandbyInterface));
             strncpy(pWanDmlData->CurrentStandbyInterface, CurrentStandbyInterface, sizeof(pWanDmlData->CurrentStandbyInterface) - 1);
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
             publishCurrentStandbyInf = TRUE;
-#endif //RBUS_BUILD_FLAG_ENABLE
+#endif
         }
         WanMgrDml_GetConfigData_release(pWanConfigData);
     }
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
     if(publishCurrentActiveInf == TRUE)
     {
         WanMgr_Rbus_String_EventPublish_OnValueChange(WANMGR_CONFIG_WAN_CURRENTACTIVEINTERFACE, prevCurrentActiveInterface, CurrentActiveInterface);
@@ -1926,7 +1927,8 @@ ANSC_STATUS Update_Interface_Status()
         WanMgr_Rbus_String_EventPublish_OnValueChange(WANMGR_CONFIG_WAN_INTERFACEACTIVESTATUS, prevInterfaceActiveStatus, InterfaceActiveStatus);
     }
 
-#endif //RBUS_BUILD_FLAG_ENABLE
+#endif
+
     return ANSC_STATUS_SUCCESS;
 }
 
@@ -1947,7 +1949,7 @@ ANSC_STATUS WanMgr_Publish_WanStatus(UINT IfaceIndex, UINT VirId)
             {
                 memset(param_name, 0, sizeof(param_name));
                 _ansc_sprintf(param_name, WANMGR_IFACE_WAN_STATUS, (IfaceIndex+1), (VirId+1));
-#ifdef RBUS_BUILD_FLAG_ENABLE
+#if defined(RBUS_BUILD_FLAG_ENABLE)
                 WanMgr_Rbus_String_EventPublish(param_name, &PrevWanStatus);
 #if defined(WAN_MANAGER_UNIFICATION_ENABLED)
                 char DmlNameV1[128] = {0};
