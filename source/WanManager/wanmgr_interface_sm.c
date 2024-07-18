@@ -1722,19 +1722,6 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         CcspTraceInfo(("%s %d -  IPv6 DNS servers configured successfully \n", __FUNCTION__, __LINE__));
     }
 
-    if (!strcmp(p_VirtIf->Alias, "DATA"))
-    {
-        uint32_t mtu = 0;
-        update_wan_mtu(&mtu);
-        if( mtu > 0)
-        {
-            snprintf(cmdStr, sizeof(cmdStr), "ip -6 link set %s mtu %u", p_VirtIf->IP.Ipv6Data.ifname,mtu);
-            WanManager_DoSystemAction("setupIPv6:", cmdStr);
-        }
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_CONNECTION_STATE, WAN_STATUS_UP, 0);
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_RADVD_RESTART, NULL, 0);
-        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCP_SERVER_RESTART, NULL, 0);
-    }
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIREWALL_RESTART, NULL, 0);
     sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_WAN_STATUS, buf, sizeof(buf));
     //TODO: Firewall IPv6 FORWARD rules are not working if SYSEVENT_WAN_SERVICE_STATUS is set for REMOTE_IFACE. Modify firewall similar for backup interface similar to primary.
@@ -1801,6 +1788,21 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     }
   
     WanMgr_StartConnectivityCheck(pWanIfaceCtrl);
+
+    if (!strcmp(p_VirtIf->Alias, "DATA"))
+    {
+        uint32_t mtu = 0;
+        update_wan_mtu(&mtu);
+        if( mtu > 0)
+        {
+            snprintf(cmdStr, sizeof(cmdStr), "ip -6 link set %s mtu %u", p_VirtIf->IP.Ipv6Data.ifname,mtu);
+            WanManager_DoSystemAction("setupIPv6:", cmdStr);
+        }
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_CONNECTION_STATE, WAN_STATUS_UP, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_RADVD_RESTART, NULL, 0);
+        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_DHCP_SERVER_RESTART, NULL, 0);
+    }
+
     return ret;
 }
 
