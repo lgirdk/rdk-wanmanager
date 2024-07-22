@@ -652,7 +652,18 @@ BOOL WanIf_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG* p
             }
             if (strcmp(ParamName, "Status") == 0)
             {
-                *puLong = pWanDmlIface->Selection.Status;
+                if(false == pWanDmlIface->Selection.Enable)
+                {
+                    //This is a workaround since pWanDmlIface->Selection.Status is not getting updated to proper status when
+                    //Secondary WAN feature is disbled. Updating pWanDmlIface->Selection.Status to NOT_SELECTED is leading to many regressions
+                    //during failover and fallback.
+                    //Todo : Need to revisit and fix pWanDmlIface->Selection.Status.
+                    *puLong = WAN_IFACE_NOT_SELECTED;
+                }
+                else
+                {
+                    *puLong = pWanDmlIface->Selection.Status;
+                }
                 ret = TRUE;
             }
 #if !defined(RBUS_BUILD_FLAG_ENABLE)
