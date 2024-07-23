@@ -170,6 +170,12 @@ WanManager_GetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL* pBo
             ret = TRUE;
         }
 
+        if (strcmp(ParamName, "IPv6AddrMonEnable") == 0)
+        {
+            *pBool= pWanDmlData->IPv6AddrMonEnable;
+            ret = TRUE;
+        }
+
         WanMgrDml_GetConfigData_release(pWanConfigData);
     }
 
@@ -306,6 +312,18 @@ BOOL WanManager_SetParamBoolValue(ANSC_HANDLE hInsContext, char* ParamName, BOOL
                 v_secure_system("sed -i '/dmsb.wanmanager./d' /nvram/bbhm_bak_cfg.xml");
             }
 
+            ret = TRUE;
+        }
+
+        if (strcmp(ParamName, "IPv6AddrMonEnable") == 0)
+        {
+            if (pWanDmlData->IPv6AddrMonEnable != bValue)
+            {
+                WanMgr_RdkBus_setIPv6AddrMonEnableToPsm(bValue);
+                pWanDmlData->IPv6AddrMonEnable = bValue;
+
+                WanManager_RestartNetmonitor();
+            }
             ret = TRUE;
         }
 

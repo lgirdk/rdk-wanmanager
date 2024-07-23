@@ -265,6 +265,6 @@ void WanManager_PrintBootEvents (WanBootEventState state);
  * @return TRUE if its a valid IP address else returned false.
  ****************************************************************************/
 BOOL IsValidIpAddress(int32_t af, const char *address);
-
+void WanManager_RestartNetmonitor(void);
 
 #endif // _WANMGR_NET_UTILS_H_

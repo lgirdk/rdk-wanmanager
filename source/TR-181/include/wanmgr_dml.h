@@ -347,6 +347,7 @@ typedef struct _DML_WANIFACE_IP
     UINT                        Dhcp6cPid;
     UINT                        RTable;
     CHAR                        DnsCfgPath[BUFLEN_64];
+    BOOL                        Ipv6AddrMonTrigger;
 } DML_WANIFACE_IP;
 
 #ifdef FEATURE_MAPT
@@ -557,6 +558,7 @@ typedef struct _DML_WANMGR_CONFIG_
     CHAR    CurrentStatus[BUFLEN_16];
     CHAR    CurrentStandbyInterface[BUFLEN_64];
     UINT    RestorationDelay;
+    BOOL    IPv6AddrMonEnable;
 } DML_WANMGR_CONFIG;
 
 //WAN CONFIG

@@ -47,7 +47,7 @@ ANSC_STATUS WanMgr_Core_Init(void)
     {
         CcspTraceInfo(("%s %d - IPC Thread failed to start!\n", __FUNCTION__, __LINE__ ));
     }
-    v_secure_system("netmonitor &");
+    WanManager_RestartNetmonitor();
 
     return retStatus;
 }
