@@ -604,6 +604,7 @@ static void *WanManagerSyseventHandler(void *args)
     async_id_t wan_status_asyncid;
     async_id_t radvd_restart_asyncid;
     async_id_t ipv6_down_asyncid;
+    async_id_t ipv6_addrmon_asyncid;
 #ifdef NTP_STATUS_SYNC_EVENT
     async_id_t ntp_time_asyncid;
     async_id_t sync_ntp_statusid;
@@ -637,6 +638,9 @@ static void *WanManagerSyseventHandler(void *args)
 #endif
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_IPV6_ENABLE, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_IPV6_ENABLE, &lan_ipv6_enable_asyncid);
+
+    sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_IPV6_ADDRMON_IP_LOSS, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_IPV6_ADDRMON_IP_LOSS, &ipv6_addrmon_asyncid);
 
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_WAN_STATUS, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_WAN_STATUS,  &wan_status_asyncid);
@@ -1029,6 +1033,16 @@ static void *WanManagerSyseventHandler(void *args)
                    }
                }
            }
+           else if (strcmp(name, SYSEVENT_IPV6_ADDRMON_IP_LOSS) == 0)
+           {
+               DML_VIRTUAL_IFACE *p_VirtIf = WanMgr_GetVirtualIfaceByName_locked(val);
+               if (p_VirtIf != NULL)
+               {
+                   CcspTraceWarning(("%s %d: IPv6 address is deleted from the interface: %s  \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+                   p_VirtIf->IP.Ipv6AddrMonTrigger = TRUE;
+                   WanMgr_VirtualIfaceData_release(val);
+               }
+           }
             else
             {
                 CcspTraceWarning(("%s %d undefined event %s:%s \n", __FUNCTION__, __LINE__, name, val));
@@ -1360,6 +1374,13 @@ ANSC_STATUS wanmgr_sshd_restart()
 {
     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_SSHD_RESTART, "", 0);
     CcspTraceInfo(("%s %d - sshd restart\n", __FUNCTION__, __LINE__));
+    return ANSC_STATUS_SUCCESS;
+}
+
+ANSC_STATUS wanmgr_set_ipv6_addrmon_enable(bool bEnable)
+{
+    sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_ADDRMON_ENABLE, bEnable ? "1" : "0", 0);
+    CcspTraceInfo(("%s %d - Set IPv6 AddrMon Enable: %d\n", __FUNCTION__, __LINE__, bEnable));
     return ANSC_STATUS_SUCCESS;
 }
 

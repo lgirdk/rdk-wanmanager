@@ -146,6 +146,9 @@
 #define SYSEVENT_IPV4_DHCP_STATE  "ipv4_%s_dhcp_state"
 #define SYSEVENT_IPV4_START_TIME  "ipv4_%s_start_time"
 
+#define SYSEVENT_IPV6_ADDRMON_IP_LOSS   "ipv6_addr_mon_ip_del"
+#define SYSEVENT_IPV6_ADDRMON_ENABLE    "ipv6_addr_mon_enable"
+
 #define SYSEVENT_WAN_STOP            "wan-stop"
 #define SYSEVENT_WAN_RESTART         "wan-restart"
 #define SYSEVENT_SSHD_RESTART         "sshd-restart"
@@ -275,6 +278,7 @@ ANSC_STATUS wanmgr_setwanrestart();
 INT wanmgr_isWanStarted();
 INT WanMgr_IsWanStopped(void);
 ANSC_STATUS wanmgr_firewall_restart(void);
+ANSC_STATUS wanmgr_set_ipv6_addrmon_enable(bool bEnable);
 //#ifdef FEATURE_MAPT
 ///*
 // * @brief Utility function used to store MAPT specific values in sysevent/

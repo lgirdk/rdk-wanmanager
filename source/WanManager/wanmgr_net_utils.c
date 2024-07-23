@@ -2734,3 +2734,14 @@ ANSC_STATUS WanManager_get_interface_mac(char *interfaceName, char* macAddress, 
 
    return returnStatus;
 }
+
+void WanManager_RestartNetmonitor(void)
+{
+    WanMgr_Config_Data_t *pWanConfigData = WanMgr_GetConfigData_locked();
+    if (pWanConfigData != NULL)
+    {
+        wanmgr_set_ipv6_addrmon_enable(pWanConfigData->data.IPv6AddrMonEnable);
+        WanManager_DoRestartApp("netmonitor", NULL);
+        WanMgrDml_GetConfigData_release(pWanConfigData);
+    }
+}
