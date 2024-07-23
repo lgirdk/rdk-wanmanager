@@ -167,6 +167,7 @@ int WanMgr_RdkBus_SetParamValuesToDB( char *pParamName, char *pParamVal );
 
 ANSC_STATUS WanMgr_RdkBus_setWanEnableToPsm(BOOL WanEnable);
 ANSC_STATUS WanMgr_RdkBus_setAllowRemoteIfaceToPsm(BOOL Enable);
+ANSC_STATUS WanMgr_RdkBus_setIPv6AddrMonEnableToPsm(BOOL IPv6AddrMonEnable);
 ANSC_STATUS WanMgr_RdkBus_updateInterfaceUpstreamFlag(char *phyPath, BOOL flag);
 void* WanMgr_RdkBus_WanIfRefreshThread( void *arg );
 

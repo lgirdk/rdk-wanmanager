@@ -1613,6 +1613,13 @@ ANSC_STATUS WanMgr_WanConfInit (DML_WANMGR_CONFIG* pWanConfig)
 
     pWanConfig->RestorationDelay = wan_restoration_delay;
 
+    memset(param_name, 0, sizeof(param_name));
+    memset(param_value, 0, sizeof(param_value));
+    _ansc_sprintf(param_name, PSM_WANMANAGER_IPV6_ADDR_MON_ENABLE);
+    retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+        pWanConfig->IPv6AddrMonEnable = atoi(param_value);
+
     return ret_val;
 }
 

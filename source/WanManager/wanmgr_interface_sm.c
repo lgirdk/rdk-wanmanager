@@ -440,17 +440,37 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
 #endif
     }
 
-    //Check if IPv6 dhcp client is still running - handling runtime crash of dhcp client
-    if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) &&  // IP.Mode supports V6
-        p_VirtIf->IP.IPv6Source == DML_WAN_IP_SOURCE_DHCP &&                                                    // uses DHCP client
-        p_VirtIf->IP.Dhcp6cPid > 0 &&                                                                           // dhcp started by ISM
-        (WanMgr_IsPIDRunning(p_VirtIf->IP.Dhcp6cPid) != TRUE))                                                  // but DHCP client not running
+    if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) && // IP.Mode supports V6
+        p_VirtIf->IP.IPv6Source == DML_WAN_IP_SOURCE_DHCP) // uses DHCP client
     {
-        p_VirtIf->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(p_VirtIf, pInterface->IfaceType);
-        CcspTraceInfo(("%s %d - SELFHEAL - Started dhcp6c on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, p_VirtIf->Name, p_VirtIf->IP.Dhcp6cPid));
+        if (p_VirtIf->IP.Dhcp6cPid > 0) // dhcp started by ISM
+        {
+            // Check if IPv6 dhcp client is still running - handling runtime crash of dhcp client
+            if (WanMgr_IsPIDRunning(p_VirtIf->IP.Dhcp6cPid) != TRUE) // DHCP client not running
+            {
+                p_VirtIf->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(p_VirtIf, pInterface->IfaceType);
+                CcspTraceInfo(("%s %d - SELFHEAL - Started dhcp6c on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, p_VirtIf->Name, p_VirtIf->IP.Dhcp6cPid));
 #ifdef ENABLE_FEATURE_TELEMETRY2_0
-        t2_event_d("SYS_ERROR_DHCPV6Client_notrunning", 1);
+                t2_event_d("SYS_ERROR_DHCPV6Client_notrunning", 1);
 #endif
+            }
+            else if (p_VirtIf->IP.Ipv6AddrMonTrigger == TRUE)
+            {
+                char guAddr[IP_ADDR_LENGTH] = {0};
+                uint32_t prefixLen = 0;
+
+                if (WanManager_getGloballyUniqueIfAddr6(p_VirtIf->Name, guAddr, &prefixLen) != ANSC_STATUS_SUCCESS)
+                {
+                    /* stop the client so that WanMgr_MonitorDhcpApps function will start it when the client gracefully stops */
+                    WanManager_StopDhcpv6Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE);
+                    CcspTraceInfo(("%s %d - SELFHEAL - IPv6 address is deleted. Restart the client \n", __FUNCTION__, __LINE__));
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+                    t2_event_d("RF_ERROR_erouter_ipv6_loss", 1);
+#endif
+                }
+                p_VirtIf->IP.Ipv6AddrMonTrigger = FALSE;
+            }
+        }
     }
 }
 

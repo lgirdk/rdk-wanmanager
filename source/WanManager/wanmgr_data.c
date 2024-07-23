@@ -57,6 +57,7 @@ void WanMgr_SetConfigData_Default(DML_WANMGR_CONFIG* pWanDmlConfig)
         pWanDmlConfig->Enable = TRUE;
         pWanDmlConfig->ResetFailOverScan = FALSE;
         pWanDmlConfig->AllowRemoteInterfaces = FALSE;
+        pWanDmlConfig->IPv6AddrMonEnable = FALSE;
         memset(pWanDmlConfig->InterfaceAvailableStatus, 0, BUFLEN_64);
         memset(pWanDmlConfig->InterfaceActiveStatus, 0, BUFLEN_64);
         memset(pWanDmlConfig->CurrentStatus, 0, sizeof(pWanDmlConfig->CurrentStatus));
@@ -792,6 +793,7 @@ void WanMgr_VirtIface_Init(DML_VIRTUAL_IFACE * pVirtIf, UINT iface_index)
     pVirtIf->IP.pIpcIpv4Data = NULL;
     pVirtIf->IP.pIpcIpv6Data = NULL;
     pVirtIf->IP.RTable = 0;
+    pVirtIf->IP.Ipv6AddrMonTrigger = FALSE;
     pVirtIf->MAP.MaptStatus = WAN_IFACE_MAPT_STATE_DOWN;
     memset(pVirtIf->MAP.Path, 0, 64);
     pVirtIf->MAP.MaptChanged = FALSE;

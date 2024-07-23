@@ -1,6 +1,8 @@
 /* ---- Include Files ---------------------------------------- */
 #include <unistd.h>
 #include <linux/rtnetlink.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
 #include "ipc_msg.h"
 #include "network_route_monitor.h"
 #include "ansc_platform.h"
@@ -16,10 +18,14 @@ int netlinkRouteMonitorFd = -1; //subscribe to route change events
 fd_set readFdsMaster;
 static fd_set errorFdsMaster;
 static bool g_toggle_flag = TRUE;
+static bool g_ipv6_addrmon_enabled = FALSE;
 #define UPDATE_MAXFD(f) (maxFd = (f > maxFd) ? f : maxFd)
 
 #define LOOP_TIMEOUT 100000 // timeout in milliseconds. This is the state machine loop interval
-#define SYSEVENT_IPV6_TOGGLE        "ipv6Toggle"
+#define SYSEVENT_IPV6_TOGGLE            "ipv6Toggle"
+#define SYSEVENT_IPV6_ADDRMON_IP_LOSS   "ipv6_addr_mon_ip_del"
+#define SYSEVENT_IPV6_ADDRMON_ENABLE    "ipv6_addr_mon_enable"
+
 #define SYSEVENT_OPEN_MAX_RETRIES   6
 #define SE_SERVER_WELL_KNOWN_PORT   52367
 #define SE_VERSION                  1
@@ -205,6 +211,9 @@ static ANSC_STATUS NetMonitor_InitNetlinkRouteMonitorFd()
     memset(&addr, 0, sizeof(addr));
     addr.nl_family = AF_NETLINK;
     addr.nl_groups = RTMGRP_IPV6_ROUTE;
+    if (g_ipv6_addrmon_enabled)
+        addr.nl_groups |= RTMGRP_IPV6_IFADDR;
+
     if (0 > bind(netlinkRouteMonitorFd, (struct sockaddr *) &addr, sizeof(addr)))
     {
         DBG_MONITOR_PRINT("%s Failed to bind netlink socket: %s\n", __FUNCTION__, strerror(errno));
@@ -251,6 +260,43 @@ static void netMonitor_SyseventInit()
        usleep(50000);
     }
         DBG_MONITOR_PRINT("%s-%d: Started \n", __FUNCTION__, __LINE__);
+}
+
+static bool NetMonitor_IsNetworkInterfaceUp(char *IfaceName)
+{
+    int skfd = -1;
+    struct ifreq ifr = {0};
+
+    if (NULL == IfaceName)
+    {
+        return FALSE;
+    }
+
+    AnscCopyString(ifr.ifr_name, IfaceName);
+
+    skfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (skfd == -1)
+        return FALSE;
+
+    if (ioctl(skfd, SIOCGIFFLAGS, &ifr) < 0)
+    {
+        if (errno == ENODEV)
+        {
+            close(skfd);
+            return FALSE;
+        }
+    }
+
+    close(skfd);
+    return ifr.ifr_flags & IFF_UP;
+}
+
+static void NetMonitor_InitIPv6AddrMon(void)
+{
+    char buf[BUFLEN_4] = {0};
+
+    sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_IPV6_ADDRMON_ENABLE, buf, sizeof(buf));
+    g_ipv6_addrmon_enabled = (buf[0] != '\0' && !strcmp(buf, "1")) ? TRUE : FALSE;
 }
 
 static void NetMonitor_ProcessNetlinkRouteMonitorFd()
@@ -329,6 +375,25 @@ static void NetMonitor_ProcessNetlinkRouteMonitorFd()
                      }
                      break;
                 }
+                case RTM_DELADDR:
+                {
+                    if (g_ipv6_addrmon_enabled)
+                    {
+                        struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(nl_msgHdr);
+                        if (ifa->ifa_family == AF_INET6 && ifa->ifa_scope == RT_SCOPE_UNIVERSE)
+                        {
+                            char ifname[IF_NAMESIZE];
+
+                            if (if_indextoname(ifa->ifa_index, ifname) != NULL && NetMonitor_IsNetworkInterfaceUp(ifname))
+                            {
+                                DBG_MONITOR_PRINT("IPv6 address is deleted from the interface: %s\n", ifname);
+                                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_ADDRMON_IP_LOSS, ifname, 0);
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
             default:
                 break;
         }
@@ -363,6 +428,7 @@ int main(int argc, char* argv[])
 
     netMonitor_SyseventInit();
 
+    NetMonitor_InitIPv6AddrMon();
     NetMonitor_InitNetlinkRouteMonitorFd();
     if (netlinkRouteMonitorFd != -1)
     {

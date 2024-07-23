@@ -139,6 +139,20 @@ ANSC_STATUS WanMgr_RdkBus_setWanEnableToPsm(BOOL WanEnable)
     return result;
 }
 
+ANSC_STATUS WanMgr_RdkBus_setIPv6AddrMonEnableToPsm(BOOL IPv6AddrMonEnable)
+{
+    int retPsmSet;
+    char *param_value = IPv6AddrMonEnable ? "1" : "0";
+
+    retPsmSet = WanMgr_RdkBus_SetParamValuesToDB(PSM_WANMANAGER_IPV6_ADDR_MON_ENABLE, param_value);
+    if (retPsmSet != CCSP_SUCCESS) {
+        AnscTraceError(("%s Error %d writing %s %s\n", __FUNCTION__, retPsmSet, PSM_WANMANAGER_IPV6_ADDR_MON_ENABLE, param_value));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    return ANSC_STATUS_SUCCESS;
+}
+
 ANSC_STATUS WanMgr_RdkBus_setAllowRemoteIfaceToPsm(BOOL Enable)
 {
     int result = ANSC_STATUS_SUCCESS;
