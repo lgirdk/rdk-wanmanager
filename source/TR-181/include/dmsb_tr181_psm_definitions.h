@@ -34,6 +34,7 @@
 #define PSM_WANMANAGER_CONFIGUREWANIPV6ON_LANBRIDGE_SUPPPORT  "dmsb.wanmanager.ConfigureWANIPv6OnLANBridgeSupport"
 #define PSM_WANMANAGER_USEWANMAC_FOR_MGMT_SERVICES            "dmsb.wanmanager.UseWANMACForManagementServices"
 #define PSM_WANMANAGER_INTERFACE_VLAN_MARKING_SUPPORT       "dmsb.wanmanager.InterfaceVLANMarkingSupport"
+#define PSM_WANMANAGER_IPV6_ADDR_MON_ENABLE                 "dmsb.wanmanager.IPv6AddrMonEnable"
 
 #define PSM_WANMANAGER_GROUP_COUNT                          "dmsb.wanmanager.group.Count"
 #define PSM_WANMANAGER_GROUP_PERSIST_SELECTED_IFACE         "dmsb.wanmanager.group.%d.PersistSelectedInterface"

@@ -79,7 +79,13 @@
                     <syntax>string</syntax>
                     <writable>true</writable>
                 </parameter>
-            </parameters>
+                <parameter>
+                    <name>IPv6AddrMonEnable</name>
+                    <type>boolean</type>
+                    <syntax>bool</syntax>
+                    <writable>true</writable>
+                </parameter>
+           </parameters>
             <objects>
                 <object>
                     <name>DnsConnectivityCheck</name>

@@ -381,6 +381,7 @@ typedef struct _DML_WANIFACE_IP
     int                         Dhcp6cPid;
     UINT                        RTable;
     CHAR                        DnsCfgPath[BUFLEN_64];
+    BOOL                        Ipv6AddrMonTrigger;
 } DML_WANIFACE_IP;
 
 #ifdef FEATURE_MAPT
@@ -596,6 +597,7 @@ typedef struct _DML_WANMGR_CONFIG_
     BOOLEAN ConfigureWANIPv6OnLANBridgeSupport;
     BOOLEAN UseWANMACForManagementServices;
     BOOLEAN InterfaceVLANMarkingSupport;            
+    BOOL    IPv6AddrMonEnable;
 } DML_WANMGR_CONFIG;
 
 //WAN CONFIG
