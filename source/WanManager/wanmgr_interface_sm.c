@@ -72,9 +72,6 @@ static XLAT_State_t xlat_state_get(void);
 
 
 /*WAN Manager States*/
-volatile bool restartDibbler   = false;
-static bool timerThreadStarted = false;
-static BOOL WanMgr_HasIpv6(char *Ifname);
 static eWanState_t wan_state_vlan_configuring(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl);
 static eWanState_t wan_state_ppp_configuring(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl);
 static eWanState_t wan_state_validating_wan(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl);
@@ -450,46 +447,12 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
         (WanMgr_IsPIDRunning(p_VirtIf->IP.Dhcp6cPid) != TRUE))                                                  // but DHCP client not running
     {
         p_VirtIf->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(p_VirtIf, pInterface->IfaceType);
-        restartDibbler = false;
-        CcspTraceInfo(("%s %d - SELFHEAL 1 - Started dhcp6c on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, p_VirtIf->Name, p_VirtIf->IP.Dhcp6cPid));
+        CcspTraceInfo(("%s %d - SELFHEAL - Started dhcp6c on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, p_VirtIf->Name, p_VirtIf->IP.Dhcp6cPid));
 #ifdef ENABLE_FEATURE_TELEMETRY2_0
         t2_event_d("SYS_ERROR_DHCPV6Client_notrunning", 1);
 #endif
-    }else
-     if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) &&  // IP.Mode supports V6
-         p_VirtIf->IP.IPv6Source == DML_WAN_IP_SOURCE_DHCP &&                                                    // uses DHCP client
-         p_VirtIf->IP.Dhcp6cPid > 0 &&
-         (WanMgr_IsPIDRunning(p_VirtIf->IP.Dhcp6cPid) == TRUE) &&  restartDibbler && (WanMgr_HasIpv6("erouter0")==FALSE))           // client is running, no ipv6 addr
-     {
-         WanManager_StopDhcpv6Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE);
-         sleep(3);
-         p_VirtIf->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(p_VirtIf, pInterface->IfaceType);
-         CcspTraceInfo(("%s %d - SELFHEAL 2- Started dhcp6c on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, p_VirtIf->Name, p_VirtIf->IP.Dhcp6cPid));
-         restartDibbler = false;
-     }
+    }
 }
-
-static BOOL WanMgr_HasIpv6(char *Ifname)
- {
-     char command[512];
-     FILE *fp;
-     char ipv6[1024];
-     BOOL ret = FALSE;
- 
-     sprintf(command,"ifconfig %s | grep \"inet6\" | grep \"Scope:Global\"", Ifname);
- 
-     // Open for reading
-     fp = popen(command, "r");
-     if (fp == NULL) {
-         return ret;
-     }
-     // Read ipv6 addr
-     if(fgets(ipv6, sizeof(ipv6)-1, fp) != NULL) {
-         ret = TRUE;
-     }
-     pclose(fp);
-     return ret;
- }
 
 #if defined(FEATURE_464XLAT)
 static XLAT_State_t xlat_state_get(void)
@@ -4474,18 +4437,6 @@ static ANSC_STATUS WanMgr_IfaceIpcMsg_handle(WanMgr_IfaceSM_Controller_t* pWanIf
     return ANSC_STATUS_SUCCESS;
 }
 
-//This Thread can be used further to create timeout and notify apis which handles different wanmanager events
-static void WanMgr_InterfaceTimerThread( void *arg )
-{
-
-	pthread_detach(pthread_self());
-	while(true)
-	{
-		sleep(15*60);
-		restartDibbler = true;
-	}
-	pthread_exit(NULL);
-}
 
 static void* WanMgr_InterfaceSMThread( void *arg )
 {
@@ -4676,7 +4627,7 @@ static void* WanMgr_InterfaceSMThread( void *arg )
 int WanMgr_StartInterfaceStateMachine(WanMgr_IfaceSM_Controller_t *wanIf)
 {
     WanMgr_IfaceSM_Controller_t *     wanIfLocal = NULL;
-    pthread_t                wanSmThreadId,wanTimerThreadId;
+    pthread_t                wanSmThreadId;
     int                      iErrorCode     = 0;
     static int               siKeyCreated   = 0;
 
@@ -4693,18 +4644,6 @@ int WanMgr_StartInterfaceStateMachine(WanMgr_IfaceSM_Controller_t *wanIf)
 
     CcspTraceInfo (("%s %d - WAN interface data received in the state machine (iface idx %d) \n", __FUNCTION__, __LINE__, wanIfLocal->interfaceIdx));
 
-	if (!timerThreadStarted) {
-		iErrorCode = pthread_create( &wanTimerThreadId, NULL, &WanMgr_InterfaceTimerThread, NULL);
-		if(iErrorCode != 0) 
-		{
-			CcspTraceError(("%s %d - Failed to start WanMgr_InterfaceTimerThread EC:%d\n", __FUNCTION__, __LINE__,iErrorCode ));
-		}
-		else
-		{
-			timerThreadStarted = true;
-			CcspTraceInfo(("%s %d -  WanMgr_InterfaceTimerThread  started sucessfully \n", __FUNCTION__, __LINE__ ));
-		}
-	}
     //Wanmanager state machine thread
     iErrorCode = pthread_create( &wanSmThreadId, NULL, &WanMgr_InterfaceSMThread, (void*)wanIfLocal );
 
