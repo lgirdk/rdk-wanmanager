@@ -461,9 +461,9 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
 
                 if (WanManager_getGloballyUniqueIfAddr6(p_VirtIf->Name, guAddr, &prefixLen) != ANSC_STATUS_SUCCESS)
                 {
+                    CcspTraceInfo(("%s %d - SELFHEAL - IPv6 address is deleted. Restart the client \n", __FUNCTION__, __LINE__));
                     /* stop the client so that WanMgr_MonitorDhcpApps function will start it when the client gracefully stops */
                     WanManager_StopDhcpv6Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE);
-                    CcspTraceInfo(("%s %d - SELFHEAL - IPv6 address is deleted. Restart the client \n", __FUNCTION__, __LINE__));
 #ifdef ENABLE_FEATURE_TELEMETRY2_0
                     t2_event_d("RF_ERROR_erouter_ipv6_loss", 1);
 #endif
@@ -1943,6 +1943,7 @@ static eWanState_t wan_transition_start(WanMgr_IfaceSM_Controller_t* pWanIfaceCt
     p_VirtIf->IP.Ipv6Status = WAN_IFACE_IPV6_STATE_DOWN;
     p_VirtIf->MAP.MaptStatus = WAN_IFACE_MAPT_STATE_DOWN;
     p_VirtIf->DSLite.Status = WAN_IFACE_DSLITE_STATE_DOWN;
+    p_VirtIf->IP.Ipv6AddrMonTrigger = FALSE;
 
     p_VirtIf->Status = WAN_IFACE_STATUS_INITIALISING;
 
