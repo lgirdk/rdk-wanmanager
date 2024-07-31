@@ -2745,3 +2745,32 @@ void WanManager_RestartNetmonitor(void)
         WanMgrDml_GetConfigData_release(pWanConfigData);
     }
 }
+
+void WanManager_PeriodicTimerHandler(int sig, siginfo_t *si, void *uc)
+{
+    if (!strcmp(IPv6_ARRDMON_TIMER_NAME, (char *)si->si_value.sival_ptr))
+    {
+        int uiLoopCount;
+        int TotalIfaces = WanMgr_IfaceData_GetTotalWanIface();
+
+        for (uiLoopCount = 0; uiLoopCount < TotalIfaces; uiLoopCount++)
+        {
+            WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
+            if (pWanDmlIfaceData != NULL)
+            {
+                DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
+                for (int virIf_id = 0; virIf_id < pWanIfaceData->NoOfVirtIfs; virIf_id++)
+                {
+                    DML_VIRTUAL_IFACE *p_VirtIf = WanMgr_getVirtualIfaceById(pWanIfaceData->VirtIfList, virIf_id);
+                    if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) &&
+                        p_VirtIf->IP.IPv6Source == DML_WAN_IP_SOURCE_DHCP)
+                    {
+                        /* Override AddrmonTrigger via timer when Addrmon feature is disabled. */
+                        p_VirtIf->IP.Ipv6AddrMonTrigger = TRUE;
+                    }
+                }
+                WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+            }
+        }
+    }
+}
