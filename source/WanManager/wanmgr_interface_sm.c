@@ -458,10 +458,25 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
             {
                 char guAddr[IP_ADDR_LENGTH] = {0};
                 uint32_t prefixLen = 0;
+                bool IPv6AddrMonEnabled = FALSE;
+
+                WanMgr_Config_Data_t*   pWanConfigData = WanMgr_GetConfigData_locked();
+                if(pWanConfigData != NULL)
+                {
+                    IPv6AddrMonEnabled = pWanConfigData->data.IPv6AddrMonEnable;
+                    WanMgrDml_GetConfigData_release(pWanConfigData);
+                }
 
                 if (WanManager_getGloballyUniqueIfAddr6(p_VirtIf->Name, guAddr, &prefixLen) != ANSC_STATUS_SUCCESS)
                 {
-                    CcspTraceInfo(("%s %d - SELFHEAL - IPv6 address is deleted. Restart the client \n", __FUNCTION__, __LINE__));
+                    if (IPv6AddrMonEnabled)
+                    {
+                        CcspTraceInfo(("%s %d - SELFHEAL - IPv6 address is deleted. Restart the client \n", __FUNCTION__, __LINE__));
+                    }
+                    else
+                    {
+                        CcspTraceInfo(("%s %d - SELFHEAL - Timer detected IPv6 loss. Restart the client \n", __FUNCTION__, __LINE__));
+                    }
                     /* stop the client so that WanMgr_MonitorDhcpApps function will start it when the client gracefully stops */
                     WanManager_StopDhcpv6Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE);
 #ifdef ENABLE_FEATURE_TELEMETRY2_0

@@ -66,6 +66,9 @@ typedef  struct _CONTEXT_MARKING_LINK_OBJECT
         RDK_LOG(RDK_LOG_INFO, "LOG.RDK.MAPTLOG", fmt "\n", ##arg);
 #endif /*FEATURE_MAPT_DEBUG*/
 
+#define IPv6_ARRDMON_TIMER_NAME     "ipv6_AddrMonTimer"
+#define IPv6_ARRDMON_TIMER_TIMEOUT  900 //seconds
+
 typedef enum
 {
     DEL_ADDR = 0,
@@ -266,5 +269,6 @@ void WanManager_PrintBootEvents (WanBootEventState state);
  ****************************************************************************/
 BOOL IsValidIpAddress(int32_t af, const char *address);
 void WanManager_RestartNetmonitor(void);
+void WanManager_PeriodicTimerHandler(int sig, siginfo_t *si, void *uc);
 
 #endif // _WANMGR_NET_UTILS_H_

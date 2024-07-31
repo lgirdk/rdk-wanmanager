@@ -32,4 +32,4 @@ wanmanager_SOURCES = wanmgr_webconfig_apis.c wanmgr_webconfig.c wanmgr_main.c  w
 if FEATURE_IPOE_HEALTH_CHECK
 wanmanager_SOURCES += wanmgr_ipoe_hc_apis.c wanmgr_ipoe_hc_internal.c
 endif
-wanmanager_LDADD = $(wanmanager_DEPENDENCIES) -lccsp_common -lrdkloggers -ltelemetry_msgsender $(SYSTEMD_LDFLAGS) -lhal_platform -lapi_dhcpv4c -lnanomsg -lwebconfig_framework -lmsgpackc -ldhcp_client_utils -lprivilege -lrbus -lsecure_wrapper
+wanmanager_LDADD = $(wanmanager_DEPENDENCIES) -lccsp_common -lrdkloggers -ltelemetry_msgsender $(SYSTEMD_LDFLAGS) -lhal_platform -lapi_dhcpv4c -lnanomsg -lwebconfig_framework -lmsgpackc -ldhcp_client_utils -lprivilege -lrbus -lsecure_wrapper -lrt

@@ -17,6 +17,9 @@
  * limitations under the License.
 */
 
+#include <time.h>
+#include <signal.h>
+
 #include <syscfg/syscfg.h>
 
 #include "wanmgr_core.h"
@@ -52,6 +55,42 @@ ANSC_STATUS WanMgr_Core_Init(void)
     return retStatus;
 }
 
+ANSC_STATUS WanController_Init_PeriodicTimers(void)
+{
+    struct sigaction sa;
+    struct sigevent sev;
+    struct itimerspec its;
+    timer_t timerid;
+
+    sa.sa_flags = SA_SIGINFO;
+    sa.sa_sigaction = WanManager_PeriodicTimerHandler;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(SIGRTMIN, &sa, NULL) == -1)
+    {
+        CcspTraceError(("%s %d - Failed sigaction on timer: %s, error=%s\n", __FUNCTION__, __LINE__, IPv6_ARRDMON_TIMER_NAME, strerror(errno)));
+        exit(EXIT_FAILURE);
+    }
+    sev.sigev_notify = SIGEV_SIGNAL;
+    sev.sigev_signo = SIGRTMIN;
+    sev.sigev_value.sival_ptr = IPv6_ARRDMON_TIMER_NAME;
+    if (timer_create(CLOCK_MONOTONIC, &sev, &timerid) == -1)
+    {
+        CcspTraceError(("%s %d - Failed to create periodic timer: %s, error=%s\n", __FUNCTION__, __LINE__, IPv6_ARRDMON_TIMER_NAME, strerror(errno)));
+        exit(EXIT_FAILURE);
+    }
+    its.it_value.tv_sec = IPv6_ARRDMON_TIMER_TIMEOUT;
+    its.it_value.tv_nsec = 0;
+    its.it_interval.tv_sec = IPv6_ARRDMON_TIMER_TIMEOUT;
+    its.it_interval.tv_nsec = 0;
+    if (timer_settime(timerid, 0, &its, NULL) == -1)
+    {
+        CcspTraceError(("%s %d - Failed to set periodic timer: %s, error=%s\n", __FUNCTION__, __LINE__, IPv6_ARRDMON_TIMER_NAME, strerror(errno)));
+        exit(EXIT_FAILURE);
+    }
+    CcspTraceInfo(("%s %d - Periodic timer is created: %s\n", __FUNCTION__, __LINE__, IPv6_ARRDMON_TIMER_NAME));
+
+}
+
 ANSC_STATUS WanMgr_Core_Start(void)
 {
     ANSC_STATUS retStatus = ANSC_STATUS_SUCCESS;
@@ -61,6 +100,7 @@ ANSC_STATUS WanMgr_Core_Start(void)
 #endif
     WanMgr_UpdatePrevData();
     WanMgr_RdkBus_setDhcpv6DnsServerInfo();
+    WanController_Init_PeriodicTimers();
 #ifdef FEATURE_802_1P_COS_MARKING
     /* Initialize middle layer for Marking */
     WanMgr_WanIfaceMarkingInit();
