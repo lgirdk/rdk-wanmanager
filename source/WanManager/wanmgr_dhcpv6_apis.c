@@ -1800,10 +1800,12 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
             if (!strcmp(pVirtIf->Alias,"DATA"))
             {
                 char buf[32];
+                CcspTraceInfo(("Setting the sysevent - ipv6_addr-renew to renew the IPv6 addresses for brlan0 and brlan7\n"));
+                sysevent_set(sysevent_fd, sysevent_token, "ipv6_addr-renew", "", 0);
                 /*TODO: Revisit this*/
                 //call function for changing the prlft and vallft
                 // FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE : Handle Ip renew in handler thread. 
-#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) || defined(FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE)  //TODO: V6 handled in PAM
+#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) && !defined(_LG_OFW_)  //TODO: V6 handled in PAM
                 if ((WanManager_Ipv6AddrUtil(pVirtIf->Name, SET_LFT, pNewIpcMsg->prefixPltime, pNewIpcMsg->prefixVltime) < 0))
                 {
                     CcspTraceError(("Life Time Setting Failed"));
