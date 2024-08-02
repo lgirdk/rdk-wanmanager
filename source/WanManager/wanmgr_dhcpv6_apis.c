@@ -1852,7 +1852,11 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
         {
             if(!strcmp(pVirtIf->Alias,"DATA") && pVirtIf->Status == WAN_IFACE_STATUS_UP &&  pNewIpcMsg->prefixPltime > 0 && pNewIpcMsg->prefixVltime > 0 ) //Update life time only if the interface is active.
             {
-#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_)) || defined(_RDKB_GLOBAL_PRODUCT_REQ_) //Do not add prefix on LAN bridge for the Comcast platforms.
+                char buf[32];
+                CcspTraceInfo(("Setting the sysevent - ipv6_addr-renew to renew the IPv6 addresses for brlan0 and brlan7\n"));
+                sysevent_set(sysevent_fd, sysevent_token, "ipv6_addr-renew", "", 0);
+
+#if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_)) || defined(_RDKB_GLOBAL_PRODUCT_REQ_) && !defined(_LG_OFW_) //Do not add prefix on LAN bridge for the Comcast platforms.
 #if defined(_RDKB_GLOBAL_PRODUCT_REQ_)
             WanMgr_Config_Data_t    *pWanConfigData = WanMgr_GetConfigData_locked();
             unsigned char           ConfigureWANIPv6OnLANBridgeSupport = FALSE;
