@@ -478,7 +478,7 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
                     {
                         CcspTraceInfo(("%s %d - SELFHEAL - Timer detected IPv6 loss. Restart the client \n", __FUNCTION__, __LINE__));
                     }
-                    syslog_networklog("NETWORK",LOG_NOTICE,"%s","Gateway ipv6 address is empty");
+                    syslog_networklog("NETWORK", LOG_NOTICE, "%s ipv6 address is empty", p_VirtIf->Name);
                     /* stop the client so that WanMgr_MonitorDhcpApps function will start it when the client gracefully stops */
                     WanManager_StopDhcpv6Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE);
 #ifdef ENABLE_FEATURE_TELEMETRY2_0
