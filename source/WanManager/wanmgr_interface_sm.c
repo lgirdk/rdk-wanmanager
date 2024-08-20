@@ -2461,7 +2461,7 @@ static eWanState_t wan_transition_ipv4_down(WanMgr_IfaceSM_Controller_t* pWanIfa
     }
 #endif
 
-    if(p_VirtIf->Status == WAN_IFACE_STATUS_UP)
+    if(pInterface->Selection.Status == WAN_IFACE_ACTIVE)
     {
         if (wan_tearDownIPv4(pWanIfaceCtrl) != RETURN_OK)
         {
@@ -2736,7 +2736,7 @@ static eWanState_t wan_transition_ipv6_down(WanMgr_IfaceSM_Controller_t* pWanIfa
 
     WanManager_UpdateInterfaceStatus (p_VirtIf, WANMGR_IFACE_CONNECTION_IPV6_DOWN);
 
-    if(p_VirtIf->Status == WAN_IFACE_STATUS_UP)
+    if(pInterface->Selection.Status == WAN_IFACE_ACTIVE)
     {
         if (wan_tearDownIPv6(pWanIfaceCtrl) != RETURN_OK)
         {
