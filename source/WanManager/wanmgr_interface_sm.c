@@ -1621,7 +1621,6 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     int ret = RETURN_OK;
     char buf[BUFLEN_32] = {0};
     char cmdStr[BUFLEN_128] = {0};
-    int erouter_mode;
 
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
@@ -1663,15 +1662,6 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         }
     }
 #endif
-
-    syscfg_get(NULL, "last_erouter_mode", buf, sizeof(buf));
-    erouter_mode = (buf[0] != 0) ? atoi(buf) : -1;
-
-    if (erouter_mode == 3) //skip setting wan-status to started if we are not yet assigned with ipv4 addr
-    {
-        return ret;
-    }
-
 #if !(defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) || defined (_LG_OFW_) //TODO: V6 handled in PAM
     /** Reset IPv6 DNS configuration. */
     if (wan_updateDNS(pWanIfaceCtrl, (p_VirtIf->IP.Ipv4Status == WAN_IFACE_IPV4_STATE_UP), TRUE) != RETURN_OK)
