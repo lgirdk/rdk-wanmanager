@@ -482,7 +482,9 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
                     /* stop the client so that WanMgr_MonitorDhcpApps function will start it when the client gracefully stops */
                     WanManager_StopDhcpv6Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE);
 #ifdef ENABLE_FEATURE_TELEMETRY2_0
-                    t2_event_d("RF_ERROR_erouter_ipv6_loss", 1);
+                    char rferroripv6loss[64];
+                    snprintf(rferroripv6loss, sizeof(rferroripv6loss), "RF_ERROR_%s_ipv6_loss", p_VirtIf->Name);
+                    t2_event_d(rferroripv6loss, 1);
 #endif
                 }
                 p_VirtIf->IP.Ipv6AddrMonTrigger = FALSE;
