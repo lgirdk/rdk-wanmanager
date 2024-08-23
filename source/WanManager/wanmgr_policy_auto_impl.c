@@ -104,30 +104,6 @@ void setActiveLinkToSysCfg(UINT IfaceIndex)
     syscfg_set_commit(NULL, "curr_wan_mode", buf);
 }
 #endif
-
-/*
- * WanMgr_AddOrRemoveInterfaceInLanBridge()
- * */
-static void WanMgr_AddOrRemoveInterfaceInLanBridge(WanMgr_Policy_Controller_t * pWanController, bool AddToBridge)
-{
-    int ret = 0;
-    WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(pWanController->activeInterfaceIdx);
-    if (pWanDmlIfaceData != NULL)
-    {
-        DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
-        if (strstr(pWanIfaceData->BaseInterface, "Ethernet"))
-        {
-            ret = WanMgr_RdkBus_AddIntfToLanBridge(pWanIfaceData->BaseInterface, AddToBridge);
-            if (ret == ANSC_STATUS_FAILURE)
-            {
-                CcspTraceError(("%s %d: unable to config LAN bridge for index %d BaseInterface %s\n", __FUNCTION__, __LINE__, pWanController->activeInterfaceIdx, pWanIfaceData->BaseInterface));
-            }
-        }
-        WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
-    }
-    return;
-}
-
 /*
  * WanMgr_SetActiveLink()
 * - sets the ActiveLink locallt and saves it to PSM
@@ -896,9 +872,6 @@ static WcAwPolicyState_t Transistion_WanInterfaceDown (WanMgr_Policy_Controller_
         CcspTraceError(("%s %d: Invalid args\n", __FUNCTION__, __LINE__));
         return STATE_AUTO_WAN_ERROR;
     }
-
-    WanMgr_AddOrRemoveInterfaceInLanBridge(pWanController, TRUE);
-
     CcspTraceInfo(("%s %d: moving to State_WanInterfaceDown()\n", __FUNCTION__, __LINE__));
     return STATE_AUTO_WAN_INTERFACE_DOWN;
 }
@@ -929,8 +902,6 @@ static WcAwPolicyState_t Transistion_WanInterfaceUp (WanMgr_Policy_Controller_t 
             CcspTraceError(("%s %d: unable to start interface state machine\n", __FUNCTION__, __LINE__));
         }
     }
-
-    WanMgr_AddOrRemoveInterfaceInLanBridge(pWanController, FALSE);
 
     CcspTraceInfo(("%s %d: started interface state machine & moving to state State_WanInterfaceActive()\n", __FUNCTION__, __LINE__));
     return STATE_AUTO_WAN_INTERFACE_ACTIVE;
@@ -1055,9 +1026,6 @@ static WcAwPolicyState_t State_WaitForInterface (WanMgr_Policy_Controller_t * pW
     if (pActiveInterface->Selection.Enable == FALSE)
     {
         CcspTraceInfo(("%s %d: WAN disabled on selected interface %d\n", __FUNCTION__, __LINE__, pWanController->activeInterfaceIdx));
-
-        WanMgr_AddOrRemoveInterfaceInLanBridge(pWanController, TRUE);
-
         return Transition_InterfaceInvalid(pWanController);
     }
 
