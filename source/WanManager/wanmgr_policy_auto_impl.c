@@ -618,6 +618,15 @@ static WcAwPolicyState_t Transition_InterfaceInvalid (WanMgr_Policy_Controller_t
     CcspTraceInfo(("%s %d: de-selecting interface \n", __FUNCTION__, __LINE__));
     pWanController->activeInterfaceIdx = -1;
 
+    if (strstr(pIfaceData->BaseInterface, "Ethernet"))
+    {
+        CcspTraceInfo(("%s %d: Adding WANoE port %s to LAN bridge  \n", __FUNCTION__, __LINE__, pIfaceData->Name));
+        if (WanMgr_RdkBus_AddIntfToLanBridge(pIfaceData->BaseInterface, TRUE) == ANSC_STATUS_FAILURE)
+        {
+            CcspTraceError(("%s %d: unable to config LAN bridge for BaseInterface %s\n", __FUNCTION__, __LINE__, pIfaceData->BaseInterface));
+        }
+    }
+
     return STATE_AUTO_WAN_INTERFACE_SELECTING;
 
 }
@@ -1445,6 +1454,13 @@ static WcAwPolicyState_t State_WanInterfaceDown (WanMgr_Policy_Controller_t * pW
                         __FUNCTION__, __LINE__, pWanController->activeInterfaceIdx));
         }
         return Transistion_WanInterfaceUp (pWanController);
+    }
+
+    // check if the interface is still enabled
+    if (pActiveInterface->Selection.Enable == FALSE)
+    {
+        CcspTraceInfo(("%s %d: interface:%s is disabled. Restart selection process\n", __FUNCTION__, __LINE__, pActiveInterface->Name));
+        return Transition_ResetSelectedInterface (pWanController);
     }
 
     return STATE_AUTO_WAN_INTERFACE_DOWN;
