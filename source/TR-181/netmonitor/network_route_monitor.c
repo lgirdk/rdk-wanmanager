@@ -25,6 +25,7 @@ static bool g_ipv6_addrmon_enabled = FALSE;
 #define SYSEVENT_IPV6_TOGGLE            "ipv6Toggle"
 #define SYSEVENT_IPV6_ADDRMON_IP_LOSS   "ipv6_addr_mon_ip_del"
 #define SYSEVENT_IPV6_ADDRMON_ENABLE    "ipv6_addr_mon_enable"
+#define SYSEVENT_IPV6_ADDRMON_IGNORE    "ignore_%s_ipv6_deladdr"
 
 #define SYSEVENT_OPEN_MAX_RETRIES   6
 #define SE_SERVER_WELL_KNOWN_PORT   52367
@@ -377,19 +378,35 @@ static void NetMonitor_ProcessNetlinkRouteMonitorFd()
                 }
                 case RTM_DELADDR:
                 {
-                    if (g_ipv6_addrmon_enabled)
-                    {
-                        struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(nl_msgHdr);
-                        if (ifa->ifa_family == AF_INET6 && ifa->ifa_scope == RT_SCOPE_UNIVERSE)
-                        {
-                            char ifname[IF_NAMESIZE];
+                    char ifname[IF_NAMESIZE];
+                    char event[256];
+                    char ignore[16];
+                    struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(nl_msgHdr);
 
-                            if (if_indextoname(ifa->ifa_index, ifname) != NULL && NetMonitor_IsNetworkInterfaceUp(ifname))
-                            {
-                                DBG_MONITOR_PRINT("IPv6 address is deleted from the interface: %s\n", ifname);
-                                sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_ADDRMON_IP_LOSS, ifname, 0);
-                            }
+                    /* Consider this event only if
+                     * - interface is valid
+                     * - Deleted address is a global IPv6 address
+                     * - IPv6Addrmon feature is enabled
+                     */
+                    if ((if_indextoname(ifa->ifa_index, ifname) != NULL) &&
+                        (ifa->ifa_family == AF_INET6 && ifa->ifa_scope == RT_SCOPE_UNIVERSE) &&
+                        (g_ipv6_addrmon_enabled == TRUE))
+                    {
+                        snprintf(event, sizeof(event), SYSEVENT_IPV6_ADDRMON_IGNORE, ifname);
+                        sysevent_get(sysevent_fd, sysevent_token, event, ignore, sizeof(ignore));
+
+                        /* ignore flag is set. RTM_DELADDR should be ignored */
+                        if (ignore[0] != '\0')
+                        {
+                            sysevent_set(sysevent_fd, sysevent_token, event, NULL, 0); // reset the event
+                            DBG_MONITOR_PRINT("IPv6 address deletion is ignored for the interface: %s\n", ifname);
                             break;
+                        }
+                        /* Ignore events that are caused by interface downs */
+                        if (NetMonitor_IsNetworkInterfaceUp(ifname))
+                        {
+                            DBG_MONITOR_PRINT("IPv6 address is deleted from the interface: %s\n", ifname);
+                            sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV6_ADDRMON_IP_LOSS, ifname, 0);
                         }
                     }
                     break;
