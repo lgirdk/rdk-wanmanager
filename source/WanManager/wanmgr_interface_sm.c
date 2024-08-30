@@ -859,7 +859,11 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     }
     else
     {
-        sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", "", 0);
+        /* Update wan_dhcp_dns only if p_VirtIf->Name is the primary WAN */
+        if (!strcmp(p_VirtIf->Alias, "DATA"))
+        {
+            sysevent_set(sysevent_fd, sysevent_token, "wan_dhcp_dns", "", 0);
+        }
     }
 
     if (addIPv6)
