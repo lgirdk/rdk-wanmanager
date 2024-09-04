@@ -605,6 +605,7 @@ static void *WanManagerSyseventHandler(void *args)
     async_id_t radvd_restart_asyncid;
     async_id_t ipv6_down_asyncid;
     async_id_t ipv6_addrmon_asyncid;
+    async_id_t ipv4_addrmon_asyncid;
 #ifdef NTP_STATUS_SYNC_EVENT
     async_id_t ntp_time_asyncid;
     async_id_t sync_ntp_statusid;
@@ -641,6 +642,9 @@ static void *WanManagerSyseventHandler(void *args)
 
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_IPV6_ADDRMON_IP_LOSS, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_IPV6_ADDRMON_IP_LOSS, &ipv6_addrmon_asyncid);
+
+    sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_IPV4_ADDRMON_IP_LOSS, TUPLE_FLAG_EVENT);
+    sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_IPV4_ADDRMON_IP_LOSS, &ipv4_addrmon_asyncid);
 
     sysevent_set_options(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_WAN_STATUS, TUPLE_FLAG_EVENT);
     sysevent_setnotification(sysevent_msg_fd, sysevent_msg_token, SYSEVENT_WAN_STATUS,  &wan_status_asyncid);
@@ -1040,6 +1044,16 @@ static void *WanManagerSyseventHandler(void *args)
                {
                    CcspTraceWarning(("%s %d: IPv6 address is deleted from the interface: %s  \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
                    p_VirtIf->IP.Ipv6AddrMonTrigger = TRUE;
+                   WanMgr_VirtualIfaceData_release(val);
+               }
+           }
+           else if (strcmp(name, SYSEVENT_IPV4_ADDRMON_IP_LOSS) == 0)
+           {
+               DML_VIRTUAL_IFACE *p_VirtIf = WanMgr_GetVirtualIfaceByName_locked(val);
+               if (p_VirtIf != NULL)
+               {
+                   CcspTraceWarning(("%s %d: IPv4 address is deleted from the interface: %s  \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+                   p_VirtIf->IP.Ipv4AddrMonTrigger = TRUE;
                    WanMgr_VirtualIfaceData_release(val);
                }
            }

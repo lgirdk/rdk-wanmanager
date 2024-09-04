@@ -145,6 +145,7 @@
 #define SYSEVENT_IPV4_DHCP_SERVER "ipv4_%s_dhcp_server"
 #define SYSEVENT_IPV4_DHCP_STATE  "ipv4_%s_dhcp_state"
 #define SYSEVENT_IPV4_START_TIME  "ipv4_%s_start_time"
+#define SYSEVENT_IPV4_ADDRMON_IP_LOSS   "ipv4_addr_mon_ip_del"
 
 #define SYSEVENT_IPV6_ADDRMON_IP_LOSS   "ipv6_addr_mon_ip_del"
 #define SYSEVENT_IPV6_ADDRMON_ENABLE    "ipv6_addr_mon_enable"

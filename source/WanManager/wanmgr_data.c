@@ -794,6 +794,7 @@ void WanMgr_VirtIface_Init(DML_VIRTUAL_IFACE * pVirtIf, UINT iface_index)
     pVirtIf->IP.pIpcIpv6Data = NULL;
     pVirtIf->IP.RTable = 0;
     pVirtIf->IP.Ipv6AddrMonTrigger = FALSE;
+    pVirtIf->IP.Ipv4AddrMonTrigger = FALSE;
     pVirtIf->MAP.MaptStatus = WAN_IFACE_MAPT_STATE_DOWN;
     memset(pVirtIf->MAP.Path, 0, 64);
     pVirtIf->MAP.MaptChanged = FALSE;

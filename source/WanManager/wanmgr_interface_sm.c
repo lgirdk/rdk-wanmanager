@@ -441,6 +441,17 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
 #endif
     }
 
+    if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV4_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) &&  // IP.Mode supports V4
+        (p_VirtIf->IP.IPv4Source == DML_WAN_IP_SOURCE_DHCP) && (p_VirtIf->IP.Dhcp4cPid > 0) && (WanMgr_IsPIDRunning(p_VirtIf->IP.Dhcp4cPid) == TRUE))
+    {
+        if(p_VirtIf->IP.Ipv4AddrMonTrigger == TRUE)
+        {
+            syslog_networklog("NETWORK", LOG_NOTICE, "%s ipv4 address is empty", p_VirtIf->Name);
+            //WanManager_StopDhcpv4Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE); //to be discussed if wwe need recover it
+            p_VirtIf->IP.Ipv4AddrMonTrigger = FALSE;
+        }
+    }
+
     if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) && // IP.Mode supports V6
         p_VirtIf->IP.IPv6Source == DML_WAN_IP_SOURCE_DHCP) // uses DHCP client
     {
@@ -1953,6 +1964,7 @@ static eWanState_t wan_transition_start(WanMgr_IfaceSM_Controller_t* pWanIfaceCt
     p_VirtIf->MAP.MaptStatus = WAN_IFACE_MAPT_STATE_DOWN;
     p_VirtIf->DSLite.Status = WAN_IFACE_DSLITE_STATE_DOWN;
     p_VirtIf->IP.Ipv6AddrMonTrigger = FALSE;
+    p_VirtIf->IP.Ipv4AddrMonTrigger = FALSE;
 
     p_VirtIf->Status = WAN_IFACE_STATUS_INITIALISING;
 

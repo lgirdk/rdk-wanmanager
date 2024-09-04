@@ -27,6 +27,8 @@ static bool g_ipv6_addrmon_enabled = FALSE;
 #define SYSEVENT_IPV6_ADDRMON_ENABLE    "ipv6_addr_mon_enable"
 #define SYSEVENT_IPV6_ADDRMON_IGNORE    "ignore_%s_ipv6_deladdr"
 
+#define SYSEVENT_IPV4_ADDRMON_IP_LOSS   "ipv4_addr_mon_ip_del"
+
 #define SYSEVENT_OPEN_MAX_RETRIES   6
 #define SE_SERVER_WELL_KNOWN_PORT   52367
 #define SE_VERSION                  1
@@ -215,6 +217,8 @@ static ANSC_STATUS NetMonitor_InitNetlinkRouteMonitorFd()
     if (g_ipv6_addrmon_enabled)
         addr.nl_groups |= RTMGRP_IPV6_IFADDR;
 
+    addr.nl_groups |= RTMGRP_IPV4_IFADDR; //it's always enabled now before deciding if we add SYSEVENT_IPV6_ADDRMON_ENABLE
+
     if (0 > bind(netlinkRouteMonitorFd, (struct sockaddr *) &addr, sizeof(addr)))
     {
         DBG_MONITOR_PRINT("%s Failed to bind netlink socket: %s\n", __FUNCTION__, strerror(errno));
@@ -382,6 +386,10 @@ static void NetMonitor_ProcessNetlinkRouteMonitorFd()
                     char event[256];
                     char ignore[16];
                     struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(nl_msgHdr);
+
+                    if((if_indextoname(ifa->ifa_index, ifname) != NULL) && (ifa->ifa_family == AF_INET && ifa->ifa_scope == RT_SCOPE_UNIVERSE)) {
+                        sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_ADDRMON_IP_LOSS, ifname, 0);
+                    }
 
                     /* Consider this event only if
                      * - interface is valid
