@@ -382,6 +382,7 @@ typedef struct _DML_WANIFACE_IP
     UINT                        RTable;
     CHAR                        DnsCfgPath[BUFLEN_64];
     BOOL                        Ipv6AddrMonTrigger;
+    BOOL                        Ipv4AddrMonTrigger;
 } DML_WANIFACE_IP;
 
 #ifdef FEATURE_MAPT
