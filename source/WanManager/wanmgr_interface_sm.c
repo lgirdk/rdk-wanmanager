@@ -455,7 +455,15 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
     if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) && // IP.Mode supports V6
         p_VirtIf->IP.IPv6Source == DML_WAN_IP_SOURCE_DHCP) // uses DHCP client
     {
-        if (p_VirtIf->IP.Dhcp6cPid > 0) // dhcp started by ISM
+        if(p_VirtIf->IP.Dhcp6cPid <= 0) // Start DHCP client if it has not staretd at all
+        {
+            p_VirtIf->IP.Dhcp6cPid = WanManager_StartDhcpv6Client(p_VirtIf, pInterface->IfaceType);
+            CcspTraceInfo(("%s %d - SELFHEAL - Started dhcp6c on interface %s, dhcpv6_pid %d \n", __FUNCTION__, __LINE__, p_VirtIf->Name, p_VirtIf->IP.Dhcp6cPid));
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+            t2_event_d("SYS_ERROR_DHCPV6Client_notrunning", 1);
+#endif
+        }
+        else if (p_VirtIf->IP.Dhcp6cPid > 0) // dhcp started by ISM
         {
             // Check if IPv6 dhcp client is still running - handling runtime crash of dhcp client
             if (WanMgr_IsPIDRunning(p_VirtIf->IP.Dhcp6cPid) != TRUE) // DHCP client not running
