@@ -272,4 +272,6 @@ void WanManager_RestartNetmonitor(void);
 void WanManager_PeriodicTimerHandler(int sig, siginfo_t *si, void *uc);
 
 int WanManager_send_and_receive_rs(DML_VIRTUAL_IFACE * pVirtIf);
+
+ANSC_STATUS WanManager_checkInterfaceIpv4Address(const char *IfaceName);
 #endif // _WANMGR_NET_UTILS_H_
