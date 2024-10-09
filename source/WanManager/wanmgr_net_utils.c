@@ -2774,3 +2774,22 @@ void WanManager_PeriodicTimerHandler(int sig, siginfo_t *si, void *uc)
         }
     }
 }
+
+ANSC_STATUS WanManager_checkInterfaceIpv4Address(const char *IfaceName)
+{
+    int fd;
+    int result;
+    struct ifreq ifr;
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0) {
+        return ANSC_STATUS_FAILURE;
+    }
+
+    ifr.ifr_addr.sa_family = AF_INET;
+    strncpy(ifr.ifr_name, IfaceName, IFNAMSIZ-1);
+    result = ioctl(fd, SIOCGIFADDR, &ifr);
+    close(fd);   
+
+    return (result >= 0) ? ANSC_STATUS_SUCCESS : ANSC_STATUS_FAILURE; // Success if interface has an IP address
+}

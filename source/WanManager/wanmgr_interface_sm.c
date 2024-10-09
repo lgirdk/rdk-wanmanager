@@ -430,27 +430,29 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
     if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV4_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) &&  // IP.Mode supports V4
         p_VirtIf->IP.IPv4Source == DML_WAN_IP_SOURCE_DHCP && (p_VirtIf->PPP.Enable == FALSE) &&                 // uses DHCP client
         p_VirtIf->MAP.MaptStatus == WAN_IFACE_MAPT_STATE_DOWN &&                                                // MAPT status is DOWN
-        p_VirtIf->IP.SelectedModeTimerStatus != RUNNING  &&
-        p_VirtIf->IP.Dhcp4cPid > 0 &&                                                                           // dhcp started by ISM
-        (WanMgr_IsPIDRunning(p_VirtIf->IP.Dhcp4cPid) != TRUE))                                                  // but DHCP client not running
-    {
-        p_VirtIf->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(p_VirtIf, pInterface->Name, pInterface->IfaceType);
-        CcspTraceInfo(("%s %d - SELFHEAL - Started dhcpc on interface %s, dhcpv4_pid %d \n", __FUNCTION__, __LINE__, p_VirtIf->Name, p_VirtIf->IP.Dhcp4cPid));
-#ifdef ENABLE_FEATURE_TELEMETRY2_0
-        t2_event_d("SYS_ERROR_DHCPV4Client_notrunning", 1);
-#endif
-    }
-
-    if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV4_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) &&  // IP.Mode supports V4
-        (p_VirtIf->IP.IPv4Source == DML_WAN_IP_SOURCE_DHCP) && (p_VirtIf->IP.Dhcp4cPid > 0) && (WanMgr_IsPIDRunning(p_VirtIf->IP.Dhcp4cPid) == TRUE))
-    {
-        if(p_VirtIf->IP.Ipv4AddrMonTrigger == TRUE)
+        p_VirtIf->IP.SelectedModeTimerStatus != RUNNING)
         {
-            syslog_networklog("NETWORK", LOG_NOTICE, "%s ipv4 address is empty", p_VirtIf->Name);
-            //WanManager_StopDhcpv4Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE); //to be discussed if wwe need recover it
-            p_VirtIf->IP.Ipv4AddrMonTrigger = FALSE;
+            if(p_VirtIf->IP.Dhcp4cPid > 0)                                                                      // dhcp started by ISM
+            {
+                if((WanMgr_IsPIDRunning(p_VirtIf->IP.Dhcp4cPid) != TRUE))                                       // but DHCP client not running
+                {
+                    p_VirtIf->IP.Dhcp4cPid = WanManager_StartDhcpv4Client(p_VirtIf, pInterface->Name, pInterface->IfaceType);
+                    CcspTraceInfo(("%s %d - SELFHEAL - Started dhcpc on interface %s, dhcpv4_pid %d \n", __FUNCTION__, __LINE__, p_VirtIf->Name, p_VirtIf->IP.Dhcp4cPid));
+#ifdef ENABLE_FEATURE_TELEMETRY2_0
+                    t2_event_d("SYS_ERROR_DHCPV4Client_notrunning", 1);
+#endif
+                }
+                else if(p_VirtIf->IP.Ipv4AddrMonTrigger == TRUE)
+                {
+                    if (WanManager_checkInterfaceIpv4Address(p_VirtIf->Name) != ANSC_STATUS_SUCCESS)
+                    {
+                        syslog_networklog("NETWORK", LOG_NOTICE, "%s ipv4 address is empty", p_VirtIf->Name);
+                        //WanManager_StopDhcpv4Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE); //to be discussed if we need recover it
+                    }
+                }
+                p_VirtIf->IP.Ipv4AddrMonTrigger = FALSE;
+            }
         }
-    }
 
     if ((p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY || p_VirtIf->IP.Mode == DML_WAN_IP_MODE_DUAL_STACK) && // IP.Mode supports V6
         p_VirtIf->IP.IPv6Source == DML_WAN_IP_SOURCE_DHCP) // uses DHCP client

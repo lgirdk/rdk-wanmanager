@@ -271,4 +271,6 @@ BOOL IsValidIpAddress(int32_t af, const char *address);
 void WanManager_RestartNetmonitor(void);
 void WanManager_PeriodicTimerHandler(int sig, siginfo_t *si, void *uc);
 
+ANSC_STATUS WanManager_checkInterfaceIpv4Address(const char *IfaceName);
+
 #endif // _WANMGR_NET_UTILS_H_
