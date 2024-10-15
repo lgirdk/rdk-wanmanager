@@ -655,7 +655,7 @@ static WcAwPolicyState_t Transition_TryingNextInterface (WanMgr_Policy_Controlle
         {
             //All interfaces are scanned atleast once. set InitialScanComplete to TRUE
             pWanIfaceGroup->InitialScanComplete = TRUE;
-            CcspTraceInfo(("%s %d  group(%d) Initial Scan Completed\n", __FUNCTION__, __LINE__, pWanController->GroupInst));
+            CcspTraceDebug(("%s %d  group(%d) Initial Scan Completed\n", __FUNCTION__, __LINE__, pWanController->GroupInst));
             WanMgrDml_GetIfaceGroup_release();
         }
 
