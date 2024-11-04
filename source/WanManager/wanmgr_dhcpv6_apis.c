@@ -119,6 +119,8 @@ void _cosa_dhcpsv6_refresh_config();
 
 static int DHCPv6sDmlTriggerRestart(BOOL OnlyTrigger);
 
+static void  VerifyV6FilteringRules(char *prefix);
+
 void _get_shell_output(FILE *fp, char * out, int len)
 {
     char * p;
@@ -2078,6 +2080,8 @@ int setUpLanPrefixIPv6(DML_VIRTUAL_IFACE* pVirtIf)
                 // ipv6_prefix should be set with original prefix length received on WAN interface.
                 CcspTraceInfo(("%s %d new prefix = %s\n", __FUNCTION__, __LINE__, pVirtIf->IP.Ipv6Data.sitePrefix));
                 sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIELD_IPV6_PREFIX, pVirtIf->IP.Ipv6Data.sitePrefix, 0);
+
+                VerifyV6FilteringRules(prefix);
             }
         }else /* IFADDRCONF_REMOVE: prefix remove */
         {
@@ -2099,4 +2103,111 @@ int setUpLanPrefixIPv6(DML_VIRTUAL_IFACE* pVirtIf)
 
 #endif
     return RETURN_OK;
+}
+
+#define V6FILTERING   "Device.Firewall.X_RDKCENTRAL-COM_Security.V6.IPFiltering."
+#define V6FILTERING_NUM_ENTRIES      "Device.Firewall.X_RDKCENTRAL-COM_Security.V6.IPFiltering.ServiceNumberOfEntries"
+#define V6FILTERING_SRCADDR          "Device.Firewall.X_RDKCENTRAL-COM_Security.V6.IPFiltering.Service.%d.SrcStartAddr"
+#define V6FILTERING_DSTADDR          "Device.Firewall.X_RDKCENTRAL-COM_Security.V6.IPFiltering.Service.%d.DstStartAddr"
+#define V6FILTERING_DIRECTION        "Device.Firewall.X_RDKCENTRAL-COM_Security.V6.IPFiltering.Service.%d.Direction"
+#define V6FILTERING_SERVICE_ENABLE   "Device.Firewall.X_RDKCENTRAL-COM_Security.V6.IPFiltering.Service.%d.Enable"
+
+#define MAX_ENTRIES 100
+
+static void  VerifyV6FilteringRules(char *prefix)
+{
+    long int NumOfEntries = 0;
+    char ValStr[BUFLEN_256]             = {0};
+    char Param[BUFLEN_256]              = {0};
+    int i,RuleCnt =0;
+    unsigned int segments[4];
+    char formated_prefix[22];
+    if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, V6FILTERING_NUM_ENTRIES, ValStr))
+    {
+        CcspTraceError(("%s-%d: Failed to read V6.IPFiltering.ServiceNumberOfEntries\n", __FUNCTION__, __LINE__));
+        return;
+    }else{
+        CcspTraceInfo(("%s-%d:, get V6.IPFiltering.ServiceNumberOfEntries \n", __FUNCTION__, __LINE__));
+    }
+
+    // Parse the input prefix into four 16-bit segments
+    if (sscanf(prefix, "%x:%x:%x:%x", &segments[0], &segments[1], &segments[2], &segments[3]) != 4) {
+        CcspTraceError(("%s-%d:, Invalid IPv6 prefix format.\n", __FUNCTION__, __LINE__));
+        return;
+    }
+    // Print each segment with leading zeros
+    sprintf(formated_prefix,"%04x:%04x:%04x:%04x", segments[0], segments[1], segments[2], segments[3]);
+
+    NumOfEntries = strtol(ValStr,NULL,10);
+    if ( NumOfEntries > 0 ){
+       for (i=1;i< MAX_ENTRIES;i++){//how many rules are allowed? User can create 1000 rules, delete the first 9999. We still have to loop thru 1000 times
+          if ( RuleCnt == NumOfEntries){
+            CcspTraceInfo(("%s-%d: done with rules %d\n", __FUNCTION__, __LINE__,RuleCnt));
+            return;
+          }
+          snprintf(Param, sizeof(Param), V6FILTERING_SERVICE_ENABLE, i);
+          if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, Param, ValStr)){//no entry
+            continue;
+          }
+          RuleCnt++; //rule found
+          if( 0 == strncmp(ValStr, "false", 5)){  //rule disabled
+            CcspTraceInfo(("%s-%d: rule %d disabled\n", __FUNCTION__, __LINE__,i));
+            continue;
+          }
+
+          snprintf(Param, sizeof(Param), V6FILTERING_DIRECTION, i);
+          if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, Param, ValStr)){//no entry,something wrong
+            CcspTraceError(("%s-%d: rule %d direction not found\n", __FUNCTION__, __LINE__,i));
+            continue;
+          }
+
+          if( 0 == strncmp(ValStr, "Inbound", 7)){  // check filter destination addr against new prefix if rule is for inbound traffic
+
+              CcspTraceInfo(("%s-%d: rule %d inbound\n", __FUNCTION__, __LINE__,i));
+              snprintf(Param, sizeof(Param), V6FILTERING_DSTADDR, i); //filter destination address
+              if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, Param, ValStr)){//no entry,something wrong
+                CcspTraceError(("%s-%d: rule %d dest. addr not found\n", __FUNCTION__, __LINE__,i));
+                continue;
+              }
+
+              if ( strncmp(formated_prefix,ValStr,strlen(formated_prefix)) == 0) //formated_prefix format xxxx:xxxx:xxxx:xxxx  dest.addr format prefix:yyyy:yyyy:yyyy:yyyy
+              {
+                CcspTraceInfo(("%s-%d: rule %d dest. addr prefix matched %s  %s\n", __FUNCTION__, __LINE__,i,formated_prefix,ValStr));
+                continue;
+              }else{
+                snprintf(Param, sizeof(Param), V6FILTERING_SERVICE_ENABLE, i); //disable rule
+                if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, Param, "FALSE", ccsp_boolean, TRUE ))//something wrong
+                {
+                    CcspTraceError(("%s-%d: rule %d failed to disable\n", __FUNCTION__, __LINE__,i));
+                    continue;
+                }
+                CcspTraceInfo(("%s-%d: rule %d successfully disabled\n", __FUNCTION__, __LINE__,i));
+              }
+          }else{ //outbound
+
+              CcspTraceInfo(("%s-%d: rule %d outbound\n", __FUNCTION__, __LINE__,i));
+              snprintf(Param, sizeof(Param), V6FILTERING_SRCADDR, i); //filter source address
+              if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, Param, ValStr)){//no entry,something wrong
+                CcspTraceError(("%s-%d: rule %d src. addr not found\n", __FUNCTION__, __LINE__,i));
+                continue;
+              }
+              if ( strncmp(formated_prefix,ValStr,strlen(formated_prefix)) == 0) //formated_prefix format xxxx:xxxx:xxxx:xxxx src.addr format prefix:yyyy:yyyy:yyyy:yyyy
+              {
+                CcspTraceInfo(("%s-%d: rule %d src. addr prefix matched\n", __FUNCTION__, __LINE__,i));
+                continue;
+              }else{
+                snprintf(Param, sizeof(Param), V6FILTERING_SERVICE_ENABLE, i); //disable rule
+                if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, Param, "FALSE", ccsp_boolean, TRUE ))//something wrong
+                {
+                    CcspTraceError(("%s-%d: rule %d failed to disable\n", __FUNCTION__, __LINE__,i));
+                    continue;
+                }
+                CcspTraceInfo(("%s-%d: rule %d successfully disabled\n", __FUNCTION__, __LINE__,i));
+              }
+          }
+       }
+    }else{
+       CcspTraceInfo(("%s-%d:, ServiceNumberOfEntries is 0!!\n", __FUNCTION__, __LINE__));
+       return;
+    }
 }
