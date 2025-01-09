@@ -2113,6 +2113,7 @@ int setUpLanPrefixIPv6(DML_VIRTUAL_IFACE* pVirtIf)
 #define V6FILTERING_SERVICE_ENABLE   "Device.Firewall.X_RDKCENTRAL-COM_Security.V6.IPFiltering.Service.%d.Enable"
 
 #define MAX_ENTRIES 100
+#define ALL_ADDRESS "::"
 
 static void  VerifyV6FilteringRules(char *prefix)
 {
@@ -2170,6 +2171,12 @@ static void  VerifyV6FilteringRules(char *prefix)
                 continue;
               }
 
+              if (strcmp(ValStr, ALL_ADDRESS) == 0)  // Check if destination address is present as ALL
+              {
+                  CcspTraceInfo(("%s-%d: rule %d destination address is ALL\n", __FUNCTION__, __LINE__, i));
+                  continue;
+              }
+
               if ( strncmp(formated_prefix,ValStr,strlen(formated_prefix)) == 0) //formated_prefix format xxxx:xxxx:xxxx:xxxx  dest.addr format prefix:yyyy:yyyy:yyyy:yyyy
               {
                 CcspTraceInfo(("%s-%d: rule %d dest. addr prefix matched %s  %s\n", __FUNCTION__, __LINE__,i,formated_prefix,ValStr));
@@ -2190,6 +2197,11 @@ static void  VerifyV6FilteringRules(char *prefix)
               if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, Param, ValStr)){//no entry,something wrong
                 CcspTraceError(("%s-%d: rule %d src. addr not found\n", __FUNCTION__, __LINE__,i));
                 continue;
+              }
+              if (strcmp(ValStr, ALL_ADDRESS) == 0)  // Check if source address is present as ALL
+              {
+                  CcspTraceInfo(("%s-%d: rule %d source address is ALL\n", __FUNCTION__, __LINE__, i));
+                  continue;
               }
               if ( strncmp(formated_prefix,ValStr,strlen(formated_prefix)) == 0) //formated_prefix format xxxx:xxxx:xxxx:xxxx src.addr format prefix:yyyy:yyyy:yyyy:yyyy
               {
