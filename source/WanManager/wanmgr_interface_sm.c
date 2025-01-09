@@ -507,6 +507,7 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
                     syslog_networklog("NETWORK", LOG_NOTICE, "%s ipv6 address is empty", p_VirtIf->Name);
                     /* stop the client so that WanMgr_MonitorDhcpApps function will start it when the client gracefully stops */
                     WanManager_StopDhcpv6Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE);
+                    p_VirtIf->IP.Dhcp6cPid = 0;
 #ifdef ENABLE_FEATURE_TELEMETRY2_0
                     char rferroripv6loss[64];
                     snprintf(rferroripv6loss, sizeof(rferroripv6loss), "RF_ERROR_%s_ipv6_loss", p_VirtIf->Name);
