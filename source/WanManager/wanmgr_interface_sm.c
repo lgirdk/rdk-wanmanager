@@ -1664,17 +1664,6 @@ static int wan_setUpIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         return RETURN_ERR;
     }
 
-    if (IsValidIpAddress(AF_INET6, p_VirtIf->IP.Ipv6Data.address))
-    {
-        snprintf(cmdStr, sizeof(cmdStr), "ip -6 addr add %s dev %s", p_VirtIf->IP.Ipv6Data.address, p_VirtIf->IP.Ipv6Data.ifname);
-        CcspTraceInfo(("%s %d - IP configuration = %s\n", __FUNCTION__, __LINE__, cmdStr));
-        WanManager_DoSystemAction("setupIPv6:", cmdStr);
-    }
-    else
-    {
-        CcspTraceInfo(("%s %d - Invalid IPv6 address (%s)\n", __FUNCTION__, __LINE__, p_VirtIf->IP.Ipv6Data.address));
-    }
-
 #ifdef _LG_OFW_
     /* ASSUMPTION: DSLite is only configured for the primary interface */
     /* Enable DSLite if the interface is in IPv6 Only mode, it's active with a
@@ -1798,17 +1787,9 @@ static int wan_tearDownIPv6(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     int ret = RETURN_OK;
     char buf[BUFLEN_32] = {0};
-    char cmdStr[64];
 
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
-
-    snprintf(cmdStr, sizeof(cmdStr), "ip -6 addr flush scope global dev %s", p_VirtIf->Name);
-    if (WanManager_DoSystemActionWithStatus("wan_tearDownIPv6: ip -6 addr flush scope global dev L3IfName", cmdStr) != 0)
-    {
-        CcspTraceError(("%s %d - failed to run cmd: %s", __FUNCTION__, __LINE__, cmdStr));
-        ret = RETURN_ERR;
-    }
 
 #ifdef _LG_OFW_
     /* ASSUMPTION: DSLite is only configured for the primary interface */
