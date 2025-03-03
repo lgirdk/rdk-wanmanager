@@ -231,34 +231,6 @@ ANSC_STATUS wanmgr_handle_dhcpv4_event_data(DML_VIRTUAL_IFACE* pVirtIf)
         // update current IPv4 data
         wanmgr_dchpv4_get_ipc_msg_info(&(pVirtIf->IP.Ipv4Data), pDhcpcInfo);
         pVirtIf->IP.Ipv4Data.leaseReceivedTime = up_time;
-
-        /* Assign the address to the inetrface when received. Remaining configurations are updated when activated from VISM*/
-        CcspTraceInfo(("%s %d -  Received Ipv4 lease for interface %s. Configuring address on interface\n", __FUNCTION__, __LINE__, pVirtIf->IP.Ipv4Data.ifname));
-        /** Setup IPv4: such as
-         * "ifconfig eth0 10.6.33.165 netmask 255.255.255.192 broadcast 10.6.33.191 up"
-         */
-        char cmdStr[BUFLEN_256] = {0};
-        char bCastStr[IP_ADDR_LENGTH] = {0};
-        if (WanManager_GetBCastFromIpSubnetMask(pVirtIf->IP.Ipv4Data.ip, pVirtIf->IP.Ipv4Data.mask, bCastStr) != RETURN_OK)
-        {
-            CcspTraceError((" %s %d - bad address %s/%s \n",__FUNCTION__,__LINE__, pVirtIf->IP.Ipv4Data.ip, pVirtIf->IP.Ipv4Data.mask));
-            return ANSC_STATUS_FAILURE;
-        }
-
-        snprintf(cmdStr, sizeof(cmdStr), "ifconfig %s %s netmask %s broadcast %s mtu %u",
-                pVirtIf->IP.Ipv4Data.ifname, pVirtIf->IP.Ipv4Data.ip, pVirtIf->IP.Ipv4Data.mask, bCastStr, pVirtIf->IP.Ipv4Data.mtuSize);
-        CcspTraceInfo(("%s %d -  IP configuration = %s \n", __FUNCTION__, __LINE__, cmdStr));
-        WanManager_DoSystemAction("setupIPv4:", cmdStr);
-
-        /** Need to manually add route if the connection is PPP connection*/
-        if (pVirtIf->PPP.Enable == TRUE)
-        {
-            if (WanManager_AddGatewayRoute(&pVirtIf->IP.Ipv4Data) != RETURN_OK)
-            {
-                CcspTraceError(("%s %d - Failed to set up system gateway", __FUNCTION__, __LINE__));
-            }
-        }
-
         WanManager_UpdateInterfaceStatus(pVirtIf, WANMGR_IFACE_CONNECTION_UP);
     }
     else if (pDhcpcInfo->isExpired)

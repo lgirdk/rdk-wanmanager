@@ -1298,6 +1298,31 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
          CcspTraceError(("%s %d - Could not store ipv4 data!", __FUNCTION__, __LINE__));
      }
 
+     /** Setup IPv4: such as
+      * "ifconfig eth0 10.6.33.165 netmask 255.255.255.192 broadcast 10.6.33.191 up"
+      */
+     char cmdStr[BUFLEN_256] = {0};
+     char bCastStr[IP_ADDR_LENGTH] = {0};
+     if (WanManager_GetBCastFromIpSubnetMask(pVirtIf->IP.Ipv4Data.ip, pVirtIf->IP.Ipv4Data.mask, bCastStr) != RETURN_OK)
+     {
+         CcspTraceError((" %s %d - bad address %s/%s \n", __FUNCTION__, __LINE__, pVirtIf->IP.Ipv4Data.ip, pVirtIf->IP.Ipv4Data.mask));
+         return RETURN_ERR;
+     }
+
+     snprintf(cmdStr, sizeof(cmdStr), "ifconfig %s %s netmask %s broadcast %s mtu %u",
+              pVirtIf->IP.Ipv4Data.ifname, pVirtIf->IP.Ipv4Data.ip, pVirtIf->IP.Ipv4Data.mask, bCastStr, pVirtIf->IP.Ipv4Data.mtuSize);
+     CcspTraceInfo(("%s %d -  IP configuration = %s \n", __FUNCTION__, __LINE__, cmdStr));
+     WanManager_DoSystemAction("setupIPv4:", cmdStr);
+
+     /** Need to manually add route if the connection is PPP connection*/
+     if (pVirtIf->PPP.Enable == TRUE)
+     {
+         if (WanManager_AddGatewayRoute(&pVirtIf->IP.Ipv4Data) != RETURN_OK)
+         {
+             CcspTraceError(("%s %d - Failed to set up system gateway", __FUNCTION__, __LINE__));
+         }
+     }
+
     /** configure DNS */
     if (RETURN_OK != wan_updateDNS(pWanIfaceCtrl, TRUE, (p_VirtIf->IP.Ipv6Status == WAN_IFACE_IPV6_STATE_UP)))
     {
@@ -1425,6 +1450,12 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
         {
             CcspTraceInfo(("%s %d -  IPv4 DNS servers unconfig successfully \n", __FUNCTION__, __LINE__));
         }   
+    }
+
+    if (wan_deconfigIPv4onInterface(pWanIfaceCtrl) != RETURN_OK)
+    {
+        CcspTraceError(("%s %d - Failed to deconfig IPv4 stack", __FUNCTION__, __LINE__));
+        ret = RETURN_ERR;
     }
 
     if (WanManager_DelDefaultGatewayRoute(DeviceNwMode, pWanIfaceCtrl->DeviceNwModeChanged, &p_VirtIf->IP.Ipv4Data) != RETURN_OK)
@@ -2428,7 +2459,6 @@ static eWanState_t wan_transition_ipv4_down(WanMgr_IfaceSM_Controller_t* pWanIfa
     }
 #endif
 
-    wan_deconfigIPv4onInterface(pWanIfaceCtrl); //delete IPv4 address from the interface
     if(p_VirtIf->Status == WAN_IFACE_STATUS_UP)
     {
         if (wan_tearDownIPv4(pWanIfaceCtrl) != RETURN_OK)
