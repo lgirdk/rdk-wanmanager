@@ -1832,6 +1832,9 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
 
     if (connected)
     {
+        char guAddr[IP_ADDR_LENGTH] = {0};
+        uint32_t prefixLen = 0;
+
         if ((strlen(Ipv6DataNew.address) > 0 && strcmp(Ipv6DataNew.address, pDhcp6cInfoCur->address)) ||
                 ((strlen(Ipv6DataNew.pdIfAddress) > 0) && (strcmp(Ipv6DataNew.pdIfAddress, pDhcp6cInfoCur->pdIfAddress))) ||
                 ((strlen(Ipv6DataNew.sitePrefix) > 0) && (strcmp(Ipv6DataNew.sitePrefix, pDhcp6cInfoCur->sitePrefix)))||
@@ -1849,6 +1852,11 @@ ANSC_STATUS wanmgr_handle_dhcpv6_event_data(DML_VIRTUAL_IFACE * pVirtIf)
 
             pVirtIf->IP.RestartConnectivityCheck = TRUE;
             CcspTraceInfo(("%s %d - RestartConnectivityCheck triggered. \n", __FUNCTION__, __LINE__));
+        }
+        else if (WanManager_getGloballyUniqueIfAddr6(pVirtIf->Name, guAddr, &prefixLen) != ANSC_STATUS_SUCCESS)
+        {
+            CcspTraceInfo(("IPv6 configuration is the same but global IPv6 not found for %s. Trigger network restart!\n", pVirtIf->Name));
+            pVirtIf->IP.Ipv6Changed = TRUE;
         }
         else
         {
