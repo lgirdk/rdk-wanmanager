@@ -29,6 +29,7 @@ libCcspWanManager_middle_layer_src_la_CPPFLAGS = -I$(top_srcdir)/source/TR-181/m
 libCcspWanManager_middle_layer_src_la_SOURCES = wanmgr_plugin_main.c wanmgr_plugin_main_apis.c wanmgr_dml_apis.c wanmgr_dml_iface_v2_apis.c wanmgr_dml_iface_apis.c wanmgr_rdkbus_utils.c wanmgr_rdkbus_apis.c wanmgr_dml_dhcpv4.c wanmgr_dml_dhcpv6.c
 libCcspWanManager_middle_layer_src_la_LDFLAGS = -lccsp_common -lsyscfg -lsysevent -lpthread
 
+libCcspWanManager_middle_layer_src_la_CFLAGS = -DRBUS_BUILD_FLAG_ENABLE
 libCcspWanManager_middle_layer_src_la_CPPFLAGS += -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rbus
 libCcspWanManager_middle_layer_src_la_SOURCES += wanmgr_rbus_handler_apis.c
 libCcspWanManager_middle_layer_src_la_LDFLAGS += -lrbus
