@@ -33,7 +33,6 @@ libCcspWanManager_middle_layer_src_la_SOURCES += wanmgr_ipoe_hc_dml.c
 endif
 libCcspWanManager_middle_layer_src_la_LDFLAGS = -lccsp_common -lsyscfg -lsysevent -lpthread
 
-libCcspWanManager_middle_layer_src_la_CFLAGS = -DRBUS_BUILD_FLAG_ENABLE
 libCcspWanManager_middle_layer_src_la_CPPFLAGS += -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rbus
 libCcspWanManager_middle_layer_src_la_SOURCES += wanmgr_rbus_handler_apis.c
 libCcspWanManager_middle_layer_src_la_LDFLAGS += -lrbus
