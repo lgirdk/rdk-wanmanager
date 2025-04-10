@@ -22,6 +22,7 @@
 #include <syscfg/syscfg.h>
 
 #include "wanmgr_sysevents.h"
+#include "wanmgr_utils.h"
 #include "wanmgr_rdkbus_utils.h"
 #include "wanmgr_ipc.h"
 #include "secure_wrapper.h"
@@ -1239,21 +1240,21 @@ void WanMgr_Configure_accept_ra(DML_VIRTUAL_IFACE * pVirtIf, BOOL EnableRa)
 
     CcspTraceInfo(("%s %d %s accept_ra for interface %s\n", __FUNCTION__, __LINE__,EnableRa?"Enabling":"Disabling", pVirtIf->Name));
     //Enable accept_ra to allow receiving RA all the time. This funtion  only blocks learning defult route from RA.
-    v_secure_system("sysctl -w net.ipv6.conf.%s.accept_ra=2",pVirtIf->Name);
-    v_secure_system("sysctl -w net.ipv6.conf.%s.accept_ra_pinfo=0",pVirtIf->Name);
+    sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra", pVirtIf->Name, "2");
+    sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_pinfo", pVirtIf->Name, "0");
     if(EnableRa)
     {
-        v_secure_system("sysctl -w net.ipv6.conf.%s.router_solicitations=3",pVirtIf->Name);
-        v_secure_system("sysctl -w net.ipv6.conf.%s.forwarding=1",pVirtIf->Name);
-        v_secure_system("sysctl -w net.ipv6.conf.%s.accept_ra_defrtr=1",pVirtIf->Name); //Learn defult route from the RA.
-        v_secure_system("sysctl -w net.ipv6.conf.all.forwarding=1");
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/router_solicitations", pVirtIf->Name, "3");
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/forwarding", pVirtIf->Name, "1");
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_defrtr", pVirtIf->Name, "1"); //Learn defult route from the RA.
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/all/forwarding", NULL, "1");
         CcspTraceInfo(("%s %d Enabling forwarding for interface %s\n", __FUNCTION__, __LINE__,pVirtIf->Name));
     }
     else
     {
         //Only accept_ra_defrtr set to false to block setting default route.
-        v_secure_system("sysctl -w net.ipv6.conf.%s.router_solicitations=0",pVirtIf->Name);
-        v_secure_system("sysctl -w net.ipv6.conf.%s.accept_ra_defrtr=0",pVirtIf->Name); 
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/router_solicitations", pVirtIf->Name, "0");
+        sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_defrtr", pVirtIf->Name, "0");
     }
 }
 

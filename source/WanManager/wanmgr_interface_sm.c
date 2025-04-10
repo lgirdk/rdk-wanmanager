@@ -1215,7 +1215,7 @@ static int wan_setUpIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
 
     //Enabling IP forwarding 
     CcspTraceInfo(("%s %d - net.ipv4.ip_forward set to 1 \n", __FUNCTION__, __LINE__));
-    v_secure_system("sysctl -w net.ipv4.ip_forward=1");
+    sysctl_iface_set("/proc/sys/net/ipv4/ip_forward", NULL, "1");
 
     if (strstr(pInterface->BaseInterface, "Ethernet"))
     {
@@ -2784,7 +2784,7 @@ static eWanState_t wan_transition_mapt_up(WanMgr_IfaceSM_Controller_t* pWanIface
 
     //Enabling IP forwarding 
     CcspTraceInfo(("%s %d - net.ipv4.ip_forward set to 1 \n", __FUNCTION__, __LINE__));
-    v_secure_system("sysctl -w net.ipv4.ip_forward=1");
+    sysctl_iface_set("/proc/sys/net/ipv4/ip_forward", NULL, "1");
 
     /* Configure MAPT. */
     if (WanManager_ProcessMAPTConfiguration(&(p_VirtIf->MAP.dhcp6cMAPTparameters), &(p_VirtIf->MAP.MaptConfig), pInterface->Name, p_VirtIf->IP.Ipv6Data.ifname) != RETURN_OK)

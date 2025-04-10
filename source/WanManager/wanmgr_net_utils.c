@@ -24,6 +24,7 @@
 #include <time.h>
 #include <sysevent/sysevent.h>
 #include "wanmgr_sysevents.h"
+#include "wanmgr_utils.h"
 #include "wanmgr_net_utils.h"
 #include "wanmgr_rdkbus_utils.h"
 #include "wanmgr_dhcpv4_apis.h"
@@ -1146,13 +1147,13 @@ int WanManager_ProcessMAPTConfiguration(ipc_mapt_data_t *dhcp6cMAPTMsgBody, WANM
 #if defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)
     // This is a configuration specific for Comcast. Sky devices has nf_conntrack_udp_timeout_stream set to 300 seconds.
     CcspTraceInfo(("%s %d :Setting nf_conntrack_udp_timeout to 30 seconds for MAPT! \n", __FUNCTION__, __LINE__));
-    if ( v_secure_system("sysctl -w net.netfilter.nf_conntrack_udp_timeout=30") )
+    if (sysctl_iface_set("/proc/sys/net/netfilter/nf_conntrack_udp_timeout", NULL, "30") != 0)
     {
         CcspTraceError(("%s %d : Failed to set nf_conntrack_udp_timeout! \n", __FUNCTION__, __LINE__));
     }
 
     CcspTraceInfo(("%s %d :Setting nf_conntrack_udp_timeout_stream to 120 seconds for MAPT! \n", __FUNCTION__, __LINE__));
-    if ( v_secure_system("sysctl -w net.netfilter.nf_conntrack_udp_timeout_stream=120") )
+    if (sysctl_iface_set("/proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream", NULL, "120") != 0)
     {
         CcspTraceError(("%s %d : Failed to set nf_conntrack_udp_timeout_stream! \n", __FUNCTION__, __LINE__));
     }
