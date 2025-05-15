@@ -325,12 +325,13 @@ ANSC_STATUS Wan_ForceRenewVlan(char *ifName)
 
 ANSC_STATUS Wan_ForceRenewDhcpIPv6(char *ifName)
 {
+
     /*send triggered renew request to DHCPv6C*/
     WanManager_StopDhcpv6Client(ifName, STOP_DHCP_WITH_RELEASE /* fixme: is this correct? */ );
     WanMgr_SetInterfaceStatus(ifName, WANMGR_IFACE_CONNECTION_IPV6_DOWN);
     CcspTraceInfo(("Dhcpv6 client has been killed. Restart it \n"));
     sleep(1);
-    WanManager_StartDhcpv6Client(ifName,WAN_IFACE_TYPE_PRIMARY);
+    WanManager_StartDhcpv6Client(ifName);
 
     return  ANSC_STATUS_SUCCESS; 
 }
@@ -449,15 +450,23 @@ ANSC_STATUS WanMgr_SendMsgToIHC (ipoe_msg_type_t msgType, char *ifName)
     {
         // V6 UP Message needs Wan V6 IP
         char* pattern = NULL;
-        char ipv6_address[INET6_ADDRSTRLEN] = {0};
+        char ipv6_prefix[INET6_ADDRSTRLEN] = {0};
 
-        syscfg_get(NULL, SYSCFG_FIELD_IPV6_ADDRESS, ipv6_address, sizeof(ipv6_address));
-        if( *ipv6_address == '\0'|| (0 == strncmp(ipv6_address, "(null)", strlen("(null)"))))
+        sysevent_get(sysevent_fd, sysevent_token, SYSCFG_FIELD_IPV6_PREFIX, ipv6_prefix, sizeof(ipv6_prefix));
+        if(ipv6_prefix == NULL  || *ipv6_prefix == '\0'|| (0 == strncmp(ipv6_prefix, "(null)", strlen("(null)"))))
         {
-            CcspTraceError(("[%s-%d] Unable to get ipv6_address..\n",  __FUNCTION__, __LINE__));
+            CcspTraceError(("[%s-%d] Unable to get ipv6_prefix..\n",  __FUNCTION__, __LINE__));
             return ANSC_STATUS_FAILURE;
         }
-        strncpy(msgBody.ipv6Address, ipv6_address, sizeof(ipv6_address));
+
+        pattern = strstr(ipv6_prefix, "/");
+        if (pattern == NULL)
+        {
+            CcspTraceError(("[%s-%d] Invalid ipv6_prefix :%s\n", __FUNCTION__, __LINE__, ipv6_prefix));
+            return ANSC_STATUS_FAILURE;
+        }
+        sprintf(pattern, "%c%c", '1', '\0'); //Form the global address with ::1
+        strncpy(msgBody.ipv6Address, ipv6_prefix, sizeof(ipv6_prefix));
 
         if( 0 == syscfg_get( NULL, "ntp_server1", domainName, sizeof(domainName)) )
         {

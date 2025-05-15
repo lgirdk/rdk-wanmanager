@@ -1422,6 +1422,27 @@ static void EnableIPOE(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, DML_WAN_IFACE
 }
 #endif
 
+static int checkIpv6AddressAssignedToBridge(char *IfaceName)
+{
+    char lanPrefix[BUFLEN_128] = {0};
+    int ret = RETURN_ERR;
+
+#if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) &&  !defined(FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE)//TODO: V6 handled in PAM
+    CcspTraceWarning(("%s %d Ipv6 handled in PAM. No need to check here.  \n",__FUNCTION__, __LINE__));
+    return RETURN_OK;
+#endif
+    sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_GLOBAL_IPV6_PREFIX_SET, lanPrefix, sizeof(lanPrefix));
+
+    if(route_flag == 0)
+    {
+        //If the default route is not present, Send a router solicit.
+        WanManager_send_and_receive_rs(p_VirtIf);
+        return -1;
+    }
+
+    return 0;
+}
+
 static void updateInterfaceToVoiceManager(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, bool voip_started)
 {
     ANSC_STATUS retStatus        = ANSC_STATUS_FAILURE;
