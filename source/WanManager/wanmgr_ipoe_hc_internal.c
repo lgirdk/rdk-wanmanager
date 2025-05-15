@@ -46,7 +46,6 @@ ANSC_STATUS WanMgr_IPOE_HC_Initialize ( ANSC_HANDLE hThisObject )
     DmlIPoEGetIPRegularInterval(&pMyObject->IPRegularInterval);
     DmlIPoEGetRetryLimit(&pMyObject->RetryLimit);
     DmlIPoEGetRetryInterval(&pMyObject->RetryInterval); 
-    pMyObject->CfgChanged = FALSE;
 
     return ANSC_STATUS_SUCCESS;
 }
