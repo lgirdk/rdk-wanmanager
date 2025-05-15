@@ -53,8 +53,6 @@
 #define IPOE_HEALTH_CHECK_V4_STATUS "ipoe_health_check_ipv4_status"
 #define IPOE_HEALTH_CHECK_V6_STATUS "ipoe_health_check_ipv6_status"
 #define IPOE_STATUS_FAILED "failed"
-#define MGMT_INTF "mg0"
-#define VOIP_INTF "voip0"
 #endif
 
 #define POSTD_START_FILE "/tmp/.postd_started"
@@ -320,21 +318,6 @@ static int wan_tearDownMapt()
     }
 
     return ret;
-}
-#endif
-
-#ifdef FEATURE_IPOE_HEALTH_CHECK
-int check_multivlan_enabled (void)
-{
-    char wanmg_enable[12];
-
-    if (syscfg_get(NULL, "management_wan_enabled", wanmg_enable, sizeof(wanmg_enable)) != 0)
-    {
-        CcspTraceError(("%s %d: failed to get management_wan_enabled from syscfg \n", __FUNCTION__, __LINE__));
-        return -1;
-    }
-
-    return atoi(wanmg_enable);
 }
 #endif
 
@@ -1375,72 +1358,6 @@ static int checkIpv6LanAddressIsReadyToUse(DML_VIRTUAL_IFACE* p_VirtIf)
 
     return 0;
 }
-#ifdef FEATURE_IPOE_HEALTH_CHECK
-static void EnableIPOE(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, DML_WAN_IFACE* pInterface)
-{
-    UINT IhcPid = 0;
-    UINT Ihc_mg0_pid = 0;
-    UINT Ihc_voip0_pid = 0;
-    int IsMultiVlanEnabled = check_multivlan_enabled();
-
-    if (IsMultiVlanEnabled == 1)
-    {
-        Ihc_mg0_pid = WanManager_StartIpoeHealthCheckService(MGMT_INTF);
-        if (Ihc_mg0_pid > 0)
-        {
-            pWanIfaceCtrl->Ihc_mg0_pid = Ihc_mg0_pid;
-            CcspTraceInfo(("%s %d - Starting IPoE Health Check pid - %u for interface mg0  \n", __FUNCTION__, __LINE__, pWanIfaceCtrl->Ihc_mg0_pid));
-        }
-        else
-        {
-            CcspTraceError(("%s %d - Failed to start IPoE Health Check for interface mg0 \n", __FUNCTION__, __LINE__));
-        }
-
-        Ihc_voip0_pid = WanManager_StartIpoeHealthCheckService(VOIP_INTF);
-        if (Ihc_mg0_pid > 0)
-        {
-            pWanIfaceCtrl->Ihc_voip0_pid = Ihc_voip0_pid;
-            CcspTraceInfo(("%s %d - Starting IPoE Health Check pid - %u for interface voip0 \n", __FUNCTION__, __LINE__, pWanIfaceCtrl->Ihc_voip0_pid));
-        }
-        else
-        {
-            CcspTraceError(("%s %d - Failed to start IPoE Health Check for interface voip0 \n", __FUNCTION__, __LINE__));
-        }
-     }
-
-     IhcPid = WanManager_StartIpoeHealthCheckService(pInterface->Name);
-     if (IhcPid > 0)
-     {
-         pWanIfaceCtrl->IhcPid = IhcPid;
-         CcspTraceInfo(("%s %d - Starting IPoE Health Check pid - %u for interface %s \n", __FUNCTION__, __LINE__, pWanIfaceCtrl->IhcPid, pInterface->Name));
-     }
-     else
-     {
-         CcspTraceError(("%s %d - Failed to start IPoE Health Check for interface %s \n", __FUNCTION__, __LINE__, pInterface->Name));
-     }
-}
-#endif
-
-static int checkIpv6AddressAssignedToBridge(char *IfaceName)
-{
-    char lanPrefix[BUFLEN_128] = {0};
-    int ret = RETURN_ERR;
-
-#if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_)) &&  !defined(FEATURE_RDKB_CONFIGURABLE_WAN_INTERFACE)//TODO: V6 handled in PAM
-    CcspTraceWarning(("%s %d Ipv6 handled in PAM. No need to check here.  \n",__FUNCTION__, __LINE__));
-    return RETURN_OK;
-#endif
-    sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_GLOBAL_IPV6_PREFIX_SET, lanPrefix, sizeof(lanPrefix));
-
-    if(route_flag == 0)
-    {
-        //If the default route is not present, Send a router solicit.
-        WanManager_send_and_receive_rs(p_VirtIf);
-        return -1;
-    }
-
-    return 0;
-}
 
 static void updateInterfaceToVoiceManager(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, bool voip_started)
 {
@@ -2129,8 +2046,6 @@ static ANSC_STATUS WanMgr_IfaceSM_IHC_Init(WanMgr_IfaceSM_Controller_t* pWanIfac
         CcspTraceError(("%s %d - Invalid args\n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
     }
-    pWanIfaceCtrl->Ihc_mg0_pid = 0;
-    pWanIfaceCtrl->Ihc_voip0_pid = 0;
     pWanIfaceCtrl->IhcPid = 0;
     pWanIfaceCtrl->IhcV4Status = IHC_STOPPED;
     pWanIfaceCtrl->IhcV6Status = IHC_STOPPED;
@@ -2144,28 +2059,7 @@ static ANSC_STATUS WanManager_StopIHC(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl
         CcspTraceError(("%s %d - invalid args \n", __FUNCTION__, __LINE__));
         return ANSC_STATUS_FAILURE;
     }
-
-    if (check_multivlan_enabled() == 1)
-    {
-        // Case of multivlan try to stop all ipoe instances running
-        if (pWanIfaceCtrl->Ihc_mg0_pid > 0)
-        {
-             if (WanManager_StopIpoeHealthCheckService(pWanIfaceCtrl->Ihc_mg0_pid) == ANSC_STATUS_FAILURE)
-             {
-                  CcspTraceError(("%s %d - Failed to kill IHC process interface mg0 \n", __FUNCTION__, __LINE__));
-                  return ANSC_STATUS_FAILURE;
-             }
-        }
-        if (pWanIfaceCtrl->Ihc_voip0_pid > 0)
-        {
-            if (WanManager_StopIpoeHealthCheckService(pWanIfaceCtrl->Ihc_voip0_pid) == ANSC_STATUS_FAILURE)
-            {
-                CcspTraceError(("%s %d - Failed to kill IHC process interface voip0  \n", __FUNCTION__, __LINE__));
-                return ANSC_STATUS_FAILURE;
-            }
-        }
-    }
-
+    DML_WAN_IFACE* pInterface = pWanIfaceCtrl->pIfaceData;
     CcspTraceInfo(("[%s:%d] Stopping IHC App\n", __FUNCTION__, __LINE__));
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
     if (WanManager_StopIpoeHealthCheckService(pWanIfaceCtrl->IhcPid) == ANSC_STATUS_FAILURE)
@@ -3985,39 +3879,6 @@ static eWanState_t wan_state_ipv4_leased(WanMgr_IfaceSM_Controller_t* pWanIfaceC
 
     DML_WAN_IFACE* pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
-#ifdef FEATURE_IPOE_HEALTH_CHECK
-    if ((p_VirtIf->EnableIPoE == TRUE) && (p_VirtIf->PPP.Enable == FALSE))
-    {
-        // IHC is enabled
-        if ( pWanIfaceCtrl->IhcPid <= 0 )
-        {
-            // IHC enabled but not running, So Starting IHC
-            UINT IhcPid = 0;
-            IhcPid = WanManager_StartIpoeHealthCheckService(p_VirtIf->Name);
-            if (IhcPid > 0)
-            {
-                pWanIfaceCtrl->IhcPid = IhcPid;
-                CcspTraceInfo(("%s %d - Starting IPoE Health Check pid - %u for interface %s \n", 
-                                __FUNCTION__, __LINE__, pWanIfaceCtrl->IhcPid, p_VirtIf->Name));
-            }
-            else
-            {
-                CcspTraceError(("%s %d - Failed to start IPoE Health Check for interface %s \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
-            }
-        }
-        if ( (pWanIfaceCtrl->IhcPid > 0) && (pWanIfaceCtrl->IhcV4Status == IHC_STOPPED) )
-        {
-            // sending v4 UP event to IHC, IHC will starts to send BFD v4 packets to BNG
-            WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_UP, p_VirtIf->Name);
-            pWanIfaceCtrl->IhcV4Status = IHC_STARTED;
-        }
-    }
-    else if (pWanIfaceCtrl->IhcPid > 0)
-    {
-        // IHC is disabled, but is still running, so stop it
-        WanManager_StopIHC(pWanIfaceCtrl);
-    }
-#endif // FEATURE_IPOE_HEALTH_CHECK
 
     //Start dhcpv6 client if Ip mode changed runtime
     if(p_VirtIf->IP.RefreshDHCP == TRUE &&
@@ -4126,39 +3987,6 @@ static eWanState_t wan_state_ipv6_leased(WanMgr_IfaceSM_Controller_t* pWanIfaceC
 
     DML_WAN_IFACE* pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
-#ifdef FEATURE_IPOE_HEALTH_CHECK
-    if ((p_VirtIf->EnableIPoE == TRUE) && (p_VirtIf->PPP.Enable == FALSE))
-    {
-        // IHC is enabled
-        if ( pWanIfaceCtrl->IhcPid <= 0 )
-        {
-            // IHC enabled but not running, So Starting IHC
-            UINT IhcPid = 0;
-            IhcPid = WanManager_StartIpoeHealthCheckService(p_VirtIf->Name);
-            if (IhcPid > 0)
-            {
-                pWanIfaceCtrl->IhcPid = IhcPid;
-                CcspTraceInfo(("%s %d - Starting IPoE Health Check pid - %u for interface %s \n", 
-                                __FUNCTION__, __LINE__, pWanIfaceCtrl->IhcPid, p_VirtIf->Name));
-            }
-            else
-            {
-                CcspTraceError(("%s %d - Failed to start IPoE Health Check for interface %s \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
-            }
-        }
-        if ((pWanIfaceCtrl->IhcPid > 0) && (pWanIfaceCtrl->IhcV6Status == IHC_STOPPED))
-        {
-            // sending v6 UP event to IHC, IHC starts to send BFD v6 packts to BNG
-            WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_IPV6_UP, p_VirtIf->Name);
-            pWanIfaceCtrl->IhcV6Status = IHC_STARTED;
-        }
-    }
-    else if (pWanIfaceCtrl->IhcPid > 0)
-    {
-        // IHC is disabled, but is still running, so stop it
-        WanManager_StopIHC(pWanIfaceCtrl);
-    }
-#endif 
 
     //Start dhcpv4 client if Ip mode changed runtime
     if(p_VirtIf->IP.RefreshDHCP == TRUE && 
@@ -4283,46 +4111,6 @@ static eWanState_t wan_state_dual_stack_active(WanMgr_IfaceSM_Controller_t* pWan
 
     DML_WAN_IFACE* pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
-
-#ifdef FEATURE_IPOE_HEALTH_CHECK
-    if ((p_VirtIf->EnableIPoE == TRUE) && (p_VirtIf->PPP.Enable == FALSE))
-    {
-        // IHC is enabled
-        if (pWanIfaceCtrl->IhcPid <= 0)
-        {
-            // IHC enabled but not running, So Starting IHC
-            UINT IhcPid = 0;
-            IhcPid = WanManager_StartIpoeHealthCheckService(p_VirtIf->Name);
-            if (IhcPid > 0)
-            {
-                pWanIfaceCtrl->IhcPid = IhcPid;
-                CcspTraceInfo(("%s %d - Starting IPoE Health Check pid - %u for interface %s \n", 
-                                __FUNCTION__, __LINE__, pWanIfaceCtrl->IhcPid, p_VirtIf->Name));
-            }
-            else
-            {
-                CcspTraceError(("%s %d - Failed to start IPoE Health Check for interface %s \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
-            }
-        }
-        if ((pWanIfaceCtrl->IhcPid > 0) && (pWanIfaceCtrl->IhcV4Status == IHC_STOPPED))
-        {
-            // sending v4 UP event to IHC, IHC starts to send BFD v4 packts to BNG
-            WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_UP, p_VirtIf->Name);
-            pWanIfaceCtrl->IhcV4Status = IHC_STARTED;
-        }
-        if ((pWanIfaceCtrl->IhcPid > 0) && (pWanIfaceCtrl->IhcV6Status == IHC_STOPPED))
-        {
-            // sending v6 UP event to IHC, IHC starts to send BFD v6 packts to BNG
-            WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_IPV6_UP, p_VirtIf->Name);
-            pWanIfaceCtrl->IhcV6Status = IHC_STARTED;
-        }
-    }
-    else if (pWanIfaceCtrl->IhcPid > 0)
-    {
-        // IHC Disbled but running, So Stoping IHC
-        WanManager_StopIHC(pWanIfaceCtrl);
-    }
-#endif
 
     if (pWanIfaceCtrl->WanEnable == FALSE ||
         pInterface->Selection.Enable == FALSE ||
