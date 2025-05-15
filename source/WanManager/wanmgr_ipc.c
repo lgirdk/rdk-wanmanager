@@ -26,6 +26,11 @@
 #include "wanmgr_sysevents.h"
 #include "wanmgr_dhcpv4_apis.h"
 
+#ifdef FEATURE_IPOE_HEALTH_CHECK
+#include "wanmgr_ipoe_hc_apis.h"
+#define MAX_ALLOWED_FORCED_RENEW 5
+#endif
+
 #define WANMGR_MAX_IPC_PROCCESS_TRY             5
 #define WANMGR_IPC_PROCCESS_TRY_WAIT_TIME       100000 //us
 
@@ -158,6 +163,18 @@ ANSC_STATUS WanMgr_SetInterfaceStatus(char *ifName, wanmgr_iface_status_t state)
 }
 
 #ifdef FEATURE_IPOE_HEALTH_CHECK
+ANSC_STATUS Wan_restart_ipoe_hc (void)
+{
+     if (DmlIPoESetEnable(false) == ANSC_STATUS_FAILURE)
+           return ANSC_STATUS_FAILURE;
+
+     sleep(1);
+
+     if (DmlIPoESetEnable(true) == ANSC_STATUS_FAILURE)
+           return ANSC_STATUS_FAILURE;
+
+     return ANSC_STATUS_SUCCESS;
+}
 
 static ANSC_STATUS WanMgr_IpcNewIhcMsg(ipc_ihc_data_t *pIhcMsg)
 {
@@ -184,6 +201,15 @@ static ANSC_STATUS WanMgr_IpcNewIhcMsg(ipc_ihc_data_t *pIhcMsg)
             if (Wan_ForceRenewDhcpIPv4(pIhcMsg->ifName) != ANSC_STATUS_SUCCESS)
             {
                 CcspTraceError(("[%s-%d] Failed to process IPoE v6 Echo Renew Event \n", __FUNCTION__, __LINE__));
+                return ANSC_STATUS_FAILURE;
+            }
+            break;
+        case IPOE_MSG_IHC_RESTART_DUO_BINDING_ERROR:
+            CcspTraceInfo(("[%s-%d] Received IPOE_MSG_IHC_RESTART_DUO_BINDING_ERROR from IHC for intf: %s \n", __FUNCTION__, __LINE__, pIhcMsg->ifName));
+            ANSC_STATUS err = Wan_restart_ipoe_hc();
+            if (err != ANSC_STATUS_SUCCESS)
+            {
+                CcspTraceError(("[%s-%d] Failed to restart all interfaces \n", __FUNCTION__, __LINE__));
                 return ANSC_STATUS_FAILURE;
             }
             break;
@@ -246,15 +272,11 @@ static ANSC_STATUS Wan_ForceRenewDhcpIPv4(char *ifName)
 ANSC_STATUS Wan_ForceRenewDhcpIPv6(char *ifName)
 {
 
-    /*send triggered renew request to DHCPv6C*/
-    int pid = util_getPidByName(DHCPV6_CLIENT_NAME, ifName);
-    if (pid > 0 )
-    {
-        CcspTraceInfo(("sending SIGUSR2 to dhcp6c, this will let the dhcp6c to send renew packet out \n"));
-        util_signalProcess(pid, SIGUSR2);
-    }
+    CcspTraceInfo(("%s %d - Forcing DHCPv6 renew by stopping client on interface: %s\n", __FUNCTION__, __LINE__, ifName));
+    // Stop the DHCPv6 client with a RELEASE so that MonitorDhcpApps can restart it.
+    WanManager_StopDhcpv6Client(ifName, STOP_DHCP_WITH_RELEASE);
 
-    return  ANSC_STATUS_SUCCESS; 
+    return ANSC_STATUS_SUCCESS;
 }
 
 static void* IpcServerThread( void *arg )
@@ -357,7 +379,7 @@ static void WanMgr_RemoveSingleQuote(char *buf)
     return 0;
 }
 
-ANSC_STATUS WanMgr_SendMsgToIHC (ipoe_msg_type_t msgType, char *ifName)
+ANSC_STATUS WanMgr_SendMsgToIHC(ipoe_msg_type_t msgType, char *ifName)
 {
     int sock = -1;
     int conn = -1;
@@ -369,64 +391,64 @@ ANSC_STATUS WanMgr_SendMsgToIHC (ipoe_msg_type_t msgType, char *ifName)
 
     if (msgType == IPOE_MSG_WAN_CONNECTION_IPV6_UP)
     {
-        // V6 UP Message needs Wan V6 IP
-        char* pattern = NULL;
-        char ipv6_prefix[INET6_ADDRSTRLEN] = {0};
+        char ipv6_address[INET6_ADDRSTRLEN] = {0};
+        char sysevent_param_name[BUFLEN_64] = {0};
 
-        sysevent_get(sysevent_fd, sysevent_token, SYSCFG_FIELD_IPV6_PREFIX, ipv6_prefix, sizeof(ipv6_prefix));
-        if(ipv6_prefix == NULL  || *ipv6_prefix == '\0'|| (0 == strncmp(ipv6_prefix, "(null)", strlen("(null)"))))
+        snprintf(sysevent_param_name, sizeof(sysevent_param_name), "ipv6_%s_ipaddr", ifName);
+        sysevent_get(sysevent_fd, sysevent_token, sysevent_param_name, ipv6_address, sizeof(ipv6_address));
+
+        if (ipv6_address == NULL || *ipv6_address == '\0' || (0 == strncmp(ipv6_address, "(null)", strlen("(null)"))))
         {
-            CcspTraceError(("[%s-%d] Unable to get ipv6_prefix..\n",  __FUNCTION__, __LINE__));
+            CcspTraceError(("[%s-%d] [%s] Unable to get ipv6_address..\n", __FUNCTION__, __LINE__, ifName));
             return ANSC_STATUS_FAILURE;
         }
 
-        pattern = strstr(ipv6_prefix, "/");
-        if (pattern == NULL)
-        {
-            CcspTraceError(("[%s-%d] Invalid ipv6_prefix :%s\n", __FUNCTION__, __LINE__, ipv6_prefix));
-            return ANSC_STATUS_FAILURE;
-        }
-        sprintf(pattern, "%c%c", '1', '\0'); //Form the global address with ::1
-        strncpy(msgBody.ipv6Address, ipv6_prefix, sizeof(ipv6_prefix));
+        strncpy(msgBody.ipv6Address, ipv6_address, sizeof(msgBody.ipv6Address));
 
-        if( 0 == syscfg_get( NULL, "ntp_server1", domainName, sizeof(domainName)) )
+        sysevent_get(sysevent_fd, sysevent_token, "dhcp_domain", domainName, sizeof(domainName));
+        if (domainName != NULL || *domainName != '\0' && (0 != strncmp(domainName, "(null)", strlen("(null)"))))
         {
             WanMgr_RemoveSingleQuote(domainName);
             snprintf(msgBody.domainName, sizeof(msgBody.domainName), "%s", domainName);
         }
         else
         {
-            CcspTraceError(("[%s-%d] syscfg_get ntp_server1 failed\n", __FUNCTION__, __LINE__));
+            CcspTraceError(("[%s-%d] sysevent_get dhcp_domain failed\n", __FUNCTION__, __LINE__));
         }
 
-        CcspTraceInfo(("[%s-%d] Sending IPOE_MSG_WAN_CONNECTION_IPV6_UP msg with addr :%s and domainName: [%s] \n", __FUNCTION__, __LINE__, msgBody.ipv6Address, msgBody.domainName));
+        CcspTraceInfo(("[%s-%d] [%s] Sending IPOE_MSG_WAN_CONNECTION_IPV6_UP msg with addr: %s and domainName: [%s] \n", __FUNCTION__, __LINE__, ifName, msgBody.ipv6Address, msgBody.domainName));
     }
     else if (msgType == IPOE_MSG_WAN_CONNECTION_UP)
     {
         char ipv4_wan_address[IP_ADDR_LENGTH] = {0};
         char sysevent_param_name[BUFLEN_64] = {0};
+
         snprintf(sysevent_param_name, sizeof(sysevent_param_name), SYSEVENT_IPV4_IP_ADDRESS, ifName);
         sysevent_get(sysevent_fd, sysevent_token, sysevent_param_name, ipv4_wan_address, sizeof(ipv4_wan_address));
-        if(ipv4_wan_address == NULL  || *ipv4_wan_address == '\0'|| (0 == strncmp(ipv4_wan_address, "(null)", strlen("(null)"))))
+
+        if (ipv4_wan_address == NULL || *ipv4_wan_address == '\0' || (0 == strncmp(ipv4_wan_address, "(null)", strlen("(null)"))))
         {
-            CcspTraceError(("[%s-%d] Unable to get ipv4_erouter0_ipaddr..\n",  __FUNCTION__, __LINE__));
+            CcspTraceError(("[%s-%d] [%s] Unable to get ipv4_address..\n", __FUNCTION__, __LINE__, ifName));
             return ANSC_STATUS_FAILURE;
         }
-        strncpy(msgBody.ipv4Address, ipv4_wan_address, sizeof(ipv4_wan_address));
 
-        if( 0 == syscfg_get( NULL, "ntp_server1", domainName, sizeof(domainName)) )
+        strncpy(msgBody.ipv4Address, ipv4_wan_address, sizeof(msgBody.ipv4Address));
+
+        sysevent_get(sysevent_fd, sysevent_token, "dhcp_domain", domainName, sizeof(domainName));
+        if (domainName != NULL || *domainName != '\0' && (0 != strncmp(domainName, "(null)", strlen("(null)"))))
         {
             WanMgr_RemoveSingleQuote(domainName);
             snprintf(msgBody.domainName, sizeof(msgBody.domainName), "%s", domainName);
         }
         else
         {
-            CcspTraceError(("[%s-%d] syscfg_get ntp_server1 failed\n", __FUNCTION__, __LINE__));
+            CcspTraceError(("[%s-%d] sysevent_get dhcp_domain failed\n", __FUNCTION__, __LINE__));
         }
 
-        CcspTraceInfo(("[%s-%d] Sending IPOE_MSG_WAN_CONNECTION_UP msg with addr :%s and domainName: [%s] \n", __FUNCTION__, __LINE__, msgBody.ipv4Address, msgBody.domainName));
+        CcspTraceInfo(("[%s-%d] [%s] Sending IPOE_MSG_WAN_CONNECTION_UP msg with addr: %s and domainName: [%s] \n", __FUNCTION__, __LINE__, ifName, msgBody.ipv4Address, msgBody.domainName));
     }
-    strncpy(msgBody.ifName, ifName, IFNAME_LENGTH-1);
+
+    strncpy(msgBody.ifName, ifName, IFNAME_LENGTH - 1);
 
     CcspTraceInfo(("[%s-%d] Sending msg = %d for interface %s  \n", __FUNCTION__, __LINE__, msgType, ifName));
 
@@ -434,34 +456,41 @@ ANSC_STATUS WanMgr_SendMsgToIHC (ipoe_msg_type_t msgType, char *ifName)
     int msgSize = sizeof(ipc_ihc_data_t);
     int socket_timeout_ms = DEFAULT_IPC_SOCKET_TIMEOUT;
 
+    const char *socketAddr = IHC_IPC_ADDR; // default for erouter0
+    if (strcmp(ifName, "mg0") == 0)
+        socketAddr = IHC_IPC_ADDR_MG0;
+    else if (strcmp(ifName, "voip0") == 0)
+        socketAddr = IHC_IPC_ADDR_VOIP;
+
     sock = nn_socket(AF_SP, NN_PUSH);
     if (sock < 0)
     {
-        CcspTraceError(("[%s-%d] nn_socket failed\n"));
+        CcspTraceError(("[%s-%d] [%s] nn_socket failed\n", __FUNCTION__, __LINE__, ifName));
         return ANSC_STATUS_FAILURE;
     }
-        
-    CcspTraceInfo(("[%s %d]  Setting NN_SNDTIMEO, NN_RCVTIMEO to %d ms \n", __FUNCTION__, __LINE__, socket_timeout_ms));
+
+    CcspTraceInfo(("[%s %d] [%s] Setting NN_SNDTIMEO, NN_RCVTIMEO to %d ms \n", __FUNCTION__, __LINE__, ifName, socket_timeout_ms));
     nn_setsockopt(sock, NN_SOL_SOCKET, NN_SNDTIMEO, &socket_timeout_ms, sizeof(int));
     nn_setsockopt(sock, NN_SOL_SOCKET, NN_RCVTIMEO, &socket_timeout_ms, sizeof(int));
 
-    conn = nn_connect(sock, IHC_IPC_ADDR);
+    conn = nn_connect(sock, socketAddr);
     if (conn < 0)
     {
-        CcspTraceError(("[%s-%d] Failed to connect to the IPoE HEalth Check IPC socket \n", __FUNCTION__, __LINE__));
-        nn_close (sock);
-        return ANSC_STATUS_FAILURE;
-    }
-    bytes = nn_send(sock, (char *) &msgBody, msgSize, 0);
-    if (bytes < 0)
-    {
-        CcspTraceError(("[%s-%d] Failed to send data to IPoE HEalth Check error=[%d][%s] \n", __FUNCTION__, __LINE__,errno, strerror(errno)));
-        nn_close (sock);
+        CcspTraceError(("[%s-%d] Failed to connect to the IPoE Health Check IPC socket \n", __FUNCTION__, __LINE__, ifName));
+        nn_close(sock);
         return ANSC_STATUS_FAILURE;
     }
 
-    CcspTraceInfo(("[%s-%d] Successfully send %d bytes over nano msg  \n", __FUNCTION__, __LINE__,bytes));
-    nn_close (sock);
+    bytes = nn_send(sock, (char *)&msgBody, msgSize, 0);
+    if (bytes < 0)
+    {
+        CcspTraceError(("[%s-%d] [%s] Failed to send data to IPoE Health Check, error=[%d][%s] \n", __FUNCTION__, __LINE__, ifName, errno, strerror(errno)));
+        nn_close(sock);
+        return ANSC_STATUS_FAILURE;
+    }
+
+    CcspTraceInfo(("[%s-%d] [%s] Successfully sent %d bytes over nano msg\n", __FUNCTION__, __LINE__, ifName, bytes));
+    nn_close(sock);
     return ANSC_STATUS_SUCCESS;
 }
 #endif
