@@ -327,11 +327,12 @@ ANSC_STATUS Wan_ForceRenewDhcpIPv6(char *ifName)
 {
 
     /*send triggered renew request to DHCPv6C*/
-    WanManager_StopDhcpv6Client(ifName, STOP_DHCP_WITH_RELEASE /* fixme: is this correct? */ );
-    WanMgr_SetInterfaceStatus(ifName, WANMGR_IFACE_CONNECTION_IPV6_DOWN);
-    CcspTraceInfo(("Dhcpv6 client has been killed. Restart it \n"));
-    sleep(1);
-    WanManager_StartDhcpv6Client(ifName);
+    int pid = util_getPidByName(DHCPV6_CLIENT_NAME, ifName);
+    if (pid > 0 )
+    {
+        CcspTraceInfo(("sending SIGUSR2 to dhcp6c, this will let the dhcp6c to send renew packet out \n"));
+        util_signalProcess(pid, SIGUSR2);
+    }
 
     return  ANSC_STATUS_SUCCESS; 
 }
