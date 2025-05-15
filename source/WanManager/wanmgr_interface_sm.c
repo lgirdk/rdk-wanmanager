@@ -1408,16 +1408,15 @@ static void EnableIPOE(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, DML_WAN_IFACE
         }
      }
 
-     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
-     IhcPid = WanManager_StartIpoeHealthCheckService(p_VirtIf->Name);
+     IhcPid = WanManager_StartIpoeHealthCheckService(pInterface->Name);
      if (IhcPid > 0)
      {
          pWanIfaceCtrl->IhcPid = IhcPid;
-         CcspTraceInfo(("%s %d - Starting IPoE Health Check pid - %u for interface %s \n", __FUNCTION__, __LINE__, pWanIfaceCtrl->IhcPid, p_VirtIf->Name));
+         CcspTraceInfo(("%s %d - Starting IPoE Health Check pid - %u for interface %s \n", __FUNCTION__, __LINE__, pWanIfaceCtrl->IhcPid, pInterface->Name));
      }
      else
      {
-         CcspTraceError(("%s %d - Failed to start IPoE Health Check for interface %s \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+         CcspTraceError(("%s %d - Failed to start IPoE Health Check for interface %s \n", __FUNCTION__, __LINE__, pInterface->Name));
      }
 }
 #endif
