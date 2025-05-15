@@ -2194,49 +2194,60 @@ static ANSC_STATUS WanMgr_SendMsgTo_ConnectivityCheck(WanMgr_IfaceSM_Controller_
     {
 #ifdef FEATURE_IPOE_HEALTH_CHECK
         char IHC_status[BUFLEN_16] = {0};
+        char sysevent_name[64] = {0};
+
         if(type == CONNECTION_MSG_IPV4 && ConnStatus == TRUE)
         {
-            sysevent_get(sysevent_fd, sysevent_token, IPOE_HEALTH_CHECK_V4_STATUS, IHC_status, sizeof(IHC_status));
-            if(pWanIfaceCtrl->IhcV4Status == IHC_STOPPED ||
-                    p_VirtIf->IP.Ipv4Changed == TRUE  ||
-                    (p_VirtIf->IP.Ipv4Renewed == TRUE && (strcmp(IHC_status, IPOE_STATUS_FAILED) == 0)))
+            snprintf(sysevent_name, sizeof(sysevent_name), "%s_%s", p_VirtIf->Name, IPOE_HEALTH_CHECK_V4_STATUS);
+            sysevent_get(sysevent_fd, sysevent_token, sysevent_name, IHC_status, sizeof(IHC_status));
+
+            if (pWanIfaceCtrl->IhcV4Status == IHC_STOPPED ||
+                p_VirtIf->IP.Ipv4Changed == TRUE ||
+                (p_VirtIf->IP.Ipv4Renewed == TRUE && (strcmp(IHC_status, IPOE_STATUS_FAILED) == 0)))
             {
                 if(p_VirtIf->IP.Ipv4Renewed == TRUE && (strcmp(IHC_status, IPOE_STATUS_FAILED) == 0))
                 {
                     //Restarting firewall to add IPOE_HEALTH_CHECK firewall rules.
+                    CcspTraceInfo(("%s %d [%s] Restarting firewall to apply IPOE rules (IPv4)\n", __FUNCTION__, __LINE__, p_VirtIf->Name));
                     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIREWALL_RESTART, NULL, 0);
                 }
+
                 WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_UP, p_VirtIf->Name);
                 pWanIfaceCtrl->IhcV4Status = IHC_STARTED;
             }
         }
         else if(type == CONNECTION_MSG_IPV4 && ConnStatus == FALSE)
         {
-                CcspTraceInfo(("%s %d Sending IPOE_MSG_WAN_CONNECTION_DOWN \n", __FUNCTION__, __LINE__));
-                WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_DOWN, p_VirtIf->Name);
-                pWanIfaceCtrl->IhcV4Status = IHC_STOPPED;
+            CcspTraceInfo(("%s %d [%s] Sending IPOE_MSG_WAN_CONNECTION_DOWN\n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+            WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_DOWN, p_VirtIf->Name);
+            pWanIfaceCtrl->IhcV4Status = IHC_STOPPED;
         }
-        else if(type == CONNECTION_MSG_IPV6 && ConnStatus == TRUE)
+        else if (type == CONNECTION_MSG_IPV6 && ConnStatus == TRUE)
         {
-            sysevent_get(sysevent_fd, sysevent_token, IPOE_HEALTH_CHECK_V6_STATUS, IHC_status, sizeof(IHC_status));
-            if(pWanIfaceCtrl->IhcV6Status == IHC_STOPPED ||
-                    p_VirtIf->IP.Ipv6Changed == TRUE  ||
-                    (p_VirtIf->IP.Ipv6Renewed == TRUE && (strcmp(IHC_status, IPOE_STATUS_FAILED) == 0)))
+            snprintf(sysevent_name, sizeof(sysevent_name), "%s_%s", p_VirtIf->Name, IPOE_HEALTH_CHECK_V6_STATUS);
+            sysevent_get(sysevent_fd, sysevent_token, sysevent_name, IHC_status, sizeof(IHC_status));
+
+            if (pWanIfaceCtrl->IhcV6Status == IHC_STOPPED ||
+                p_VirtIf->IP.Ipv6Changed == TRUE ||
+                (p_VirtIf->IP.Ipv6Renewed == TRUE && strcmp(IHC_status, IPOE_STATUS_FAILED) == 0))
             {
+
                 if(p_VirtIf->IP.Ipv6Renewed == TRUE && (strcmp(IHC_status, IPOE_STATUS_FAILED) == 0))
                 {
                     //Restarting firewall to add IPOE_HEALTH_CHECK firewall rules.
+                    CcspTraceInfo(("%s %d [%s] Restarting firewall to apply IPOE rules (IPv6)\n", __FUNCTION__, __LINE__, p_VirtIf->Name));
                     sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_FIREWALL_RESTART, NULL, 0);
                 }
-               WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_IPV6_UP, p_VirtIf->Name);
-               pWanIfaceCtrl->IhcV6Status = IHC_STARTED;
+
+                WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_IPV6_UP, p_VirtIf->Name);
+                pWanIfaceCtrl->IhcV6Status = IHC_STARTED;
             }
         }
         else if(type == CONNECTION_MSG_IPV6 && ConnStatus == FALSE)
         {
-                CcspTraceInfo(("%s %d Sending IPOE_MSG_WAN_CONNECTION_IPV6_DOWN \n", __FUNCTION__, __LINE__));
-                WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_IPV6_DOWN, p_VirtIf->Name);
-                pWanIfaceCtrl->IhcV6Status = IHC_STOPPED;
+            CcspTraceInfo(("%s %d [%s] Sending IPOE_MSG_WAN_CONNECTION_IPV6_DOWN\n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+            WanMgr_SendMsgToIHC(IPOE_MSG_WAN_CONNECTION_IPV6_DOWN, p_VirtIf->Name);
+            pWanIfaceCtrl->IhcV6Status = IHC_STOPPED;
         }
 
 #endif
