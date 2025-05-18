@@ -2198,6 +2198,83 @@ ANSC_STATUS WanManager_CheckGivenPriorityExists(INT IfIndex, UINT uiTotalIfaces,
     return retStatus;
 }
 
+#ifdef _LG_MV2_PLUS_
+static BOOL isMbuEnabled(void)
+{
+    BOOL isEnabled = FALSE;
+    int TotalIfaces = WanMgr_IfaceData_GetTotalWanIface();
+
+    for (int uiLoopCount = 0; uiLoopCount < TotalIfaces; uiLoopCount++)
+    {
+        WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
+        if (pWanDmlIfaceData != NULL)
+        {
+            DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
+            if (strcmp(pWanIfaceData->AliasName, "Backup") == 0 &&
+                strcmp(pWanIfaceData->DisplayName, "WanOE") == 0)
+            {
+                isEnabled = pWanIfaceData->Selection.Enable;
+
+                WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+                break;
+            }
+            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+        }
+    }
+    CcspTraceInfo(("%s: MBU is %s\n", __FUNCTION__, isEnabled ? "Enabled" : "Disabled"));
+
+
+    return isEnabled;
+}
+#endif
+
+/*
+ * ASSUMPTION: Possible WanOE port names : eth0,eth1,eth2,eth3
+ * 0x20 -> Disable packet forwarding on given port
+ * 0x1FF -> Default setting (enables packet forwarding Fwd)
+ */
+static void WanManager_SetEthPktFwd(BOOL enabled)
+{
+#ifdef _LG_MV2_PLUS_
+    char cmd[128];
+    int uiLoopCount;
+    int TotalIfaces = WanMgr_IfaceData_GetTotalWanIface();
+
+    CcspTraceInfo(("%s Enable=%d\n", __FUNCTION__, enabled));
+
+    for (uiLoopCount = 0; uiLoopCount < TotalIfaces; uiLoopCount++)
+    {
+        WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
+        if (pWanDmlIfaceData != NULL)
+        {
+            DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
+            if (strcmp(pWanIfaceData->AliasName, "Backup") == 0 &&
+                strcmp(pWanIfaceData->DisplayName, "WanOE") == 0)
+            {
+                int idx;
+
+                if (sscanf(pWanIfaceData->Name, "eth%d", &idx) == 1 && idx >= 0 && idx <= 3)
+                {
+                    // Port register index derived via formula: reg_offset = 6 - (port_idx * 2)
+                    snprintf(cmd, sizeof(cmd), "echo \"w 31:0%d 2 %X\" > /proc/driver/ethsw/creg", 6 - (idx * 2), enabled ? 0x1FF : 0x20);
+                    WanManager_DoSystemAction("Setup WanOE Packet Forwarding: ", cmd);
+                }
+                else
+                {
+                    CcspTraceError(("%s: Unexpected WanOE interface name '%s' — expected format 'eth[0-3]'\n", __FUNCTION__, pWanIfaceData->Name));
+                }
+
+                WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+                break;
+            }
+            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+        }
+    }
+#else
+    (void)enabled;
+#endif
+}
+
 ANSC_STATUS WanManager_ConfigurePktFlow(char *activeWanType, char *ifName)
 {
 #ifdef _LG_MV2_PLUS_
@@ -2211,6 +2288,12 @@ ANSC_STATUS WanManager_ConfigurePktFlow(char *activeWanType, char *ifName)
     }
     snprintf(cmd, sizeof(cmd), "latticecli -n \"set AltWan.EthWanInterface %s\"", !strcmp(activeWanType, "WanOE") ? ifName : "disable");
     system(cmd);
+
+    // F3896SI-3212: Disable port forwarding for ethX when CM is active and MBU is enabled
+    if (!strcmp(activeWanType, "CM") && isMbuEnabled())
+    {
+        WanManager_SetEthPktFwd(FALSE);
+    }
 #else
     (void)activeWanType;
     (void)ifName;
@@ -2559,6 +2642,10 @@ int WanMgr_RdkBus_AddIntfToLanBridge (char * PhyPath, BOOL AddToBridge)
         if (WanMgr_RdkBus_SetParamValues(ETH_COMPONENT_NAME, ETH_COMPONENT_PATH, param_name, param_value, ccsp_boolean, TRUE ) == ANSC_STATUS_SUCCESS)
         {
             CcspTraceInfo(("%s %d: Succesfully set %s = %s\n", __FUNCTION__, __LINE__, param_name, param_value));
+
+            // Enable Pkt Fwd if eth interface is to be added to the bridge (i.e., MBU is disabled)
+            // Disable Pkt Fwd if eth interface is to be deleted from the bridge (i.e., MBU is enabled)
+            WanManager_SetEthPktFwd(AddToBridge); 
             return ANSC_STATUS_SUCCESS;
         }
         usleep(500000);
