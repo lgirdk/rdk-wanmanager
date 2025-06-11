@@ -484,7 +484,7 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
                     if (WanManager_checkInterfaceIpv4Address(p_VirtIf->Name) != ANSC_STATUS_SUCCESS)
                     {
                         syslog_networklog("NETWORK", LOG_NOTICE, "%s ipv4 address is empty", p_VirtIf->Name);
-                        //WanManager_StopDhcpv4Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE); //to be discussed if we need recover it
+                        WanManager_StopDhcpv4Client(p_VirtIf->Name, STOP_DHCP_WITH_RELEASE);
 #ifdef ENABLE_FEATURE_TELEMETRY2_0
                         char rferroripv4loss[64];
                         snprintf(rferroripv4loss, sizeof(rferroripv4loss), "RF_ERROR_%s_ipv4_loss", p_VirtIf->Name);
