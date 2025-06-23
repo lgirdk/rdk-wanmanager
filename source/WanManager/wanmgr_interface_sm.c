@@ -820,8 +820,8 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 #if defined(_LG_OFW_)
     char cmd[512];
     char syseventParam[128];
-    char resolv_file[80];
-    char resolv_envs[256];
+    char resolv_file[80] = RESOLV_CONF_FILE;
+    char resolv_envs[256] = {0};
 
 #ifdef _LG_MV2_PLUS_
 #define VAR_RESOLV_FILE "/var/tmp/resolv.conf"
@@ -893,17 +893,15 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
 #endif /* _LG_MV2_PLUS_ */
 
 #ifdef _LG_MV3_
+    int len = snprintf(resolv_envs, sizeof(resolv_envs), "RESOLVCONF_IFACE_PATTERNS='%s %s.*' ", p_VirtIf->Name, p_VirtIf->Name);
+
     if (p_VirtIf->IP.RTable > 0)
     {
         snprintf(resolv_file, sizeof(resolv_file), "/tmp/%s-resolv.conf", p_VirtIf->Name);
-        snprintf(resolv_envs, sizeof(resolv_envs), "RESOLVCONF_IFACE_PATTERNS='%s %s.*' DYNAMICRSLVCNFFILE=%s ", p_VirtIf->Name, p_VirtIf->Name, resolv_file);
+        snprintf(resolv_envs + len, sizeof(resolv_envs) - len, "DYNAMICRSLVCNFFILE=%s ", resolv_file);
     }
-    else
+    CcspTraceInfo(("%s %d: resolv_envs=%s, resolv_file=%s\n", __FUNCTION__, __LINE__, resolv_envs, resolv_file));
 #endif
-    {
-        strcpy(resolv_file, RESOLV_CONF_FILE);
-        strcpy(resolv_envs, "");
-    }
 
     if (deviceMode == MODEM_MODE)
     {
