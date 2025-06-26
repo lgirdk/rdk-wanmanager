@@ -1655,7 +1655,7 @@ static int wan_tearDownIPv4(WanMgr_IfaceSM_Controller_t * pWanIfaceCtrl)
     }
 
     /** Reset IPv4 DNS configuration. */
-#if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_) || defined (_RDKB_GLOBAL_PRODUCT_REQ_))
+#if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_) || defined (_RDKB_GLOBAL_PRODUCT_REQ_)) && !defined (_LG_OFW_)
 #if defined (_RDKB_GLOBAL_PRODUCT_REQ_)
     WanMgr_Config_Data_t    *pWanConfigData = WanMgr_GetConfigData_locked();
     unsigned char           BackupWanDnsSupport = TRUE;
