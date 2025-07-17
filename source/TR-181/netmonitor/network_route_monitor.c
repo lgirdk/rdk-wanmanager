@@ -47,6 +47,7 @@ static bool g_ipv6_addrmon_enabled = FALSE;
 #define SYSEVENT_IPV6_ADDRMON_IGNORE    "ignore_%s_ipv6_deladdr"
 
 #define SYSEVENT_IPV4_ADDRMON_IP_LOSS   "ipv4_addr_mon_ip_del"
+#define SYSEVENT_IPV4_ADDRMON_IGNORE    "ignore_%s_ipv4_deladdr"
 
 #define SYSEVENT_OPEN_MAX_RETRIES   6
 #define SE_SERVER_WELL_KNOWN_PORT   52367
@@ -406,7 +407,20 @@ static void NetMonitor_ProcessNetlinkRouteMonitorFd()
                     char ignore[16];
                     struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(nl_msgHdr);
 
-                    if((if_indextoname(ifa->ifa_index, ifname) != NULL) && (ifa->ifa_family == AF_INET && ifa->ifa_scope == RT_SCOPE_UNIVERSE)) {
+                    if ((if_indextoname(ifa->ifa_index, ifname) != NULL) &&
+                        (ifa->ifa_family == AF_INET && ifa->ifa_scope == RT_SCOPE_UNIVERSE))
+                    {
+
+                        snprintf(event, sizeof(event), SYSEVENT_IPV4_ADDRMON_IGNORE, ifname);
+                        sysevent_get(sysevent_fd, sysevent_token, event, ignore, sizeof(ignore));
+
+                        /* ignore flag is set. RTM_DELADDR should be ignored */
+                        if (ignore[0] != '\0')
+                        {
+                            sysevent_set(sysevent_fd, sysevent_token, event, NULL, 0); // reset the event
+                            DBG_MONITOR_PRINT("IPv4 address deletion is ignored for the interface: %s\n", ifname);
+                            break;
+                        }
                         sysevent_set(sysevent_fd, sysevent_token, SYSEVENT_IPV4_ADDRMON_IP_LOSS, ifname, 0);
                     }
 

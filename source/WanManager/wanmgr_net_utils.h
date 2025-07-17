@@ -69,6 +69,8 @@ typedef  struct _CONTEXT_MARKING_LINK_OBJECT
 #define IPv6_ARRDMON_TIMER_NAME     "ipv6_AddrMonTimer"
 #define IPv6_ARRDMON_TIMER_TIMEOUT  900 //seconds
 
+#define SYSEVENT_IPV4_ADDRMON_IGNORE    "ignore_%s_ipv4_deladdr"
+
 typedef enum
 {
     DEL_ADDR = 0,
