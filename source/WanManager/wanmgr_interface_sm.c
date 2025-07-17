@@ -1435,6 +1435,7 @@ static int wan_deconfigIPv4onInterface(WanMgr_IfaceSM_Controller_t * pWanIfaceCt
 
     int ret = RETURN_OK;
     char cmdStr[BUFLEN_256] = {0}; 
+    char event[256];
 
     DML_WAN_IFACE * pInterface = pWanIfaceCtrl->pIfaceData;
     DML_VIRTUAL_IFACE* p_VirtIf = WanMgr_getVirtualIfaceById(pInterface->VirtIfList, pWanIfaceCtrl->VirIfIdx);
@@ -1443,6 +1444,10 @@ static int wan_deconfigIPv4onInterface(WanMgr_IfaceSM_Controller_t * pWanIfaceCt
     if( 0 != strcmp(p_VirtIf->Name, "usb0" ) )
 #endif /** LTE_USB_FEATURE_ENABLED */
     {
+        /* Don't trigger IP recovery mechanism when IP is deleted by WanManager */
+        snprintf(event, sizeof(event), SYSEVENT_IPV4_ADDRMON_IGNORE, p_VirtIf->Name);
+        sysevent_set(sysevent_fd, sysevent_token, event, "1", 0);
+
         /* Need to remove the network from the routing table by
         * doing "ifconfig L3IfName 0.0.0.0"
         * wanData->ipv4Data.ifname is Empty.
