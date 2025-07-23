@@ -197,7 +197,10 @@ ANSC_STATUS WanMgr_VirtIfConfVLAN(DML_VIRTUAL_IFACE *p_VirtIf, UINT Ifid)
         int retPsmGet = CCSP_SUCCESS;
         _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_VLAN_INTERFACE_ENTRY, (Ifid+1), (p_VirtIf->VirIfIdx +1),(i+1));
         retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-        AnscCopyString(p_VlanIf->Interface, param_value);
+        if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+        {
+            AnscCopyString(p_VlanIf->Interface, param_value);
+        }
 
         CcspTraceInfo(("%s %d Adding Vlan Interface entry %d \n", __FUNCTION__, __LINE__, p_VlanIf->Index));
         WanMgr_AddVirtVlanIfToList(&(p_VirtIf->VLAN.InterfaceList), p_VlanIf);
@@ -221,7 +224,7 @@ ANSC_STATUS WanMgr_VirtIfConfVLAN(DML_VIRTUAL_IFACE *p_VirtIf, UINT Ifid)
         int retPsmGet = CCSP_SUCCESS;
         _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_VLAN_MARKING_ENTRY, (Ifid+1), (p_VirtIf->VirIfIdx +1),(i+1));
         retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-        if (retPsmGet == CCSP_SUCCESS)
+        if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
         {
             _ansc_sscanf(param_value, "%d", &(p_Marking->Entry));
         }
