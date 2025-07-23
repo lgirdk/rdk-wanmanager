@@ -989,15 +989,18 @@ ANSC_STATUS WanMgr_RdkBus_setWanIpInterfaceData(DML_VIRTUAL_IFACE*  pVirtIf)
 {
     ANSC_STATUS retStatus = ANSC_STATUS_SUCCESS;
     char dmQuery[BUFLEN_256] = {0};
-    snprintf(dmQuery, sizeof(dmQuery)-1, "%s.LowerLayers", pVirtIf->IP.Interface);
-    if(pVirtIf->PPP.Enable == TRUE)
+    if(strlen(pVirtIf->IP.Interface) > 0)
     {
-        retStatus = WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, dmQuery, pVirtIf->PPP.Interface, ccsp_string, TRUE );
-        CcspTraceInfo(("%s %d - Updating %s => %s\n", __FUNCTION__, __LINE__,dmQuery, pVirtIf->PPP.Interface));
-    }else if(pVirtIf->VLAN.Enable == TRUE)
-    {
-        retStatus = WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, dmQuery, pVirtIf->VLAN.VLANInUse, ccsp_string, TRUE );
-        CcspTraceInfo(("%s %d - Updating %s => %s\n", __FUNCTION__, __LINE__,dmQuery,pVirtIf->VLAN.VLANInUse));
+        snprintf(dmQuery, sizeof(dmQuery)-1, "%s.LowerLayers", pVirtIf->IP.Interface);
+        if(pVirtIf->PPP.Enable == TRUE)
+        {
+            retStatus = WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, dmQuery, pVirtIf->PPP.Interface, ccsp_string, TRUE );
+            CcspTraceInfo(("%s %d - Updating %s => %s\n", __FUNCTION__, __LINE__,dmQuery, pVirtIf->PPP.Interface));
+        }else if(pVirtIf->VLAN.Enable == TRUE)
+        {
+            retStatus = WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, dmQuery, pVirtIf->VLAN.VLANInUse, ccsp_string, TRUE );
+            CcspTraceInfo(("%s %d - Updating %s => %s\n", __FUNCTION__, __LINE__,dmQuery,pVirtIf->VLAN.VLANInUse));
+        }
     }
     return retStatus;
 }

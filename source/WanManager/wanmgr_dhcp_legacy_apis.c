@@ -1584,6 +1584,8 @@ ANSC_STATUS WanMgr_CheckAndResetV2PSMEntries(UINT IfaceCount)
 
     for(int i = 1; i <= IfaceCount; i++)
     {
+        memset(param_name, 0, sizeof(param_name));
+        memset(param_value, 0, sizeof(param_value));
         snprintf(param_name, sizeof(param_name) ,PSM_WANMANAGER_IF_BASEINTERFACE, i);
         retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
         if (retPsmGet == CCSP_SUCCESS && strlen(param_value) <= 0)
@@ -1598,14 +1600,16 @@ ANSC_STATUS WanMgr_CheckAndResetV2PSMEntries(UINT IfaceCount)
         memset(param_value, 0, sizeof(param_value));
         snprintf(param_name,sizeof(param_name), PSM_WANMANAGER_IF_SELECTION_ENABLE, i);
         retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-        if(!strcmp(param_value, "TRUE"))
+        if(retPsmGet == CCSP_SUCCESS && param_value[0] != '\0' && !strcmp(param_value, "TRUE"))
         {
             memset(param_name, 0, sizeof(param_name));
             memset(param_value, 0, sizeof(param_value));
             snprintf(param_name,sizeof(param_name), PSM_WANMANAGER_IF_VIRIF_ENABLE, i , 1);
             retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-
-            psmDefaultSetRequired = strcmp(param_value, "TRUE");
+            if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+            {
+                psmDefaultSetRequired = strcmp(param_value, "TRUE");
+            }
         }
     }
 

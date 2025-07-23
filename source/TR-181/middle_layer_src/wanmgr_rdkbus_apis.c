@@ -70,7 +70,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_SELECTION_ENABLE, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         if(strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
         {
@@ -90,7 +90,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_SELECTION_ACTIVELINK, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         if(strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
         {
@@ -110,7 +110,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_DISPLAY_NAME, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS  && param_value[0] != '\0')
     {
         AnscCopyString(p_Interface->DisplayName, param_value);
     }
@@ -119,7 +119,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_NAME, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         AnscCopyString(p_Interface->Name, param_value);
 
@@ -135,7 +135,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_ALIAS, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         AnscCopyString(p_Interface->AliasName, param_value);
     }
@@ -144,7 +144,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_BASEINTERFACE, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         AnscCopyString(p_Interface->BaseInterface, param_value);
     }
@@ -153,7 +153,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_TYPE, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(p_Interface->Type));
     }
@@ -162,7 +162,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_SELECTION_PRIORITY, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(p_Interface->Selection.Priority));
     }
@@ -171,7 +171,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_SELECTION_TIMEOUT, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(p_Interface->Selection.Timeout));
     }
@@ -184,7 +184,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_SELECTION_GROUP, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(p_Interface->Selection.Group));
     }
@@ -194,7 +194,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_SELECTION_REQUIRES_REBOOT, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         if(strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
         {
@@ -214,7 +214,7 @@ int get_Wan_Interface_ParametersFromPSM(ULONG instancenum, DML_WAN_IFACE* p_Inte
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_COUNT, instancenum);
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(p_Interface->NoOfVirtIfs));
     }
@@ -238,7 +238,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     char maptRfc[16] ={0};
     syscfg_get(NULL, "MAPT_Enable", maptRfc, sizeof(maptRfc));
     
-    if(strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
+    if(retPsmGet == CCSP_SUCCESS && param_value[0] != '\0' && strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
     {
         pVirtIf->EnableMAPT = TRUE;
     }
@@ -253,7 +253,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_ENABLE_DSLITE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
 
-    if(strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
+    if(retPsmGet == CCSP_SUCCESS && param_value[0] != '\0' && strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
     {
         pVirtIf->EnableDSLite = TRUE;
     }
@@ -263,7 +263,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_ENABLE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
 
-    if(strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
+    if(retPsmGet == CCSP_SUCCESS && strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
     {
         pVirtIf->Enable = TRUE;
     }
@@ -272,19 +272,28 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_NAME, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    AnscCopyString(pVirtIf->Name, param_value);
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+    {
+        AnscCopyString(pVirtIf->Name, param_value);
+    }
 
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_ALIAS, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    AnscCopyString(pVirtIf->Alias, param_value);
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+    {
+        AnscCopyString(pVirtIf->Alias, param_value);
+    }
 
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_PPP_INTERFACE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    AnscCopyString(pVirtIf->PPP.Interface, param_value);
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+    {
+        AnscCopyString(pVirtIf->PPP.Interface, param_value);
+    }
     if(!strncmp(pVirtIf->PPP.Interface, PPP_INTERFACE_TABLE, strlen(PPP_INTERFACE_TABLE)))
     {
         CcspTraceInfo(("%s %d Valid PPP interface is configured. Use PPP\n", __FUNCTION__, __LINE__));
@@ -295,19 +304,28 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_VLAN_INTERFACE_COUNT, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    _ansc_sscanf(param_value, "%d", &(pVirtIf->VLAN.NoOfInterfaceEntries));
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+    {
+        _ansc_sscanf(param_value, "%d", &(pVirtIf->VLAN.NoOfInterfaceEntries));
+    }
 
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_VLAN_TIMEOUT, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    _ansc_sscanf(param_value, "%d", &(pVirtIf->VLAN.Timeout));
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+    {
+        _ansc_sscanf(param_value, "%d", &(pVirtIf->VLAN.Timeout));
+    }
 
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_VLAN_INUSE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    AnscCopyString(pVirtIf->VLAN.VLANInUse, param_value);
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+    {
+        AnscCopyString(pVirtIf->VLAN.VLANInUse, param_value);
+    }
     if(!strncmp(pVirtIf->VLAN.VLANInUse, VLAN_TERMINATION_TABLE, strlen(VLAN_TERMINATION_TABLE)) || pVirtIf->VLAN.NoOfInterfaceEntries > 0)
     {
         CcspTraceInfo(("%s %d Valid VLAN interface is configured. Use VLAN\n", __FUNCTION__, __LINE__));
@@ -318,13 +336,19 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_VLAN_MARKING_COUNT, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    _ansc_sscanf(param_value, "%d", &(pVirtIf->VLAN.NoOfMarkingEntries));
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+    {
+        _ansc_sscanf(param_value, "%d", &(pVirtIf->VLAN.NoOfMarkingEntries));
+    }
 
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_INTERFACE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    AnscCopyString(pVirtIf->IP.Interface, param_value);
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+    {
+        AnscCopyString(pVirtIf->IP.Interface, param_value);
+    }
 
 #ifdef _LG_MV3_
     if (!strcmp(pVirtIf->Alias, "DATA") && !syscfg_get(NULL, "last_erouter_mode", param_value, sizeof(param_value)))
@@ -353,7 +377,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
          _ansc_memset(param_value, 0, sizeof(param_value));
          _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_MODE, instancenum, (virtInsNum + 1));
          retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-         if (retPsmGet == CCSP_SUCCESS)
+         if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
          {
              _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.Mode));
          }
@@ -362,7 +386,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_V4SOURCE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if(retPsmGet == CCSP_SUCCESS)
+    if(retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.IPv4Source));
     }
@@ -380,7 +404,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_PREFERREDMODE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if(retPsmGet == CCSP_SUCCESS)
+    if(retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.PreferredMode));
     }
@@ -390,7 +414,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_MODE_FORCE_ENABLE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
 
-    if(strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
+    if(retPsmGet == CCSP_SUCCESS && strcmp(param_value, PSM_ENABLE_STRING_TRUE) == 0)
     {
         pVirtIf->IP.ModeForceEnable = TRUE;
     }
@@ -399,7 +423,7 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_CONNECTIVITY_CHECK_TYPE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if(retPsmGet == CCSP_SUCCESS)
+    if(retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.ConnectivityCheckType));
     }
@@ -408,16 +432,19 @@ int get_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTU
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_RTABLE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if(retPsmGet == CCSP_SUCCESS)
+    if(retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
-	_ansc_sscanf(param_value, "%d", &(pVirtIf->IP.RTable));
+        _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.RTable));
     }
 
     _ansc_memset(param_name, 0, sizeof(param_name));
     _ansc_memset(param_value, 0, sizeof(param_value));
     _ansc_sprintf(param_name, PSM_WANMANAGER_IF_VIRIF_IP_DNSCFGPATH, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    AnscCopyString(pVirtIf->IP.DnsCfgPath, param_value);
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
+    {
+        AnscCopyString(pVirtIf->IP.DnsCfgPath, param_value);
+    }
 }
 
 int get_Remote_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DML_VIRTUAL_IFACE * pVirtIf)
@@ -429,7 +456,7 @@ int get_Remote_Virtual_Interface_FromPSM(ULONG instancenum, ULONG virtInsNum ,DM
 
     _ansc_sprintf(param_name, PSM_WANMANAGER_CONNECTIVITY_CHECK_TYPE, instancenum, (virtInsNum + 1));
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(param_name,param_value,sizeof(param_value));
-    if(retPsmGet == CCSP_SUCCESS)
+    if(retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(pVirtIf->IP.ConnectivityCheckType));
     }
@@ -721,7 +748,7 @@ DmlWanGetPSMRecordValue
     }
 
     retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB( pPSMEntry, strValue, sizeof(strValue) );
-    if ( retPsmGet == CCSP_SUCCESS )
+    if ( retPsmGet == CCSP_SUCCESS && strValue[0] != '\0')
     {
         //Copy till end of the string
         snprintf( pOutputString, strlen( strValue ) + 1, "%s", strValue );

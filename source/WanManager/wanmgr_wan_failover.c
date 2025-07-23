@@ -137,7 +137,7 @@ ANSC_STATUS WanMgr_FailOverCtrlInit(WanMgr_FailOver_Controller_t* pFailOverContr
     //Read Failover type from PSM
     char param_value[256] = {0};
     int retPsmGet = WanMgr_RdkBus_GetParamValuesFromDB(PSM_WANMANAGER_FAILOVER_TYPE, param_value,sizeof(param_value));
-    if (retPsmGet == CCSP_SUCCESS)
+    if (retPsmGet == CCSP_SUCCESS && param_value[0] != '\0')
     {
         _ansc_sscanf(param_value, "%d", &(pFailOverController->FailOverType));
     }
