@@ -815,6 +815,7 @@ void WanMgr_IfaceData_Init(WanMgr_Iface_Data_t* pIfaceData, UINT iface_index)
 
         pWanDmlIface->NoOfVirtIfs = 1; 
         pWanDmlIface->Type = WAN_IFACE_TYPE_UNCONFIGURED;
+        pWanDmlIface->InBridge = TRUE; /*Assume that all LAN ports start inside the bridge */
     }
 }
 
