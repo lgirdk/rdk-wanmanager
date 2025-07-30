@@ -88,28 +88,32 @@ static int WanMgr_RdkBus_AddAllIntfsToLanBridge (WanMgr_Policy_Controller_t * pW
 
     UINT uiLoopCount;
     int ret = 0;
+    char PhyPath[BUFLEN_128];
+    memset (PhyPath, 0, sizeof(PhyPath));
 
     for( uiLoopCount = 0; uiLoopCount < pWanController->TotalIfaces; uiLoopCount++ )
     {
         WanMgr_Iface_Data_t*   pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
+        DML_WAN_IFACE * pWanIfaceData = &(pWanDmlIfaceData->data);
         if(pWanDmlIfaceData != NULL)
         {
-            DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
-
-            if (pWanController->GroupInst != pWanIfaceData->Selection.Group)
+            if(pWanController->GroupInst != pWanIfaceData->Selection.Group)
             {
                 WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
                 continue;
             }
-            if (strlen(pWanIfaceData->BaseInterface) > 0)
+            strncpy (PhyPath, pWanIfaceData->BaseInterface, sizeof(PhyPath)-1);
+            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+
+            if (strlen(PhyPath) > 0)
             {
-                ret = WanMgr_RdkBus_AddIntfToLanBridge(pWanIfaceData->BaseInterface, AddToBridge);
+                ret = WanMgr_RdkBus_AddIntfToLanBridge(PhyPath, AddToBridge);
                 if (ret == ANSC_STATUS_FAILURE)
                 {
-                    CcspTraceError(("%s %d: unable to config LAN bridge for index %d BaseInterface %s\n", __FUNCTION__, __LINE__, uiLoopCount, pWanIfaceData->BaseInterface));
+                    CcspTraceError(("%s %d: unable to config LAN bridge for index %d BaseInterface %s\n", __FUNCTION__, __LINE__, uiLoopCount, PhyPath));
                 }
+                memset (PhyPath, 0, sizeof(PhyPath));
             }
-            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
         }
     }
 
@@ -1267,26 +1271,29 @@ static WcAwPolicyState_t State_InterfaceReconfiguration (WanMgr_Policy_Controlle
             // skip LAN bridge config for selected interface
             continue;
         }
-        WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
-        if (pWanDmlIfaceData != NULL)
+        WanMgr_Iface_Data_t*   pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
+        if(pWanDmlIfaceData != NULL)
         {
-            DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
+            DML_WAN_IFACE * pWanIfaceData = &(pWanDmlIfaceData->data);
 
-            if (pWanController->GroupInst != pWanIfaceData->Selection.Group)
-            {
-                WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
-                continue;
-            }
+             if(pWanController->GroupInst != pWanIfaceData->Selection.Group)
+             {
+                 WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+                 continue;
+             }
 
-            if ((strlen(pWanIfaceData->BaseInterface) > 0) && (strstr(pWanIfaceData->BaseInterface, "Ethernet")))
+            strncpy (PhyPath, pWanIfaceData->BaseInterface, sizeof(PhyPath)-1);
+            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+
+            if ((strlen(PhyPath) > 0) && (strstr(PhyPath, "Ethernet")))
             {
-                ret = WanMgr_RdkBus_AddIntfToLanBridge(pWanIfaceData->BaseInterface, TRUE);
+                ret = WanMgr_RdkBus_AddIntfToLanBridge(PhyPath, TRUE);
                 if (ret == ANSC_STATUS_FAILURE)
                 {
-                    CcspTraceError(("%s %d: unable to config LAN bridge for index %d BaseInterface %s\n", __FUNCTION__, __LINE__, uiLoopCount, pWanIfaceData->BaseInterface));
+                    CcspTraceError(("%s %d: unable to config LAN bridge for index %d BaseInterface %s\n", __FUNCTION__, __LINE__, uiLoopCount, PhyPath));
                 }
+                memset (PhyPath, 0, sizeof(PhyPath));
             }
-            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
         }
     }
     // check if Hardware Configuration is required
