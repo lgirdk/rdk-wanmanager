@@ -77,6 +77,51 @@ static WcAwPolicyState_t Transistion_WanInterfaceUp (WanMgr_Policy_Controller_t 
 static WcAwPolicyState_t Transition_ResetSelectedInterface (WanMgr_Policy_Controller_t * pWanController);
 static WcAwPolicyState_t Transition_RebootDevice (void);
 
+static int WanMgr_RdkBus_ConfigureLanBridgePorts(WanMgr_Policy_Controller_t *pWanController)
+{
+    if ((pWanController == NULL) || (pWanController->WanEnable != TRUE)
+            || (pWanController->TotalIfaces == 0))
+    {
+        CcspTraceError(("%s %d: Invalid args or Global Wan disabled\n", __FUNCTION__, __LINE__));
+        return ANSC_STATUS_FAILURE;
+    }
+
+    for (UINT uiLoopCount = 0; uiLoopCount < pWanController->TotalIfaces; uiLoopCount++)
+    {
+        WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
+        DML_WAN_IFACE *pWanIfaceData = &(pWanDmlIfaceData->data);
+        if (pWanDmlIfaceData != NULL)
+        {
+            if (pWanController->GroupInst == pWanIfaceData->Selection.Group)
+            {
+                if (strstr(pWanIfaceData->BaseInterface, "Ethernet"))
+                {
+                    if (pWanIfaceData->Selection.Enable && pWanIfaceData->InBridge)
+                    {
+                        CcspTraceError(("%s %d: Removing WANoE port %s from LAN bridge\n", __FUNCTION__, __LINE__, pWanIfaceData->Name));
+                        if (WanMgr_RdkBus_AddIntfToLanBridge(pWanIfaceData->BaseInterface, FALSE) == ANSC_STATUS_SUCCESS)
+                        {
+                            pWanIfaceData->InBridge = FALSE;
+                        }
+                    }
+                    else if (!pWanIfaceData->Selection.Enable && !pWanIfaceData->InBridge)
+                    {
+                        CcspTraceError(("%s %d: Adding WANoE port %s to LAN bridge\n", __FUNCTION__, __LINE__, pWanIfaceData->Name));
+                        if (WanMgr_RdkBus_AddIntfToLanBridge(pWanIfaceData->BaseInterface, TRUE) == ANSC_STATUS_SUCCESS)
+                        {
+                            pWanIfaceData->InBridge = TRUE;
+                        }
+                    }
+                }
+            }
+            WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
+        }
+    }
+
+    return ANSC_STATUS_SUCCESS;
+}
+
+#ifndef _LG_OFW_
 static int WanMgr_RdkBus_AddAllIntfsToLanBridge (WanMgr_Policy_Controller_t * pWanController, BOOL AddToBridge)
 {
     if ((pWanController == NULL) || (pWanController->WanEnable != TRUE)
@@ -120,6 +165,7 @@ static int WanMgr_RdkBus_AddAllIntfsToLanBridge (WanMgr_Policy_Controller_t * pW
     return ANSC_STATUS_SUCCESS;
 
 }
+#endif /* _LG_OFW_ */
 #if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_))
 //TODO: this is a workaround to support upgarde from Comcast autowan policy to Unification build
 #define MAX_WanModeToIfaceMap 2
@@ -564,6 +610,7 @@ static WcAwPolicyState_t Transition_Start (WanMgr_Policy_Controller_t* pWanContr
         {
             CcspTraceInfo(("%s %d: Previous ActiveLink interface from DB is %d\n", __FUNCTION__, __LINE__, pWanController->activeInterfaceIdx));
             // previously used ActiveLink found
+#ifndef _LG_OFW_
             WanMgr_Iface_Data_t*   pWanDmlIfaceData = WanMgr_GetIfaceData_locked(pWanController->activeInterfaceIdx);
             DML_WAN_IFACE * pActiveInterface = &(pWanDmlIfaceData->data);
             if (pActiveInterface != NULL)
@@ -586,12 +633,15 @@ static WcAwPolicyState_t Transition_Start (WanMgr_Policy_Controller_t* pWanContr
                     WanMgr_RdkBus_AddAllIntfsToLanBridge(pWanController, FALSE);
                 }
             }
+#endif /* _LG_OFW_ */
         }
         else
         {
             CcspTraceInfo(("%s %d: unable to select an previous active interface from psm\n", __FUNCTION__, __LINE__));
             // No previous ActiveLink available
+#ifndef _LG_OFW_
             WanMgr_RdkBus_AddAllIntfsToLanBridge(pWanController, FALSE);
+#endif /* _LG_OFW_ */
             WanMgr_Policy_Auto_GetHighPriorityIface(pWanController);
         }
     }
@@ -916,8 +966,10 @@ static WcAwPolicyState_t Transition_RestartSelectionInterface (WanMgr_Policy_Con
     }
 #endif
 
+#ifndef _LG_OFW_
     // remove all interface from LAN bridge
     WanMgr_RdkBus_AddAllIntfsToLanBridge(pWanController, FALSE);
+#endif
 
     if (WanMgr_ResetGroupSelectedIface(pWanController) != ANSC_STATUS_SUCCESS)
     {
@@ -971,6 +1023,9 @@ static WcAwPolicyState_t Transistion_WanInterfaceDown (WanMgr_Policy_Controller_
         CcspTraceError(("%s %d: Invalid args\n", __FUNCTION__, __LINE__));
         return STATE_AUTO_WAN_ERROR;
     }
+
+    WanMgr_RdkBus_ConfigureLanBridgePorts(pWanController);
+
     CcspTraceInfo(("%s %d: moving to State_WanInterfaceDown()\n", __FUNCTION__, __LINE__));
     return STATE_AUTO_WAN_INTERFACE_DOWN;
 }
@@ -1001,6 +1056,8 @@ static WcAwPolicyState_t Transistion_WanInterfaceUp (WanMgr_Policy_Controller_t 
             CcspTraceError(("%s %d: unable to start interface state machine\n", __FUNCTION__, __LINE__));
         }
     }
+
+    WanMgr_RdkBus_ConfigureLanBridgePorts(pWanController);
 
     CcspTraceInfo(("%s %d: started interface state machine & moving to state State_WanInterfaceActive()\n", __FUNCTION__, __LINE__));
     return STATE_AUTO_WAN_INTERFACE_ACTIVE;
@@ -1046,6 +1103,8 @@ static WcAwPolicyState_t State_SelectingInterface (WanMgr_Policy_Controller_t * 
         CcspTraceError(("%s %d: Invalid args\n", __FUNCTION__, __LINE__));
         return STATE_AUTO_WAN_ERROR;
     }
+
+    WanMgr_RdkBus_ConfigureLanBridgePorts(pWanController);
 
     if(pWanController->WanEnable == FALSE || pWanController->GroupCfgChanged == TRUE)
     {
@@ -1252,6 +1311,10 @@ static WcAwPolicyState_t State_InterfaceReconfiguration (WanMgr_Policy_Controlle
         CcspTraceError(("%s %d: Invalid args\n", __FUNCTION__, __LINE__));
         return STATE_AUTO_WAN_ERROR;
     }
+
+#ifdef _LG_OFW_
+    return Transition_ActivatingInterface (pWanController);
+#endif
 
 #if (defined (_XB6_PRODUCT_REQ_) || defined (_CBR2_PRODUCT_REQ_) || defined(_PLATFORM_RASPBERRYPI_))
     // HW configuration already done using SelectedOperationalMode for XB platforms. Skipping this state.
@@ -1681,6 +1744,9 @@ void *WanMgr_AutoWanSelectionProcess (void* arg)
         }
         WanMgrDml_GetIfaceGroup_release();
     }
+
+    WanMgr_RdkBus_ConfigureLanBridgePorts(&WanController);
+
     CcspTraceInfo(("%s %d - Exit from SelectionProcess Group(%d) state machine\n", __FUNCTION__, __LINE__, WanController.GroupInst));
     pthread_exit(NULL);
 }
