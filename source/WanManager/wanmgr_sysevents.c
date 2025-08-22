@@ -1382,7 +1382,9 @@ void WanMgr_Configure_accept_ra(DML_VIRTUAL_IFACE * pVirtIf, BOOL EnableRa)
     CcspTraceInfo(("%s %d %s accept_ra for interface %s\n", __FUNCTION__, __LINE__,EnableRa?"Enabling":"Disabling", pVirtIf->Name));
     //Enable accept_ra to allow receiving RA all the time. This funtion  only blocks learning defult route from RA.
     sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra", pVirtIf->Name, "2");
+#if !defined(_LG_OFW_)
     sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/accept_ra_pinfo", pVirtIf->Name, "0");
+#endif
     if(EnableRa)
     {
         sysctl_iface_set("/proc/sys/net/ipv6/conf/%s/router_solicitations", pVirtIf->Name, "3");
