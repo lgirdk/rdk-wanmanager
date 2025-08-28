@@ -785,8 +785,26 @@ WanMgr_DmlDhcpcGetInfo
         pInfo->IPAddress.Value     = inet_addr(p_VirtIf->IP.Ipv4Data.ip);
         pInfo->SubnetMask.Value    = inet_addr(p_VirtIf->IP.Ipv4Data.mask);
         pInfo->IPRouters[0].Value  = inet_addr(p_VirtIf->IP.Ipv4Data.gateway);
+#if defined (_LG_OFW_)
+        char dnsBuf[256];
+        char *token;
+        int idx;
+
+        snprintf(dnsBuf, sizeof(dnsBuf), "%s", p_VirtIf->IP.Ipv4Data.dnsServer);
+        idx = 0;
+        token = strtok(dnsBuf, " ");
+        while (token && idx < DML_DHCP_MAX_ENTRIES)
+        {
+            pInfo->DNSServers[idx].Value = inet_addr(token);
+            token = strtok(NULL, " ");
+            idx++;
+        }
+        pInfo->NumDnsServers = idx;
+#else
         pInfo->DNSServers[0].Value = inet_addr(p_VirtIf->IP.Ipv4Data.dnsServer);
         pInfo->DNSServers[1].Value = inet_addr(p_VirtIf->IP.Ipv4Data.dnsServer1);
+        pInfo->NumDnsServers = 2;
+#endif
 
         pInfo->DHCPServer.Value = inet_addr(p_VirtIf->IP.Ipv4Data.dhcpServerId);
 	pInfo->DHCPStatus = ((strcmp(p_VirtIf->IP.Ipv4Data.dhcpState, DHCP_STATE_BOUND) == 0) || 
@@ -801,8 +819,11 @@ WanMgr_DmlDhcpcGetInfo
         }    
         WanMgrDml_GetIfaceData_release(NULL);
     }
+    else
+    {
+        pInfo->NumDnsServers = 0;
+    }
 
-    pInfo->NumDnsServers = 2;
     pInfo->NumIPRouters = 1;
     return ANSC_STATUS_SUCCESS;
 }
