@@ -332,7 +332,6 @@ static void NetMonitor_ProcessNetlinkRouteMonitorFd()
     iov.iov_base = buf;         // set message buffer as io
     iov.iov_len = sizeof(buf);  // set size
     struct nlmsghdr *nl_msgHdr;
-    static bool gw_v6_flag = FALSE;
 #if defined(FEATURE_MAPT) && defined(NAT46_KERNEL_SUPPORT)
     char maptConfigFlag[BUFLEN_128] = {0};
 #endif
@@ -374,29 +373,23 @@ static void NetMonitor_ProcessNetlinkRouteMonitorFd()
             case RTM_NEWROUTE:
                  {
                      if(isDefaultGatewaypresent(nl_msgHdr) == ANSC_STATUS_SUCCESS){
-                         if(gw_v6_flag == FALSE){
-                             DBG_MONITOR_PRINT(" %s  IPv6 Default route update - ADD \n", __FUNCTION__);
-                             NetMonitor_DoToggleV6Status(FALSE);
+                         DBG_MONITOR_PRINT(" %s  IPv6 Default route update - ADD \n", __FUNCTION__);
+                         NetMonitor_DoToggleV6Status(FALSE);
 #if defined(FEATURE_MAPT) && defined(NAT46_KERNEL_SUPPORT)
-                             sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_MAPT_CONFIG_FLAG, maptConfigFlag, sizeof(maptConfigFlag));
-                             if (!strcmp(maptConfigFlag, SET))
-                             {
-                                 WanManager_MaptRouteSetting();
-                             }
-#endif
-                             gw_v6_flag = TRUE;
+                         sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_MAPT_CONFIG_FLAG, maptConfigFlag, sizeof(maptConfigFlag));
+                         if (!strcmp(maptConfigFlag, SET))
+                         {
+                              WanManager_MaptRouteSetting();
                          }
+#endif
                      }
                      break;
                  }
             case RTM_DELROUTE:
                  {
                      if(isDefaultGatewaypresent(nl_msgHdr) == ANSC_STATUS_SUCCESS){
-                         if(gw_v6_flag == TRUE){
-                             DBG_MONITOR_PRINT(" %s  IPv6 Default route update - DEL \n", __FUNCTION__);
-                             NetMonitor_DoToggleV6Status(TRUE);
-                             gw_v6_flag = FALSE;
-                         }
+                         DBG_MONITOR_PRINT(" %s  IPv6 Default route update - DEL \n", __FUNCTION__);
+                         NetMonitor_DoToggleV6Status(TRUE);
                      }
                      break;
                 }
