@@ -1366,7 +1366,10 @@ void WanMgr_CheckDefaultRA (DML_VIRTUAL_IFACE * pVirtIf)
         //TODO: add check for remote device ( static ip )
         if (CheckV6DefaultRule(pVirtIf->Name) == TRUE ||  WanManager_send_and_receive_rs(pVirtIf) == 0)
         {
-            isDefaultGatewayAdded = 1; //Reset isDefaultGatewayAdded flag;
+            if (CheckV6DefaultRule(pVirtIf->Name) == TRUE)
+            {
+                isDefaultGatewayAdded = 1; //Reset isDefaultGatewayAdded flag;
+            }
         }
     }
 }
