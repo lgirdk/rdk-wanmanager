@@ -464,8 +464,8 @@ int WanManager_StartDhcpv6Client(DML_VIRTUAL_IFACE* pVirtIf, IFACE_TYPE IfaceTyp
     CcspTraceInfo(("Enter WanManager_StartDhcpv6Client for  %s \n", pVirtIf->Name));
 
     /* Dibbler-init is called to set the pre-configuration for dibbler */
-    CcspTraceInfo(("%s dibbler-init.sh Called \n", __func__));
-    system("/lib/rdk/dibbler-init.sh");
+    CcspTraceInfo(("%s dibbler-init.sh Called for %s \n", __func__, pVirtIf->Name));
+    v_secure_system("/lib/rdk/dibbler-init.sh %s", pVirtIf->Name);
 
     WanManager_send_and_receive_rs(pVirtIf);
     pid = start_dhcpv6_client(&params);
