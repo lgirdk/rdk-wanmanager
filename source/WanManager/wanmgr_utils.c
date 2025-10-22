@@ -746,6 +746,13 @@ static int LaunchApp(const char *appName, const char *cmdLineArgs)
         return -1;
     }
 
+#ifdef FEATURE_IPOE_HEALTH_CHECK
+    if (strstr(appName, IHC_CLIENT_NAME) != NULL)
+    {
+        signal(SIGCHLD, SIG_IGN);
+    }
+#endif
+
     CcspTraceInfo(("spawning %s args %s\n", appName, cmdLineArgs));
     ret = util_spawnProcess(exeBuf, cmdLineArgs, &pid);
     if (ret != RETURN_OK)

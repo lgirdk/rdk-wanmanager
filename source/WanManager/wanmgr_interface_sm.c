@@ -611,6 +611,7 @@ static void WanMgr_MonitorDhcpApps (WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl)
        pWanIfaceCtrl->IhcPid > 0 &&
       (WanMgr_IsPIDRunning(pWanIfaceCtrl->IhcPid) != TRUE)) 
     {
+        pWanIfaceCtrl->IhcPid = 0;
         WanMgr_StartConnectivityCheck(pWanIfaceCtrl);
         if(pWanIfaceCtrl->IhcV4Status == IHC_STARTED)
         {
