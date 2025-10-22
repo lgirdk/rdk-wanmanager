@@ -823,7 +823,6 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
     char resolv_file[80] = RESOLV_CONF_FILE;
     char resolv_envs[256] = {0};
 
-#ifdef _LG_MV2_PLUS_
 #define VAR_RESOLV_FILE "/var/tmp/resolv.conf"
 #define VAR_RESOLVPROXY_FILE "/var/tmp/resolv.dnsproxy"
 #define VAR_RESOLVPROXY_FILE_TMP "/var/tmp/resolv.dnsproxy.tmp"
@@ -838,13 +837,13 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
         syscfg_get(NULL, "dns_relay_enable", dns_relay, sizeof(dns_relay));
         syscfg_get(NULL, "dns_v4_proxy_enable", dns_v4_proxy_enable, sizeof(dns_v4_proxy_enable));
 
-        /* ASSUMPTION: If IP.Mode = DML_WAN_IP_MODE_IPV6_ONLY, DSlite mode for that interface is enabled */
-        if (strcmp(dns_relay, "1") &&
-            strcmp(dns_v4_proxy_enable, "1") &&
-            (p_VirtIf->IP.Mode != DML_WAN_IP_MODE_IPV6_ONLY))
-        {
-            CcspTraceInfo(("%s %d: DSLite for %s and DNS Relay features are all disabled\n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+        bool bRelay = !strcmp(dns_relay, "1");
+        bool bV4Proxy = !strcmp(dns_v4_proxy_enable, "1");
+        bool bDSLite = (p_VirtIf->IP.Mode == DML_WAN_IP_MODE_IPV6_ONLY) ? true : false; /* ASSUMPTION: If IP.Mode = DML_WAN_IP_MODE_IPV6_ONLY, DSlite mode for that interface is enabled */
+        CcspTraceInfo(("%s %d: dns_relay=%s, dns_v4_proxy_enable=%s, IP.Mode=%d\n", __FUNCTION__, __LINE__, dns_relay, dns_v4_proxy_enable, p_VirtIf->IP.Mode));
 
+        if (!bRelay && !bV4Proxy && !bDSLite)
+        {
             if (symlink(VAR_RESOLV_FILE, VAR_RESOLVPROXY_FILE_TMP) != 0)
             {
                 CcspTraceError(("%s %d - Symlink %s error!\n", __FUNCTION__, __LINE__, VAR_RESOLVPROXY_FILE_TMP));
@@ -859,29 +858,19 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
                 CcspTraceError(("%s %d - Open %s error!\n", __FUNCTION__, __LINE__, VAR_RESOLVPROXY_FILE_TMP));
                 return RETURN_ERR;
             }
-            if (!strcmp(dns_relay, "1"))
+            if (bRelay)
             {
-                fprintf(fp, "nameserver ::1\nnameserver 127.0.0.1\n");
-                CcspTraceInfo(("%s %d: DNS Relay is enabled\n", __FUNCTION__, __LINE__));
+                fprintf(fp, "nameserver ::1\n");
             }
-            else /* Either IPv4 Only proxy or DSLite is enabled */
+            else if (addIPv6)
             {
-                if (!strcmp(dns_v4_proxy_enable, "1"))
-                {
-                    CcspTraceInfo(("%s %d: IPv4 Only DNS Relay is enabled\n", __FUNCTION__, __LINE__));
-                }
-                else
-                {
-                    CcspTraceInfo(("%s %d: DSLite mode is enabled\n", __FUNCTION__, __LINE__));
-                }
-
-                if (addIPv6 && IsValidDnsServer(AF_INET6, p_VirtIf->IP.Ipv6Data.nameserver) == RETURN_OK)
-                {
+                if (IsValidDnsServer(AF_INET6, p_VirtIf->IP.Ipv6Data.nameserver) == RETURN_OK)
                     fprintf(fp, "nameserver %s\n", p_VirtIf->IP.Ipv6Data.nameserver);
-                }
-                /* Add IPv4 lo later so that IPv6 queries will use WAN DNS server IP */
-                fprintf(fp, "nameserver 127.0.0.1\n");
+                if (IsValidDnsServer(AF_INET6, p_VirtIf->IP.Ipv6Data.nameserver1) == RETURN_OK)
+                    fprintf(fp, "nameserver %s\n", p_VirtIf->IP.Ipv6Data.nameserver1);
             }
+            /* Add IPv4 lo later so that IPv6 queries will use WAN DNS server IP */
+            fprintf(fp, "nameserver 127.0.0.1\n");
             fclose(fp);
         }
         if (rename(VAR_RESOLVPROXY_FILE_TMP, VAR_RESOLVPROXY_FILE) != 0)
@@ -890,8 +879,6 @@ int wan_updateDNS(WanMgr_IfaceSM_Controller_t* pWanIfaceCtrl, BOOL addIPv4, BOOL
             return RETURN_ERR;
         }
     }
-#endif /* _LG_MV2_PLUS_ */
-
 #ifdef _LG_MV3_
     int len = snprintf(resolv_envs, sizeof(resolv_envs), "RESOLVCONF_IFACE_PATTERNS='%s %s.*' ", p_VirtIf->Name, p_VirtIf->Name);
 
