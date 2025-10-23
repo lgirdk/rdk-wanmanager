@@ -901,6 +901,15 @@ static void *WanManagerSyseventHandler(void *args)
                     }
                 }
 #endif
+#if defined(_LG_MV3_)
+                char natpt[8];
+                syscfg_get(NULL, "natPassthrough_enable", natpt, sizeof(natpt));
+                if (strcmp(natpt, "1") == 0)
+                {
+                    CcspTraceInfo(("%s %d - wan started call nat_passthrough.sh restart\n", __FUNCTION__, __LINE__ ));
+                    v_secure_system("/etc/utopia/nat_passthrough.sh restart");
+                }
+#endif
 
 #if defined(_DT_WAN_Manager_Enable_)
                                 sysevent_set(sysevent_fd, sysevent_token, "sendImmediateRA", "true", 0);
@@ -925,6 +934,15 @@ static void *WanManagerSyseventHandler(void *args)
                     {
                         syslog_networklog("NETWORK",LOG_ERR,"%s","WAN Interface down");
                     }
+                }
+#endif
+#if defined(_LG_MV3_)
+                char natpt[8];
+                syscfg_get(NULL, "natPassthrough_enable", natpt, sizeof(natpt));
+                if (strcmp(natpt, "1") == 0)
+                {
+                    CcspTraceInfo(("%s %d - wan stopped call nat_passthrough.sh full-stop\n", __FUNCTION__, __LINE__ ));
+                    v_secure_system("/etc/utopia/nat_passthrough.sh full-stop");
                 }
 #endif
             }
