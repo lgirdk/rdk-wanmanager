@@ -2228,21 +2228,40 @@ static BOOL isMbuEnabled(void)
 }
 #endif
 
+int ifname_to_port(const char *ifname)
+{
+    int n = -1;
+    if (sscanf(ifname, "eth%d", &n) != 1) return -1;
+
+    switch (n) {
+        case 0: return 3;  // eth0 -> port 3
+        case 1: return 2;  // eth1 -> port 2
+        case 2: return 1;  // eth2 -> port 1
+        default: return -1; // unknown
+    }
+}
+
 /*
  * ASSUMPTION: Possible WanOE port names : eth0,eth1,eth2,eth3
- * 0x20 -> Disable packet forwarding on given port
- * 0x1FF -> Default setting (enables packet forwarding Fwd)
+ * Port index mapping is a bitmap. Each bit represents a port.
+ * 31:02  denote eth2, 31:04 denote eth1, 31:06 denote eth0
+ * TODO: Currently there is no way of disabling forwarding for 2.5G port (eth3)
+ * 0x1FF -> Default setting (enables packet forwarding Fwd to all ports)
  */
 static void WanManager_SetEthPktFwd(BOOL enabled)
 {
 #ifdef _LG_MV2_PLUS_
-    char cmd[128];
-    int uiLoopCount;
+#define MAX_1G_ETH_PORTS 3
+#define ETHSW_WAN_PORT 5
+#define BASE 0x1FF
+
+    char cmd[128], iface[IFNAMSIZ];
+    int wanPort;
     int TotalIfaces = WanMgr_IfaceData_GetTotalWanIface();
 
     CcspTraceInfo(("%s Enable=%d\n", __FUNCTION__, enabled));
 
-    for (uiLoopCount = 0; uiLoopCount < TotalIfaces; uiLoopCount++)
+    for (int uiLoopCount = 0; uiLoopCount < TotalIfaces; uiLoopCount++)
     {
         WanMgr_Iface_Data_t *pWanDmlIfaceData = WanMgr_GetIfaceData_locked(uiLoopCount);
         if (pWanDmlIfaceData != NULL)
@@ -2251,24 +2270,40 @@ static void WanManager_SetEthPktFwd(BOOL enabled)
             if (strcmp(pWanIfaceData->AliasName, "Backup") == 0 &&
                 strcmp(pWanIfaceData->DisplayName, "WanOE") == 0)
             {
-                int idx;
-
-                if (sscanf(pWanIfaceData->Name, "eth%d", &idx) == 1 && idx >= 0 && idx <= 3)
-                {
-                    // Port register index derived via formula: reg_offset = 6 - (port_idx * 2)
-                    snprintf(cmd, sizeof(cmd), "echo \"w 31:0%d 2 %X\" > /proc/driver/ethsw/creg", 6 - (idx * 2), enabled ? 0x1FF : 0x20);
-                    WanManager_DoSystemAction("Setup WanOE Packet Forwarding: ", cmd);
-                }
-                else
-                {
-                    CcspTraceError(("%s: Unexpected WanOE interface name '%s' — expected format 'eth[0-3]'\n", __FUNCTION__, pWanIfaceData->Name));
-                }
-
+                wanPort = ifname_to_port(pWanIfaceData->Name);
                 WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
                 break;
             }
             WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
         }
+    }
+
+    if (wanPort == -1)
+    {
+        CcspTraceError(("%s: Could not find WanOE port\n", __FUNCTION__));
+        return;
+    }
+
+    const uint32_t ethswWanPortMask = (1 << ETHSW_WAN_PORT);
+    const uint32_t wanPortMask = (1 << wanPort);
+
+    for (int i = 0; i < MAX_1G_ETH_PORTS; i++)
+    {
+        snprintf(iface, sizeof(iface), "eth%d", i);
+        int port = ifname_to_port(iface);
+        if (port == -1)
+        {
+            CcspTraceError(("%s: Could not get port for %s\n", __FUNCTION__, iface));
+            continue;
+        }
+
+        // For WAN port, only enable Fwd to ETHSW_WAN_PORT and itself
+        // For other ports, disable Fwd to the WAN port
+        uint32_t regVal = enabled ? BASE : (port == wanPort ? (wanPortMask | ethswWanPortMask) : (BASE & ~wanPortMask));
+        snprintf(cmd, sizeof(cmd),
+                 "echo \"w 31:0%d 2 %X\" > /proc/driver/ethsw/creg",
+                 port * 2, regVal);
+        WanManager_DoSystemAction("Setup ETHSW Packet Forwarding: ", cmd);
     }
 #else
     (void)enabled;
@@ -2290,6 +2325,7 @@ ANSC_STATUS WanManager_ConfigurePktFlow(char *activeWanType, char *ifName)
     system(cmd);
 
     // F3896SI-3212: Disable port forwarding for ethX when CM is active and MBU is enabled
+    // VLAN PktFwd setting is done automatically when WanOE is active. We only need to handle CM case here.
     if (!strcmp(activeWanType, "CM") && isMbuEnabled())
     {
         WanManager_SetEthPktFwd(FALSE);
@@ -2645,7 +2681,7 @@ int WanMgr_RdkBus_AddIntfToLanBridge (char * PhyPath, BOOL AddToBridge)
 
             // Enable Pkt Fwd if eth interface is to be added to the bridge (i.e., MBU is disabled)
             // Disable Pkt Fwd if eth interface is to be deleted from the bridge (i.e., MBU is enabled)
-            WanManager_SetEthPktFwd(AddToBridge); 
+            WanManager_SetEthPktFwd(AddToBridge);
             return ANSC_STATUS_SUCCESS;
         }
         usleep(500000);

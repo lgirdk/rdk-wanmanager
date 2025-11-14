@@ -236,10 +236,10 @@ static ANSC_STATUS WanMgr_ActivateGroup(UINT groupId)
                 DML_WAN_IFACE* pWanIfaceData = &(pWanDmlIfaceData->data);
                 if(pWanIfaceData->Selection.Status == WAN_IFACE_SELECTED)
                 {
-                    WanManager_ConfigurePktFlow(pWanIfaceData->DisplayName, pWanIfaceData->Name);
                     pWanIfaceData->Selection.Status = WAN_IFACE_ACTIVE;
                     pWanIfaceGroup->ActivationCount++; //update group activation count
                     CcspTraceInfo(("%s %d Group %d ActivationCount : %d\n", __FUNCTION__, __LINE__, groupId,pWanIfaceGroup->ActivationCount));
+                    WanManager_ConfigurePktFlow(pWanIfaceData->DisplayName, pWanIfaceData->Name);
                 }
                 WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
             }
