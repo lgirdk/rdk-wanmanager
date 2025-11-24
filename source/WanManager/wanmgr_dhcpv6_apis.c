@@ -2155,7 +2155,7 @@ static void  VerifyV6FilteringRules(char *prefix)
     char Param[BUFLEN_256]              = {0};
     int i,RuleCnt =0;
     unsigned int segments[4];
-    char formated_prefix[22];
+    unsigned int val_segments[4] = {0};
     if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_GetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, V6FILTERING_NUM_ENTRIES, ValStr))
     {
         CcspTraceError(("%s-%d: Failed to read V6.IPFiltering.ServiceNumberOfEntries\n", __FUNCTION__, __LINE__));
@@ -2169,8 +2169,6 @@ static void  VerifyV6FilteringRules(char *prefix)
         CcspTraceError(("%s-%d:, Invalid IPv6 prefix format.\n", __FUNCTION__, __LINE__));
         return;
     }
-    // Print each segment with leading zeros
-    sprintf(formated_prefix,"%04x:%04x:%04x:%04x", segments[0], segments[1], segments[2], segments[3]);
 
     NumOfEntries = strtol(ValStr,NULL,10);
     if ( NumOfEntries > 0 ){
@@ -2210,10 +2208,20 @@ static void  VerifyV6FilteringRules(char *prefix)
                   continue;
               }
 
-              if ( strncmp(formated_prefix,ValStr,strlen(formated_prefix)) == 0) //formated_prefix format xxxx:xxxx:xxxx:xxxx  dest.addr format prefix:yyyy:yyyy:yyyy:yyyy
+              if (ValStr[0] == '\0') {
+                  CcspTraceInfo(("%s-%d: rule %d has empty address, skipping\n", __FUNCTION__, __LINE__, i));
+                  continue;
+              }
+
+              // Numeric IPv6 compare — first 4 segments only
+              if ( sscanf(ValStr, "%x:%x:%x:%x", &val_segments[0], &val_segments[1], &val_segments[2], &val_segments[3]) == 4 &&
+                   segments[0] == val_segments[0] &&
+                   segments[1] == val_segments[1] &&
+                   segments[2] == val_segments[2] &&
+                   segments[3] == val_segments[3] )
               {
-                CcspTraceInfo(("%s-%d: rule %d dest. addr prefix matched %s  %s\n", __FUNCTION__, __LINE__,i,formated_prefix,ValStr));
-                continue;
+                  CcspTraceInfo(("%s-%d: rule %d dest. addr prefix matched %s  %s\n", __FUNCTION__, __LINE__,i,prefix,ValStr));
+                  continue;
               }else{
                 snprintf(Param, sizeof(Param), V6FILTERING_SERVICE_ENABLE, i); //disable rule
                 if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, Param, "FALSE", ccsp_boolean, TRUE ))//something wrong
@@ -2236,11 +2244,22 @@ static void  VerifyV6FilteringRules(char *prefix)
                   CcspTraceInfo(("%s-%d: rule %d source address is ALL\n", __FUNCTION__, __LINE__, i));
                   continue;
               }
-              if ( strncmp(formated_prefix,ValStr,strlen(formated_prefix)) == 0) //formated_prefix format xxxx:xxxx:xxxx:xxxx src.addr format prefix:yyyy:yyyy:yyyy:yyyy
-              {
-                CcspTraceInfo(("%s-%d: rule %d src. addr prefix matched\n", __FUNCTION__, __LINE__,i));
-                continue;
-              }else{
+
+             if (ValStr[0] == '\0'){
+                 CcspTraceInfo(("%s-%d: rule %d has empty address, skipping\n", __FUNCTION__, __LINE__, i));
+                 continue;
+             }
+
+             // Numeric IPv6 compare — first 4 segments only
+             if ( sscanf(ValStr, "%x:%x:%x:%x", &val_segments[0], &val_segments[1], &val_segments[2], &val_segments[3]) == 4 &&
+                  segments[0] == val_segments[0] &&
+                  segments[1] == val_segments[1] &&
+                  segments[2] == val_segments[2] &&
+                  segments[3] == val_segments[3] )
+             {
+                 CcspTraceInfo(("%s-%d: rule %d src. addr prefix matched\n", __FUNCTION__, __LINE__,i));
+                 continue;
+             }else{
                 snprintf(Param, sizeof(Param), V6FILTERING_SERVICE_ENABLE, i); //disable rule
                 if( ANSC_STATUS_FAILURE == WanMgr_RdkBus_SetParamValues( PAM_COMPONENT_NAME, PAM_DBUS_PATH, Param, "FALSE", ccsp_boolean, TRUE ))//something wrong
                 {
