@@ -3051,6 +3051,11 @@ static eWanState_t wan_transition_ipv6_down(WanMgr_IfaceSM_Controller_t* pWanIfa
         }
         WanManager_StopDhcpv6Client(p_VirtIf->Name, release_action);
         p_VirtIf->IP.Dhcp6cPid = 0;
+
+#ifdef _LG_OFW_
+        CcspTraceInfo(("%s %d: Stopping DHCP v6 Server\n", __FUNCTION__, __LINE__));
+        sysevent_set(sysevent_fd, sysevent_token, "dhcpv6s-stop", "", 0);
+#endif
     }
     else
     {
