@@ -352,7 +352,9 @@ ANSC_STATUS wanmgr_sysevents_ipv4Info_init(const char *wanIfName, DEVICE_NETWORK
     strncpy(ipv4Data.gateway, "0.0.0.0", sizeof(ipv4Data.gateway)-1);
     strncpy(ipv4Data.dnsServer, "0.0.0.0", sizeof(ipv4Data.dnsServer)-1);
     strncpy(ipv4Data.dnsServer1, "0.0.0.0", sizeof(ipv4Data.dnsServer1)-1);
+#if !defined(_LG_OFW_)
     sysevent_set(sysevent_fd, sysevent_token,SYSEVENT_CURRENT_WAN_IPADDR, "0.0.0.0", 0);
+#endif
     snprintf(name, sizeof(name), SYSEVENT_IPV4_START_TIME, wanIfName);
     sysevent_set(sysevent_fd, sysevent_token,name, "0", 0);
     ipv4Data.mtuSize = WANMNGR_INTERFACE_DEFAULT_MTU_SIZE;
