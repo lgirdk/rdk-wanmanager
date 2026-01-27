@@ -1520,7 +1520,9 @@ static WcAwPolicyState_t State_WanInterfaceActive (WanMgr_Policy_Controller_t * 
         return Transistion_WanInterfaceDown (pWanController);
     }
 
-    if(pActiveInterface->VirtIfChanged == TRUE)
+    if ((pActiveInterface->VirtIfChanged == TRUE) ||
+        (WanMgr_Get_ISM_RunningStatus(pActiveInterface->uiIfaceIdx) == FALSE &&
+         pActiveInterface->BaseInterfaceStatus == WAN_IFACE_PHY_STATUS_UP))
     {
         for(int VirtId=0; VirtId < pActiveInterface->NoOfVirtIfs; VirtId++)
         {
