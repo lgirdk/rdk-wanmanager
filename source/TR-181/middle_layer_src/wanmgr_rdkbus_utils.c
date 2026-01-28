@@ -203,6 +203,27 @@ ANSC_STATUS WanMgr_RdkBus_setRestorationDelay(UINT delay)
     return result;
 }
 
+#if defined(_LG_MV3_)
+ANSC_STATUS WanMgr_RdkBus_setFailOverDelay(UINT delay)
+{
+    ANSC_STATUS ret = ANSC_STATUS_FAILURE;
+    char value[BUFLEN_64] = {0};
+    char paramName[BUFLEN_256] = {0};
+
+    _ansc_sprintf(paramName, "Device.X_LGI-COM_ONT.FailOverDelay");
+    snprintf(value, sizeof(value), "%u", delay);
+
+    ret = WanMgr_RdkBus_SetParamValues("com.cisco.spvtg.ccsp.gponmanager", "/com/cisco/spvtg/ccsp/gponmanager", paramName, value, ccsp_unsignedInt, TRUE);
+
+    if (ret != ANSC_STATUS_SUCCESS)
+    {
+        AnscTraceError(("%s: Error setting %s=%s\n", __FUNCTION__, paramName, value));
+    }
+
+    return ret;
+}
+#endif
+
 ANSC_STATUS WanMgr_RdkBus_setWanEnableToPsm(BOOL WanEnable)
 {
     int result = ANSC_STATUS_SUCCESS;

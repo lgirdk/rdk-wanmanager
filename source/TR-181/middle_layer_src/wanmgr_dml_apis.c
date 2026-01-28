@@ -69,6 +69,25 @@ WanManager_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG* p
             *puLong= pWanDmlData->RestorationDelay;
             ret = TRUE;
         }
+        if (strcmp(ParamName, "FailOverDelay") == 0)
+        {
+#if defined(_LG_MV3_)
+            char param_value[BUFLEN_64] = {0};
+            UINT failover_delay = 0;
+
+            if (0 == syscfg_get(NULL, "gpon_failover_delay", param_value, sizeof(param_value)))
+            {
+                if (param_value[0] != '\0' && strlen(param_value) != 0)
+                {
+                    failover_delay = atoi(param_value);
+                }
+            }
+
+            pWanDmlData->FailOverDelay = failover_delay;
+            *puLong = pWanDmlData->FailOverDelay;
+#endif
+            ret = TRUE;
+        }
 
         WanMgrDml_GetConfigData_release(pWanConfigData);
     }
@@ -125,6 +144,22 @@ WanManager_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG uV
                 }
                 ret = TRUE;
             }
+        }
+        if (strcmp(ParamName, "FailOverDelay") == 0)
+        {
+#if defined(_LG_MV3_)
+            retStatus = WanMgr_RdkBus_setFailOverDelay(uValue);
+            if(retStatus == ANSC_STATUS_SUCCESS)
+            {
+                if(pWanDmlData->FailOverDelay != uValue)
+                {
+                    pWanDmlData->FailOverDelay = uValue;
+                }
+                ret = TRUE;
+            }
+#else
+            return FALSE;
+#endif
         }
 
         WanMgrDml_GetConfigData_release(pWanConfigData);

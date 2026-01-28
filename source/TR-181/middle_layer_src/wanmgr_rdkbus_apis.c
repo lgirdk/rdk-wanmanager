@@ -1601,6 +1601,9 @@ ANSC_STATUS WanMgr_WanConfInit (DML_WANMGR_CONFIG* pWanConfig)
     unsigned int wan_policy;
     unsigned int wan_allow_remote_iface = 0;
     unsigned int wan_restoration_delay = 0;
+#if defined(_LG_MV3_)
+    unsigned int failover_delay = 0;
+#endif
     unsigned int wan_idle_timeout;
     int ret_val = ANSC_STATUS_SUCCESS;
     int retPsmGet = CCSP_SUCCESS;
@@ -1638,6 +1641,18 @@ ANSC_STATUS WanMgr_WanConfInit (DML_WANMGR_CONFIG* pWanConfig)
         wan_restoration_delay = atoi(param_value);
 
     pWanConfig->RestorationDelay = wan_restoration_delay;
+
+#if defined(_LG_MV3_)
+    memset(param_value, 0, sizeof(param_value));
+    if (0 == syscfg_get(NULL, "gpon_failover_delay", param_value, sizeof(param_value)))
+    {
+        if (param_value[0] != '\0' && strlen(param_value) != 0)
+        {
+            failover_delay = atoi(param_value);
+        }
+    }
+    pWanConfig->FailOverDelay = failover_delay;
+#endif
 
     memset(param_name, 0, sizeof(param_name));
     memset(param_value, 0, sizeof(param_value));

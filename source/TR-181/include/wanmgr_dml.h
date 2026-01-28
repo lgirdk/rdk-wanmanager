@@ -593,6 +593,7 @@ typedef struct _DML_WANMGR_CONFIG_
     CHAR    CurrentStatus[BUFLEN_16];
     CHAR    CurrentStandbyInterface[BUFLEN_64];
     UINT    RestorationDelay;
+    UINT    FailOverDelay;
     CHAR    CurrentActiveDNS[BUFLEN_256];
     BOOLEAN BackupWanDnsSupport;    
     BOOLEAN IPv6EUI64FormatSupport;
