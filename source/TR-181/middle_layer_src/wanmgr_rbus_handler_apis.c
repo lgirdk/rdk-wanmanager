@@ -547,7 +547,7 @@ rbusError_t WanMgr_Interface_SetHandler(rbusHandle_t handle, rbusProperty_t prop
             }
             else
             {
-                ret = RBUS_ERROR_INVALID_INPUT;
+                ret = RBUS_ERROR_INVALID_PARAMETER_TYPE;
             }
         }
         WanMgrDml_GetIfaceData_release(pWanDmlIfaceData);
