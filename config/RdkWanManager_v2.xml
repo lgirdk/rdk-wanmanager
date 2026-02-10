@@ -74,7 +74,7 @@
                     <writable>true</writable>
                 </parameter>
                 <parameter>
-                    <name>FailOverDelay</name>
+                    <name>FailoverDelay</name>
                     <type>unsignedInt</type>
                     <syntax>uint32</syntax>
                     <writable>true</writable>

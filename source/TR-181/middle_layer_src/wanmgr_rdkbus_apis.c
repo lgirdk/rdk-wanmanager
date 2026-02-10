@@ -1646,12 +1646,12 @@ ANSC_STATUS WanMgr_WanConfInit (DML_WANMGR_CONFIG* pWanConfig)
     memset(param_value, 0, sizeof(param_value));
     if (0 == syscfg_get(NULL, "gpon_failover_delay", param_value, sizeof(param_value)))
     {
-        if (param_value[0] != '\0' && strlen(param_value) != 0)
+        if (param_value[0] != '\0')
         {
             failover_delay = atoi(param_value);
         }
     }
-    pWanConfig->FailOverDelay = failover_delay;
+    pWanConfig->FailoverDelay = failover_delay;
 #endif
 
     memset(param_name, 0, sizeof(param_name));

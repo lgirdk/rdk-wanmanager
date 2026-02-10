@@ -174,7 +174,8 @@ ANSC_STATUS WanMgr_RdkBus_SetRequestIfComponent(char *pPhyPath, char *pInputpara
 ANSC_STATUS WaitForInterfaceComponentReady(char *pPhyPath);
 ANSC_STATUS WanMgr_RdkBus_setRestorationDelay(UINT delay);
 #if defined(_LG_MV3_)
-ANSC_STATUS WanMgr_RdkBus_setFailOverDelay(UINT delay);
+ANSC_STATUS WanMgr_RdkBus_getFailoverDelay(UINT *pFailoverDelay);
+ANSC_STATUS WanMgr_RdkBus_setFailoverDelay(UINT FailoverDelay);
 #endif
 ANSC_STATUS WanManager_ConfigurePPPSession(DML_VIRTUAL_IFACE* pVirtIf, BOOL PPPEnable);
 ANSC_STATUS WanMgr_RdkBus_ConfigureVlan(DML_VIRTUAL_IFACE* pVirtIf, BOOL VlanEnable);

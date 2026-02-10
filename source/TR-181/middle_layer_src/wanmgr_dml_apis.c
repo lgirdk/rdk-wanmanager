@@ -69,22 +69,15 @@ WanManager_GetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG* p
             *puLong= pWanDmlData->RestorationDelay;
             ret = TRUE;
         }
-        if (strcmp(ParamName, "FailOverDelay") == 0)
+        if (strcmp(ParamName, "FailoverDelay") == 0)
         {
 #if defined(_LG_MV3_)
-            char param_value[BUFLEN_64] = {0};
-            UINT failover_delay = 0;
-
-            if (0 == syscfg_get(NULL, "gpon_failover_delay", param_value, sizeof(param_value)))
+            if (WanMgr_RdkBus_getFailoverDelay(&pWanDmlData->FailoverDelay) != ANSC_STATUS_SUCCESS)
             {
-                if (param_value[0] != '\0' && strlen(param_value) != 0)
-                {
-                    failover_delay = atoi(param_value);
-                }
+                pWanDmlData->FailoverDelay = 0;
             }
 
-            pWanDmlData->FailOverDelay = failover_delay;
-            *puLong = pWanDmlData->FailOverDelay;
+            *puLong = pWanDmlData->FailoverDelay;
 #endif
             ret = TRUE;
         }
@@ -145,15 +138,15 @@ WanManager_SetParamUlongValue(ANSC_HANDLE hInsContext, char* ParamName, ULONG uV
                 ret = TRUE;
             }
         }
-        if (strcmp(ParamName, "FailOverDelay") == 0)
+        if (strcmp(ParamName, "FailoverDelay") == 0)
         {
 #if defined(_LG_MV3_)
-            retStatus = WanMgr_RdkBus_setFailOverDelay(uValue);
+            retStatus = WanMgr_RdkBus_setFailoverDelay(uValue);
             if(retStatus == ANSC_STATUS_SUCCESS)
             {
-                if(pWanDmlData->FailOverDelay != uValue)
+                if(pWanDmlData->FailoverDelay != uValue)
                 {
-                    pWanDmlData->FailOverDelay = uValue;
+                    pWanDmlData->FailoverDelay = uValue;
                 }
                 ret = TRUE;
             }

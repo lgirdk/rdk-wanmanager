@@ -204,14 +204,33 @@ ANSC_STATUS WanMgr_RdkBus_setRestorationDelay(UINT delay)
 }
 
 #if defined(_LG_MV3_)
-ANSC_STATUS WanMgr_RdkBus_setFailOverDelay(UINT delay)
+ANSC_STATUS WanMgr_RdkBus_getFailoverDelay(UINT *pFailoverDelay)
+{
+    char param_value[BUFLEN_64] = {0};
+    UINT delay = 0;
+
+    if (syscfg_get(NULL, "gpon_failover_delay", param_value, sizeof(param_value)) != 0)
+    {
+        return ANSC_STATUS_FAILURE;
+    }
+
+    if (param_value[0] != '\0')
+    {
+        delay = atoi(param_value);
+    }
+
+    *pFailoverDelay = delay;
+    return ANSC_STATUS_SUCCESS;
+}
+
+ANSC_STATUS WanMgr_RdkBus_setFailoverDelay(UINT FailoverDelay)
 {
     ANSC_STATUS ret = ANSC_STATUS_FAILURE;
     char value[BUFLEN_64] = {0};
     char paramName[BUFLEN_256] = {0};
 
     _ansc_sprintf(paramName, "Device.X_LGI-COM_ONT.FailOverDelay");
-    snprintf(value, sizeof(value), "%u", delay);
+    snprintf(value, sizeof(value), "%u", FailoverDelay);
 
     ret = WanMgr_RdkBus_SetParamValues("com.cisco.spvtg.ccsp.gponmanager", "/com/cisco/spvtg/ccsp/gponmanager", paramName, value, ccsp_unsignedInt, TRUE);
 
