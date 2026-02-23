@@ -1227,18 +1227,20 @@ static void *WanManagerSyseventHandler(void *args)
             else if (strcmp(name, SYSEVENT_DNS_RESTART) == 0)
             {
                 char ifName[BUFLEN_64] = {0};
-
                sysevent_get(sysevent_fd, sysevent_token, SYSEVENT_CURRENT_WAN_IFNAME, ifName, sizeof(ifName));
-               if (ifName[0] != 0)
-               {
-                   DML_VIRTUAL_IFACE *p_VirtIf = WanMgr_GetVirtualIfaceByName_locked(ifName);
+                if (ifName[0] == '\0')
+                {
+                    snprintf(ifName, sizeof(ifName), "%s", "erouter0");
+                    CcspTraceWarning(("%s line %d: %s current_wan_ifname is empty, assume erouter0\n", __FUNCTION__, __LINE__));
+                }
 
-                    if (p_VirtIf != NULL)
-                    {
-                        CcspTraceWarning(("%s line %d: %s reset DNS configuration \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
-                        p_VirtIf->Reset = TRUE;
-                        WanMgr_VirtualIfaceData_release(ifName);
-                    }
+                DML_VIRTUAL_IFACE *p_VirtIf = WanMgr_GetVirtualIfaceByName_locked(ifName);
+
+                if (p_VirtIf != NULL)
+                {
+                    CcspTraceWarning(("%s line %d: %s reset DNS configuration \n", __FUNCTION__, __LINE__, p_VirtIf->Name));
+                    p_VirtIf->Reset = TRUE;
+                    WanMgr_VirtualIfaceData_release(ifName);
                 }
             }
             else if (strcmp(name, SYSEVENT_IPV6_ADDRMON_IP_LOSS) == 0)
